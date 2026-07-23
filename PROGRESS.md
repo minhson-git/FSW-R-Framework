@@ -16,22 +16,40 @@ Hai package tách biệt hoàn toàn, phụ thuộc một chiều (`fsw-r-viz` �
 `fsw-r` có `py.typed` marker để `fsw-r-viz` chạy `mypy --strict` xuyên qua type
 của `fsw-r` thay vì phải ignore.
 
-## Parse FSW thật, không còn mock int tuỳ ý
+## Parse FSW thật (FSW → AST → FSWR), không còn tự chế regex mô phỏng
 
-`core/fsw_symbol_key.py` parse symbol key FSW thật (vd `"S10011"`), dùng
-đúng format + range category/group từ chính source code của
-[sutton-signwriting/core](https://github.com/sutton-signwriting/core)
-(đối chiếu qua bản Python port `signwriting` trên PyPI, nay là dependency
-thật của `fsw-r`). Range Hands (`0x100`-`0x204`) và 10 group boundary lấy
-trực tiếp từ `src/fsw/fsw-structure.js` của repo đó; group 1
-(`0x100`-`0x10d`, 14 symbol) khớp đúng 14 symbol liệt kê ở trang
-[group01 signwriting.org](https://www.signwriting.org/lessons/iswa/group01/),
-xác nhận base_symbol_number 1 = "Index", 7 = "Index Bent".
+**Lần sửa đầu** (trong `core/fsw_symbol_key.py`) mới chỉ tự viết regex riêng
+mô phỏng đúng format — có cài `signwriting` làm dependency nhưng **chưa hề
+`import`/gọi hàm thật nào của nó**, và chỉ parse được 1 symbol key trần (6
+ký tự), không parse được FSW sign string đầy đủ (có box marker + nhiều
+symbol + vị trí). Đây là gap người dùng phát hiện và yêu cầu sửa lại đúng.
 
-`core/registry.py` map `(group, base_symbol_number)` → class cụ thể qua
-decorator `@register_symbol`; `symbol_from_fsw("S10012")` parse key thật và
-trả về đúng instance `BaseSymbol01_01_001_Index` — không còn phải tự tin
-"chắc là đúng" vào mấy con số int truyền tay.
+**Đã sửa thành pipeline 3 tầng, mỗi tầng 1 module:**
+
+```
+FSW sign string --[fsw_ast.py, GỌI THẬT signwriting.formats.fsw_to_sign()]--> AST (FSWSignAST)
+AST             --[fswr_converter.py + registry.py]-------------------------> FSWR (PositionedSymbol)
+```
+
+1. `core/fsw_ast.py` — `parse_fsw_to_ast()` gọi **thật** hàm
+   `signwriting.formats.fsw_to_sign.fsw_to_sign()` (import thật, verify đã
+   chạy được), parse được cả sign string đầy đủ nhiều symbol (vd
+   `"M500x500S10010480x480S1061a520x520"` — sign 2 tay).
+2. `core/fsw_symbol_key.py` — decode 1 symbol key đã tách ra (vd `"S10010"`)
+   thành category/group/base_symbol_number/fill/rotation. Kỹ thuật cắt
+   chuỗi giống đúng cách `signwriting.utils.mirror.mirror_symbol` làm nội
+   bộ (không có hàm public riêng cho việc này trong thư viện thật). Range
+   group (10 group ASL) vẫn lấy từ `fsw-structure.js` như trước — đây là
+   phần domain knowledge có thật, đã verify, chỉ là bản thân thư viện JS
+   không expose nó ở dạng "group số 1-10" trực tiếp.
+3. `core/registry.py` (`build_symbol()`, `symbol_from_fsw()`) +
+   `core/fswr_converter.py` (`ast_to_fswr()`, `fsw_to_fswr()`) — converter
+   AST → FSWR thật: chạy qua từng node trong AST, tra registry, dựng đúng
+   object `FSWRenderableSymbol`, giữ nguyên toạ độ trang (x, y) — xử lý
+   được sign nhiều symbol (2 tay), không chỉ 1 symbol đơn lẻ như trước.
+
+Demo (`python -m fsw_r.demo`) giờ có thêm Part 2: parse 1 FSW sign string
+thật có 2 symbol → ra đúng 2 object FSWR, đúng vị trí, đúng hand_side.
 
 **Vẫn còn là model tự thiết kế (không có spec thật để tra):** ISWA/FSW là
 notation 2D, không có nguồn "thật" nào cho quaternion cổ tay 3D hay góc gập
@@ -112,9 +130,9 @@ chọn đúng rig (2 rig thực sự khác nhau) trước, rồi mới áp
 
 ## Trạng thái hiện tại
 
-- `fsw-r`: `mypy --strict` sạch (15 file), `pytest` 42/42 pass
+- `fsw-r`: `mypy --strict` sạch (19 file), `pytest` 49/49 pass
   (`test_group_01.py`, `test_hand_side.py`, `test_fsw_symbol_key.py`,
-  `test_registry.py`).
+  `test_fsw_ast.py`, `test_registry.py`, `test_fswr_converter.py`).
 - `fsw-r-viz`: `mypy --strict` sạch (6 file), `pytest` 4/4 pass
   (`test_hand_geometry.py`, `test_plot_hand.py`).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng: joint pose giống

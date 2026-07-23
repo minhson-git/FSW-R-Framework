@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from fsw_r.groups.group_01_index_finger import BaseSymbol01_01_001_Index
-from fsw_r.groups.group_01_index_finger import BaseSymbol01_01_007_IndexBent
 
+from fsw_r.groups.group_02_index_middle_fingers import BaseSymbol01_02_001_IndexMiddle
 from fsw_r_viz.plot_hand import render_symbols_grid
 
 
@@ -21,7 +21,7 @@ def main() -> None:
         (BaseSymbol01_01_001_Index(fill=1, rotation=0), "01-01-001 rotation=0 (RIGHT, palm out)"),
         (BaseSymbol01_01_001_Index(fill=1, rotation=5), "01-01-001 rotation=5 (RIGHT, side)"),
         (BaseSymbol01_01_001_Index(fill=1, rotation=7), "01-01-001 rotation=7 (RIGHT, back out)"),
-        (BaseSymbol01_01_007_IndexBent(fill=1, rotation=0), "01-01-007 rotation=0 (LEFT, mirrored)"),
+        (BaseSymbol01_02_001_IndexMiddle(fill=1, rotation=5), "01-01-007 rotation=5 (LEFT, mirrored)"),
     ]
 
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"

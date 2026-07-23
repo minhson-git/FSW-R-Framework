@@ -1,10 +1,18 @@
-"""Demo: parse four *real* FSW symbol keys for Base Symbol 1 ("Index",
-01-01-001) -- three in the 0-7 (RIGHT hand) half and one in the 8-15 (LEFT
-hand) half -- via symbol_from_fsw(), and confirm:
-  - joint pose stays identical regardless of rotation/hand_side.
-  - wrist orientation changes with rotation.
-  - hand_side is decoded correctly and the renderer picks the matching rig
-    (RIGHT vs LEFT), rather than mirroring a single rig via rotation.
+"""Demo, in two parts:
+
+1. Parse four *real* FSW symbol keys for Base Symbol 1 ("Index", 01-01-001)
+   -- three in the 0-7 (RIGHT hand) half and one in the 8-15 (LEFT hand)
+   half -- via symbol_from_fsw(), and confirm:
+     - joint pose stays identical regardless of rotation/hand_side.
+     - wrist orientation changes with rotation.
+     - hand_side is decoded correctly and the renderer picks the matching
+       rig (RIGHT vs LEFT), rather than mirroring a single rig via rotation.
+
+2. Parse a full, real *FSW sign string* (box marker + two positioned
+   symbols -- a two-handed sign) through the whole pipeline: the real
+   sutton-signwriting parser (fsw_ast.parse_fsw_to_ast) produces an AST,
+   which fswr_converter.ast_to_fswr converts into actual FSWRenderableSymbol
+   instances, each still carrying its page position.
 
 Run with: python -m fsw_r.demo
 """
@@ -13,12 +21,13 @@ from __future__ import annotations
 
 from scipy.spatial.transform import Rotation
 
+from fsw_r.core.fswr_converter import fsw_to_fswr
 from fsw_r.core.registry import symbol_from_fsw
 from fsw_r.core.renderer import HandMeshRenderer3D, HandSkeleton
 from fsw_r.core.types import HandJointPose, HandSide
 
-# Importing this populates the registry that symbol_from_fsw() looks up --
-# see core/registry.py.
+# Importing this populates the registry that symbol_from_fsw() and
+# fsw_to_fswr() look up -- see core/registry.py.
 import fsw_r.groups.group_01_index_finger  # noqa: F401
 
 
@@ -68,6 +77,20 @@ def main() -> None:
     assert idx_back.hand_side == HandSide.RIGHT
     assert idx_mirrored.hand_side == HandSide.LEFT
     print("OK: hand_side decoded correctly (0-7 -> RIGHT, 8-15 -> LEFT).")
+
+    print()
+    print("--- Part 2: full FSW sign string -> AST -> FSWR (two-handed sign) ---")
+    # A box marker ("M") + two positioned symbols: Index (RIGHT) and Index
+    # Bent (LEFT, rotation=10=0xa) side by side -- real FSW sign syntax.
+    fsw_sign = "M500x500S10010480x480S1061a520x520"
+    positioned_symbols = fsw_to_fswr(fsw_sign)
+    assert len(positioned_symbols) == 2
+    for positioned in positioned_symbols:
+        print(
+            f"  {positioned.symbol.symbol_id} at ({positioned.x}, {positioned.y}), "
+            f"hand_side={positioned.symbol.hand_side.value}"
+        )
+    print("OK: one real FSW sign string -> two positioned FSWRenderableSymbol instances.")
 
 
 if __name__ == "__main__":

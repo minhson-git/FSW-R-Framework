@@ -3,24 +3,48 @@
 Renders ISWA/FSW (SignWriting) hand symbols in 3D by adding a joint-pose layer
 on top of real FSW symbol-key parsing.
 
-## Real FSW parsing, not invented data
+## FSW -> AST -> FSWR: a real parser, then a converter
 
-`core/fsw_symbol_key.py` parses actual ISWA/FSW symbol keys (e.g. `"S10011"`)
-using the same key format and category/group ranges as the reference
-implementation, [sutton-signwriting/core](https://github.com/sutton-signwriting/core)
-(cross-checked against its installable Python port, the
-[`signwriting`](https://pypi.org/project/signwriting/) PyPI package, which
-this project depends on for `fsw_to_sign`-compatible parsing). The category
-(Hands, `0x100`-`0x204`) and 10-group boundaries come directly from that
-project's `src/fsw/fsw-structure.js`; group 1 (`0x100`-`0x10d`, 14 symbols)
-matches the 14 base symbols listed at
-[signwriting.org's Group 1 page](https://www.signwriting.org/lessons/iswa/group01/),
-whose own links confirm base_symbol_number 1 = "Index" and 7 = "Index Bent".
+Three stages, each its own module:
 
-`core/registry.py` maps `(group, base_symbol_number)` to the concrete
-`FSWRenderableSymbol` subclass that implements it; `symbol_from_fsw("S10012")`
-parses the real key and returns an actual `BaseSymbol01_01_001_Index`
-instance -- not a hand-rolled stand-in.
+```
+FSW sign string  --[fsw_ast.py, real signwriting.formats.fsw_to_sign()]-->  AST (FSWSignAST)
+AST              --[fswr_converter.py + registry.py]---------------------> FSWR objects (PositionedSymbol)
+```
+
+1. **`core/fsw_ast.py`** parses a *full* FSW sign string (box marker +
+   position + one or more positioned symbols, e.g.
+   `"M500x500S10010480x480S1061a520x520"` -- a two-handed sign) by calling
+   the real reference parser: `signwriting.formats.fsw_to_sign.fsw_to_sign`,
+   from the [`signwriting`](https://pypi.org/project/signwriting/) PyPI
+   package (the installable Python port of
+   [sutton-signwriting/core](https://github.com/sutton-signwriting/core)).
+   This is an actual import and call, not a re-implementation -- the AST
+   (`FSWSignAST`) is this project's typed wrapper around that library's
+   return value, nothing more.
+2. **`core/fsw_symbol_key.py`** decodes one already-extracted symbol key
+   (e.g. `"S10010"`, one AST node) into category/group/base_symbol_number/
+   fill/rotation. The key-slicing technique (`base = key[:4]`, etc.) mirrors
+   what the reference library itself does internally in
+   `signwriting.utils.mirror.mirror_symbol` -- there's no public library
+   function for this specific decomposition, so this module does it the
+   same way the reference implementation does. The *group* boundaries
+   (which of the 10 ASL-counting hand groups a base code falls into) are
+   ISWA facts sourced from that project's `src/fsw/fsw-structure.js`
+   (`ranges.hand = [0x100, 0x204]`, and the `group` array's first 10
+   entries) -- cross-checked against the 14 base symbols listed at
+   [signwriting.org's Group 1 page](https://www.signwriting.org/lessons/iswa/group01/),
+   whose own links confirm base_symbol_number 1 = "Index" and 7 = "Index Bent".
+3. **`core/registry.py`** + **`core/fswr_converter.py`** are the "AST -> FSWR"
+   converter: `registry.build_symbol()` looks up the `(group,
+   base_symbol_number)` in a table populated by `@register_symbol` and
+   constructs the concrete `FSWRenderableSymbol` subclass;
+   `fswr_converter.ast_to_fswr()` runs that over every node in an
+   `FSWSignAST`, pairing each resulting object with its page position
+   (`PositionedSymbol`). `fswr_converter.fsw_to_fswr(fsw)` chains all three
+   stages for the common case of starting from a raw string.
+   `registry.symbol_from_fsw(key)` remains as a convenience for the
+   single-symbol case.
 
 **What's still our own model, not derived from any published spec:** ISWA/FSW
 is a 2D notation -- there is no authoritative source for a 3D wrist
@@ -79,19 +103,25 @@ came back.
 src/fsw_r/
   core/
     fsw_base_symbol.py      # category/group/base/fill/rotation + hand_side + get_wrist_orientation() (abstract)
-    fsw_symbol_key.py        # real FSW symbol-key parsing (sourced from sutton-signwriting/core)
-    registry.py               # @register_symbol + symbol_from_fsw() factory
-    types.py                  # JointAngle, FingerPose, ThumbPose, HandJointPose, HandSide
-    renderable_symbol.py       # FSWRenderableSymbol
-    renderer.py                # HandMeshRenderer3D, HandSkeleton, HandRigProvider (Protocol)
+    fsw_ast.py                # FSW sign string -> AST, via the real signwriting.formats.fsw_to_sign
+    fsw_symbol_key.py          # decodes one symbol key -> category/group/base_symbol_number/fill/rotation
+    registry.py                 # @register_symbol + build_symbol() / symbol_from_fsw()
+    fswr_converter.py            # AST -> FSWR: ast_to_fswr() / fsw_to_fswr()
+    types.py                     # JointAngle, FingerPose, ThumbPose, HandJointPose, HandSide
+    renderable_symbol.py          # FSWRenderableSymbol
+    renderer.py                   # HandMeshRenderer3D, HandSkeleton, HandRigProvider (Protocol)
   groups/
-    group_01_index_finger.py  # SymbolGroup1IndexFinger + its base symbols (@register_symbol'd)
+    group_01_index_finger.py            # SymbolGroup1IndexFinger + its base symbols (@register_symbol'd)
+    group_02_index_middle_fingers.py     # SymbolGroup2IndexMiddleFingers + its base symbol
   demo.py                      # python -m fsw_r.demo
 tests/
   test_group_01.py
+  test_group_02.py
   test_hand_side.py
   test_fsw_symbol_key.py
+  test_fsw_ast.py
   test_registry.py
+  test_fswr_converter.py
 ```
 
 ## Setup
@@ -115,39 +145,58 @@ sanity-check renderer (stick-figure hand via matplotlib) lives in the
 sibling package `../fsw-r-viz`, which depends on `fsw-r` -- not the reverse.
 This package stays free of any visualization dependency.
 
-## Adding a new group (e.g. Group 2 -- Middle Finger)
+## Adding a new group
 
-1. Create `src/fsw_r/groups/group_02_middle_finger.py`.
-2. Define `SymbolGroup2MiddleFinger(FSWRenderableSymbol, ABC)` with a
+Group 2 ("Index & Middle Fingers", ASL handshape "2") is a worked example of
+this in `groups/group_02_index_middle_fingers.py`. The steps, in general:
+
+1. Find the group's real name and base symbol names/numbers at
+   `https://www.signwriting.org/lessons/iswa/groupNN/` (don't guess these --
+   they're checkable).
+2. Create `src/fsw_r/groups/group_0N_<name>.py`.
+3. Define `SymbolGroupN<Name>(FSWRenderableSymbol, ABC)` with a
    `_default_joint_pose()` giving the group's baseline hand shape, and a
    default `get_joint_pose()` that returns it.
-3. For each base symbol in the group (01-02-001, 01-02-002, ...), define a
-   class inheriting `SymbolGroup2MiddleFinger`, decorated with
-   `@register_symbol(group=2, base_symbol_number=N)`, that calls
-   `super().__init__()` with the right `base_symbol_number`, implements
-   `get_wrist_orientation()`, and only overrides `get_joint_pose()` if that
-   symbol needs a distinct pose (e.g.
+4. For each base symbol in the group (0N-0N-001, 0N-0N-002, ...), define a
+   class inheriting `SymbolGroupN<Name>`, decorated with
+   `@register_symbol(group=N, base_symbol_number=M)`, that calls
+   `super().__init__(category=1, group=N, base_symbol_number=M, fill=fill, rotation=rotation)`
+   in its `__init__(self, fill: int, rotation: int)`, implements
+   `get_wrist_orientation()` (typically
+   `Rotation.from_euler("z", self._rotation_angle_degrees(), degrees=True)`,
+   same as every other group -- the axis/formula is generic, not
+   group-specific), and only overrides `get_joint_pose()` if that particular
+   base symbol needs a distinct pose (e.g.
    `dataclasses.replace(self._default_joint_pose(), middle=...)`).
+5. To find that base symbol's real FSW key for testing: base hex code =
+   the group's start boundary (see `_HAND_GROUP_START` in
+   `fsw_symbol_key.py`) + `(base_symbol_number - 1)`. E.g. group 2 starts at
+   `0x10e`, so base_symbol_number 1 is `0x10e` -- key `"S10e" + fill + rotation`,
+   e.g. `"S10e10"` for fill=1, rotation=0.
+6. Import the new module somewhere it'll run before you call
+   `symbol_from_fsw`/`fsw_to_fswr` (a test file's top-level import is
+   enough) -- registration happens at import time.
 
 No other file needs to change -- `renderer.py`, `types.py`,
-`renderable_symbol.py`, `fsw_symbol_key.py`, and `registry.py` are
-group-agnostic by design, and `hand_side` is already handled once and for
-all in `FSWBaseSymbol`. This is the pattern to repeat for the remaining ~9
-groups / ~650 base symbols in ISWA Category 1 -- each one becomes parseable
-via `symbol_from_fsw()` the moment its module is imported and its class is
-`@register_symbol`'d.
+`renderable_symbol.py`, `fsw_ast.py`, `fsw_symbol_key.py`, `registry.py`,
+and `fswr_converter.py` are group-agnostic by design, and `hand_side` is
+already handled once and for all in `FSWBaseSymbol`. This is the pattern to
+repeat for the remaining ~9 groups / ~650 base symbols in ISWA Category 1 --
+each one becomes parseable via `symbol_from_fsw()` / `fsw_to_fswr()` the
+moment its module is imported and its class is `@register_symbol`'d.
 
 ## Notes / open items
 
-- `symbol_from_fsw()` only knows about base symbols whose module has been
-  imported somewhere (registration happens via the `@register_symbol`
-  decorator at import time). If you call it without importing
-  `fsw_r.groups.group_01_index_finger` first, it'll raise `ValueError` even
-  for `"S10011"`.
-- Only 2 of ISWA's ~652 Category-1 base symbols are registered so far
-  ("Index" and "Index Bent"). `symbol_from_fsw()` raises a clear
-  `ValueError` naming the missing `(group, base_symbol_number)` for anything
-  else -- that's expected until more groups are added, not a bug.
+- `symbol_from_fsw()` and `fsw_to_fswr()` only know about base symbols whose
+  module has been imported somewhere (registration happens via the
+  `@register_symbol` decorator at import time). If you call either without
+  importing `fsw_r.groups.group_01_index_finger` first, they'll raise
+  `ValueError` even for `"S10011"`.
+- Only 3 of ISWA's ~652 Category-1 base symbols are registered so far
+  ("Index", "Index Bent", "Index Middle"). `symbol_from_fsw()` /
+  `fsw_to_fswr()` raise a clear `ValueError` naming the missing `(group,
+  base_symbol_number)` for anything else -- that's expected until more
+  groups are added, not a bug.
 - Joint angles in `group_01_index_finger.py` are a baseline guess, not
   measured from a real rig/mesh -- expect to tune them once one is available.
 - `JointAngle.abduction`'s sign may need flipping for the LEFT hand,
