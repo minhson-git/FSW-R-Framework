@@ -1,9 +1,11 @@
-"""Symbol Group 2 -- Index & Middle Fingers.
+"""Symbol Group 6 -- Baby Finger.
 
-ASL handshape "2": index and middle fingers extended straight (spread
-apart), ring and pinky curled into the fist, thumb curled/tucked in
-against the palm (NOT extended -- only Groups 3, 5, and 10 have the thumb
-extended, confirmed by checking real symbol photos).
+Group theme is "Baby Finger" (pinky), but base symbol 1 ("Index Middle
+Ring") is not itself a pinky-only shape -- ISWA groups don't always start
+with their own namesake finger. Confirmed against the real symbol photo at
+https://www.signwriting.org/lessons/iswa/group06/01-06-001-01.html: index,
+middle, and ring fingers extended straight together, pinky curled, thumb
+curled/tucked against the palm.
 
 The angle values below are a starting baseline only -- they will need
 tuning against the actual rig/mesh once one is available.
@@ -20,24 +22,24 @@ from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
 
 
-class SymbolGroup2IndexMiddleFingers(FSWRenderableSymbol, ABC):
+class SymbolGroup6BabyFinger(FSWRenderableSymbol, ABC):
     def _default_joint_pose(self) -> HandJointPose:
         curled_into_fist = FingerPose(
             mcp=JointAngle(flexion=90),
             pip=JointAngle(flexion=100),
             dip=JointAngle(flexion=80),
         )
-        straight_spread = FingerPose(
-            mcp=JointAngle(flexion=0, abduction=10),
+        straight = FingerPose(
+            mcp=JointAngle(flexion=0),
             pip=JointAngle(flexion=0),
             dip=JointAngle(flexion=0),
         )
         thumb_curled = ThumbPose(cmc=JointAngle(70), mcp=JointAngle(80), ip=JointAngle(60))
         return HandJointPose(
             thumb=thumb_curled,
-            index=straight_spread,
-            middle=straight_spread,
-            ring=curled_into_fist,
+            index=straight,
+            middle=straight,
+            ring=straight,
             pinky=curled_into_fist,
         )
 
@@ -45,12 +47,12 @@ class SymbolGroup2IndexMiddleFingers(FSWRenderableSymbol, ABC):
         return self._default_joint_pose()
 
 
-@register_symbol(group=2, base_symbol_number=1)
-class BaseSymbol01_02_001_IndexMiddle(SymbolGroup2IndexMiddleFingers):
-    """01-02-001 "Index Middle" -- base symbol 1 of Group 2."""
+@register_symbol(group=6, base_symbol_number=1)
+class BaseSymbol01_06_001_IndexMiddleRing(SymbolGroup6BabyFinger):
+    """01-06-001 "Index Middle Ring" -- base symbol 1 of Group 6."""
 
     def __init__(self, fill: int, rotation: int) -> None:
-        super().__init__(category=1, group=2, base_symbol_number=1, fill=fill, rotation=rotation)
+        super().__init__(category=1, group=6, base_symbol_number=1, fill=fill, rotation=rotation)
 
     def get_wrist_orientation(self) -> Rotation:
         return self._default_wrist_orientation()

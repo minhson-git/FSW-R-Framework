@@ -1,4 +1,4 @@
-"""Demo, in two parts:
+"""Demo, in three parts:
 
 1. Parse four *real* FSW symbol keys for Base Symbol 1 ("Index", 01-01-001)
    -- three in the 0-7 (RIGHT hand) half and one in the 8-15 (LEFT hand)
@@ -14,6 +14,17 @@
    which fswr_converter.ast_to_fswr converts into actual FSWRenderableSymbol
    instances, each still carrying its page position.
 
+3. Walk all 6 `fill` values at a fixed rotation ("Six Palm Facings", per
+   https://www.signwriting.org/lessons/iswa/group01/01-01-001-01.html) --
+   fill is NOT the same thing as rotation: it never changes which way the
+   finger points, only which side of the hand shows (Palm/Side/Back) and
+   which plane the arm reaches in (Wall/Floor).
+
+4. Parse base_symbol_number 1 of every one of the 10 Hands groups (Category
+   1's full 261 base symbols aren't all implemented yet -- see ROADMAP.md --
+   but every group now has its own module registered, confirming the
+   registry covers all 10 groups, not just Group 1).
+
 Run with: python -m fsw_r.demo
 """
 
@@ -26,9 +37,18 @@ from fsw_r.core.registry import symbol_from_fsw
 from fsw_r.core.renderer import HandMeshRenderer3D, HandSkeleton
 from fsw_r.core.types import HandJointPose, HandSide
 
-# Importing this populates the registry that symbol_from_fsw() and
+# Importing these populates the registry that symbol_from_fsw() and
 # fsw_to_fswr() look up -- see core/registry.py.
 import fsw_r.groups.group_01_index_finger  # noqa: F401
+import fsw_r.groups.group_02_index_middle_fingers  # noqa: F401
+import fsw_r.groups.group_03_index_middle_thumb  # noqa: F401
+import fsw_r.groups.group_04_four_fingers  # noqa: F401
+import fsw_r.groups.group_05_five_fingers  # noqa: F401
+import fsw_r.groups.group_06_baby_finger  # noqa: F401
+import fsw_r.groups.group_07_ring_finger  # noqa: F401
+import fsw_r.groups.group_08_middle_finger  # noqa: F401
+import fsw_r.groups.group_09_index_thumb  # noqa: F401
+import fsw_r.groups.group_10_thumb  # noqa: F401
 
 
 class _MockRig:
@@ -56,11 +76,13 @@ class _MockRigProvider:
 
 
 def main() -> None:
-    # Real FSW symbol keys for "Index" (base 0x100), fill=1: "S100" + fill + rotation.
-    idx_front = symbol_from_fsw("S10010")  # rotation=0, RIGHT, palm facing out
-    idx_side = symbol_from_fsw("S10012")  # rotation=2, RIGHT, side facing
-    idx_back = symbol_from_fsw("S10014")  # rotation=4, RIGHT, back of hand facing out
-    idx_mirrored = symbol_from_fsw("S1001a")  # rotation=10 (0xa) -> LEFT hand
+    print("--- Part 1: rotation sweeps which way the finger points ---")
+    # Real FSW symbol keys for "Index" (base 0x100), fill=0 (Palm of Hand,
+    # Wall Plane -- the neutral fill): "S100" + fill + rotation.
+    idx_front = symbol_from_fsw("S10000")  # rotation=0, RIGHT, finger points up
+    idx_side = symbol_from_fsw("S10002")  # rotation=2, RIGHT, finger points sideways
+    idx_back = symbol_from_fsw("S10004")  # rotation=4, RIGHT, finger points down
+    idx_mirrored = symbol_from_fsw("S1000a")  # rotation=10 (0xa) -> LEFT hand
 
     renderer = HandMeshRenderer3D(_MockRigProvider())
     symbols = (idx_front, idx_side, idx_back, idx_mirrored)
@@ -91,6 +113,38 @@ def main() -> None:
             f"hand_side={positioned.symbol.hand_side.value}"
         )
     print("OK: one real FSW sign string -> two positioned FSWRenderableSymbol instances.")
+
+    print()
+    print("--- Part 3: fill sweeps the 'Six Palm Facings', rotation fixed at 0 ---")
+    fill_descriptions = [
+        (0, "Palm of Hand, Wall Plane"),
+        (1, "Side of Hand, Wall Plane"),
+        (2, "Back of Hand, Wall Plane"),
+        (3, "Palm of Hand, Floor Plane"),
+        (4, "Side of Hand, Floor Plane"),
+        (5, "Back of Hand, Floor Plane"),
+    ]
+    fill_symbols = [symbol_from_fsw(f"S100{fill}0") for fill, _ in fill_descriptions]
+    for symbol, (fill, description) in zip(fill_symbols, fill_descriptions):
+        quat = symbol.get_wrist_orientation().as_quat()
+        print(f"  fill={fill} ({description}): wrist quat (x,y,z,w)={quat}")
+
+    poses_across_fill = [symbol.get_joint_pose() for symbol in fill_symbols]
+    assert all(pose == poses_across_fill[0] for pose in poses_across_fill)
+    quats_across_fill = [tuple(symbol.get_wrist_orientation().as_quat()) for symbol in fill_symbols]
+    assert len(set(quats_across_fill)) == len(quats_across_fill)
+    print("OK: joint pose identical across all 6 fills; all 6 wrist orientations are distinct.")
+
+    print()
+    print("--- Part 4: base_symbol_number 1 of all 10 Hands groups ---")
+    # Group start hex codes, from core/fsw_symbol_key.py's _HAND_GROUP_START.
+    group_starts = [0x100, 0x10E, 0x11E, 0x144, 0x14C, 0x186, 0x1A4, 0x1BA, 0x1CD, 0x1F5]
+    group_symbols = [symbol_from_fsw(f"S{base:03x}10") for base in group_starts]
+    for symbol in group_symbols:
+        print(f"  group {symbol.group}: {symbol.symbol_id} ({type(symbol).__name__})")
+    assert len(group_symbols) == 10
+    assert [s.group for s in group_symbols] == list(range(1, 11))
+    print("OK: all 10 Hands groups have at least one registered, parseable base symbol.")
 
 
 if __name__ == "__main__":

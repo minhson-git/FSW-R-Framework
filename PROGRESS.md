@@ -57,6 +57,131 @@ khớp — `get_wrist_orientation()` và `_default_joint_pose()` vẫn là diễ
 riêng của project (ghi chú rõ trong code), không phải chỗ "mock chờ thay
 bằng bản thật" vì không tồn tại bản thật nào khác cho phần này.
 
+## Giải thích chi tiết: luồng xử lý FSW → FSW-R (từng bước)
+
+### Vì sao cần pipeline này
+
+FSW (Formal SignWriting) là một **chuỗi ký tự ASCII** (vd
+`"M500x500S10010480x480S1061a520x520"`), không phải object lập trình được.
+Để render 3D, cần biến chuỗi đó thành **object Python thật** — có method
+`get_joint_pose()` (góc gập khớp ngón) và `get_wrist_orientation()`
+(hướng xoay cổ tay dạng quaternion). Việc này được chia làm **4 bước**, mỗi
+bước 1 file riêng, để mỗi phần chỉ làm đúng 1 việc và dễ thay/mở rộng sau
+này (thêm group mới không phải sửa lại các bước còn lại).
+
+```
+FSW string (text)
+    │
+    │  BƯỚC 1 — fsw_ast.py
+    ▼
+AST (FSWSignAST)              — cấu trúc: box + danh sách symbol (key thô + toạ độ x,y)
+    │
+    │  BƯỚC 2 — fsw_symbol_key.py
+    ▼
+ParsedFSWSymbol                — số nguyên: category, group, base_symbol_number, fill, rotation
+    │
+    │  BƯỚC 3 — registry.py
+    ▼
+FSWRenderableSymbol             — object Python THẬT, đúng class (vd BaseSymbol01_01_001_Index)
+    │
+    │  BƯỚC 4 — fswr_converter.py (gộp lại + giữ toạ độ trang)
+    ▼
+PositionedSymbol                — object FSWR + vị trí (x, y) trên trang
+```
+
+### Ví dụ xuyên suốt
+
+Dùng chuỗi FSW thật của 1 "sign" 2 tay:
+`"M500x500S10010480x480S1061a520x520"`
+
+---
+
+**BƯỚC 1 — FSW string → AST**
+
+- **Input:** chuỗi FSW thô ở trên.
+- **Xử lý:** gọi hàm `signwriting.formats.fsw_to_sign.fsw_to_sign()`
+  (thư viện `signwriting` trên PyPI — bản Python của
+  `sutton-signwriting/core`). Hàm này tách
+  chuỗi thành: 1 "box" (khung/vị trí tổng) + danh sách các "symbol" (mỗi
+  symbol là 1 key 6 ký tự + toạ độ x,y).
+- **Output:**
+  ```python
+  FSWSignAST(
+      box_symbol="M", box_x=500, box_y=500,
+      symbols=(
+          FSWSymbolNode(key="S10010", x=480, y=480),
+          FSWSymbolNode(key="S1061a", x=520, y=520),
+      ),
+  )
+  ```
+- **Lưu ý:** `key` ở bước này vẫn là **string thô, chưa giải mã** — mới chỉ
+  tách được "đây là 1 symbol, ở vị trí này", chưa biết nó là symbol gì.
+
+---
+
+**BƯỚC 2 — Giải mã 1 symbol key → số nguyên**
+
+- **Input:** 1 key 6 ký tự, vd `"S10010"`.
+- **Xử lý:** bóc tách theo đúng cấu trúc key thật của ISWA:
+  `S` + 3 ký tự hex (base code) + 1 ký tự hex (fill, 0-5) + 1 ký tự hex
+  (rotation, 0-f). Sau đó tra `base code` vào bảng ranh giới 10 group (số
+  lấy thật từ source code `sutton-signwriting/core`, file
+  `fsw-structure.js`) để suy ra `group` và `base_symbol_number`.
+- **Output cho từng symbol:**
+
+  | key | base (hex) | fill | rotation | → group / base_symbol_number | tên |
+  |---|---|---|---|---|---|
+  | `"S10010"` | `0x100` | 1 | 0 | group 1 / số 1 | **"Index"** |
+  | `"S1061a"` | `0x106` | 1 | 10 (`a`) | group 1 / số 7 | **"Index Bent"** |
+
+  Cách tính `base_symbol_number`: `base_symbol_number = base_hex - group_start_hex + 1`.
+  Group 1 bắt đầu ở `0x100` → `0x106 - 0x100 + 1 = 7`.
+  Riêng `rotation=10 ≥ 8` → symbol này là tay **LEFT** (quy tắc `hand_side`).
+
+---
+
+**BƯỚC 3 — Số nguyên đã giải mã → object Python thật**
+
+- **Input:** `ParsedFSWSymbol` từ bước 2 (vd group=1, base_symbol_number=1, fill=1, rotation=0).
+- **Xử lý:** tra bảng `_REGISTRY[(group, base_symbol_number)]`. Bảng này
+  được điền **tự động lúc import module group** — mỗi class base symbol
+  (vd `BaseSymbol01_01_001_Index` trong `groups/group_01_index_finger.py`)
+  có decorator `@register_symbol(group=1, base_symbol_number=1)` phía
+  trên, chạy 1 lần khi Python import file đó. Tìm được class → gọi
+  `cls(fill=1, rotation=0)`.
+- **Output:** 1 instance thật, vd `BaseSymbol01_01_001_Index(fill=1, rotation=0)` —
+  từ đây gọi được `symbol.get_joint_pose()`, `symbol.get_wrist_orientation()`,
+  `symbol.hand_side`, `symbol.symbol_id` (`"01-01-001"`) như object bình
+  thường.
+- **Nếu không tìm thấy class** (group/base_symbol_number chưa đăng ký) →
+  raise `ValueError` rõ ràng, không âm thầm trả về sai.
+
+---
+
+**BƯỚC 4 — Gộp lại cho cả 1 "sign" (giữ vị trí trang)**
+
+- **Input:** toàn bộ `FSWSignAST` từ bước 1.
+- **Xử lý:** lặp qua từng `FSWSymbolNode`, chạy bước 2 + bước 3 cho từng
+  cái, rồi bọc thêm toạ độ `(x, y)` gốc (vì 1 "sign" có thể có nhiều tay,
+  mỗi tay 1 vị trí khác nhau trên trang — vd tay phải bên trái, tay trái
+  bên phải).
+- **Output:**
+  ```python
+  (
+      PositionedSymbol(symbol=BaseSymbol01_01_001_Index(fill=1, rotation=0), x=480, y=480),
+      PositionedSymbol(symbol=BaseSymbol01_01_007_IndexBent(fill=1, rotation=10), x=520, y=520),
+  )
+  ```
+- Hàm `fsw_to_fswr(fsw: str)` = gộp cả 4 bước làm 1, dùng khi chỉ có chuỗi
+  FSW thô trong tay: `fsw_to_fswr("M500x500S10010480x480S1061a520x520")`
+  ra thẳng kết quả trên.
+
+### Tự kiểm chứng
+
+Chạy `python -m fsw_r.demo` (Part 2 trong file demo) sẽ in ra đúng quá
+trình trên với ví dụ 2 tay này — có thể copy log đó vào báo cáo làm bằng
+chứng chạy được thật, không phải mô tả suông.
+
 ## Kiến trúc `fsw-r` (4 tầng)
 
 ```
@@ -116,6 +241,73 @@ chọn đúng rig (2 rig thực sự khác nhau) trước, rồi mới áp
    là góc nhìn 3D thật, đồng thời vẫn thấy rõ cổ tay xoay như kim đồng hồ mà
    góc gập từng khớp ngón không đổi.
 
+4. **Bị đổi qua đổi lại trục xoay (y↔z) 2 lần** trước khi chốt đúng. Người
+   dùng mô tả "xoay cổ tay" — hiểu nhầm thành động tác vặn cổ tay
+   (pronation/supination, giữ hướng ngón cố định, trục y) nên đổi lại từ z
+   về y. Sau đó người dùng mô tả cụ thể hơn: "xoay 180° thì ngón trỏ chỉ
+   xuống" — chỉ khớp với trục **z** (xoay quanh z làm hướng ngón đổi từ lên
+   → ngang → xuống). Đã chốt lại z và **khoá bằng test**
+   `test_wrist_orientation_points_finger_down_at_180_degrees` để tránh lặp
+   lỗi. Bài học: khi mô tả bằng lời mơ hồ (nhiều nghĩa vật lý khớp), nên hỏi
+   ví dụ số cụ thể ("ở góc X thì ngón chỉ hướng nào") thay vì đoán, và khoá
+   lại bằng test ngay khi có được ví dụ cụ thể.
+
+5. **Phát hiện `fill` cũng ảnh hưởng hướng 3D, không chỉ là "tô màu".** Tải
+   trực tiếp ảnh chart thật từ signwriting.org
+   (`ISWA2010_Symbol_Charts/01-01-001-ISWA_Chart.jpg`, trang lesson
+   `01-01-001-01.html`) và xem bằng mắt — phát hiện tiêu đề trang "Six Palm
+   Facings" thực ra mô tả **`fill`** (không phải `rotation` như comment gốc
+   ghi nhầm). Chart cho thấy `fill` (0-5) mã hoá 2 thành phần: **Palm/Side/
+   Back of Hand** (mặt nào của bàn tay hướng ra người xem — xoay quanh trục
+   y, giống đúng phép "vặn cổ tay" tưởng nhầm gán cho `rotation` trước đó,
+   hoá ra thuộc về `fill`!) × **Wall/Floor Plane** (cả cánh tay ở mặt phẳng
+   đứng hay ngang — xoay quanh trục x). Đã thêm `_fill_facing_degrees()` +
+   `_fill_plane_degrees()` + `_default_wrist_orientation()` (kết hợp cả 3:
+   rotation + facing + plane) vào `FSWBaseSymbol`, dùng chung cho mọi group.
+
+6. **Bug gimbal-lock: fill=3 và fill=5 (Floor Plane) ra cùng 1 hướng.**
+   Người dùng kiểm tra bằng mắt phát hiện fill 0-2 (Wall Plane) đúng, nhưng
+   fill 3-5 (Floor Plane) sai hướng: fill=3 (Palm, Floor) phải hướng lòng
+   bàn tay lên trên, fill=5 (Back, Floor) phải úp xuống dưới — nhưng code
+   cũ cho ra cùng 1 kết quả cho cả 2. Nguyên nhân: công thức cũ áp `plane`
+   (xoay quanh x) TRƯỚC `facing` (xoay quanh y) — `plane` xoay vector pháp
+   tuyến lòng bàn tay vào đúng trục y, khiến `facing` (cũng xoay quanh y)
+   không còn tác dụng phân biệt Palm/Back nữa (giống hiện tượng gimbal
+   lock). Đã sửa: (1) đổi thứ tự composition thành `facing` trước rồi mới
+   `plane` trong `_default_wrist_orientation()`, (2) đổi dấu
+   `_fill_plane_degrees()` thành âm (`-90°` cho Floor) để khớp đúng hướng
+   "palm lên trên" theo chart thật. Khoá lại bằng 3 test mới:
+   `test_fill_palm_faces_up_in_floor_plane`,
+   `test_fill_back_faces_down_in_floor_plane`,
+   `test_fill_side_in_floor_plane_differs_from_palm_and_back`.
+
+## Hoàn thành khung sườn cho cả 10 group Hands (Category 1)
+
+Đã tạo đủ `groups/group_03_*.py` đến `group_10_*.py` (trước đó chỉ có group
+1, 2). Mỗi group: xem ảnh GIF thật của symbol trên signwriting.org trước
+khi viết `_default_joint_pose()` (không suy đoán từ tên group — group 6-9
+có base_symbol_number=1 KHÔNG trùng tên group, vd Group 6 "Baby Finger"
+nhưng symbol 1 là "Index Middle Ring", không có ngón út). Mỗi group có 1
+base symbol đăng ký (`@register_symbol`) + 1 file test riêng
+(`test_group_03.py`..`test_group_10.py`, 4 test/file: joint pose ổn định
+qua rotation/hand_side, wrist orientation đổi theo rotation, symbol_id/
+hand_side đúng, `symbol_from_fsw()` parse ra đúng class). `demo.py` Part 4
+mới: parse base_symbol_number=1 của cả 10 group, xác nhận registry phủ đủ
+10/10 group.
+
+Tổng hiện tại: **11/261 base symbol Category 1** (còn thiếu base symbol
+trong mỗi group — xem `ROADMAP.md` bảng chi tiết số lượng từng group).
+
+**Sửa lỗi ngón cái sau khi người dùng đối chiếu lại:** chỉ Group 3, 5, 10
+thật sự có ngón cái xoè ra (`ThumbPose` có `abduction`); 7 group còn lại
+(1, 2, 4, 6, 7, 8, 9) ngón cái phải cuộn/gập sát lòng bàn tay, KHÔNG xoè
+ra. Baseline ban đầu (`cmc=20, mcp=15, ip=10`) tuy không có abduction nhưng
+góc gập vẫn quá nhỏ — dựng hình vẫn cho ra ngón cái vươn dài ra ngoài giống
+hệt nhóm có ngón cái xoè, không phân biệt được bằng mắt. Đã tăng góc gập
+lên `cmc=70, mcp=80, ip=60` (kiểm tra khoảng cách đầu ngón tới cổ tay giảm
+từ 11.5 xuống 3.2 đơn vị trước khi áp dụng) cho cả 7 group đó — giờ nhìn
+rõ ràng ngón cái cuộn sát vào, không còn giống nhóm ngón cái xoè.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -124,27 +316,35 @@ chọn đúng rig (2 rig thực sự khác nhau) trước, rồi mới áp
   rig LEFT riêng biệt, vì package này không có rig/mesh thật.
 - `plot_hand.py`: vẽ matplotlib 3D (`render_symbol_to_file`,
   `render_symbols_grid`), lưu PNG (headless, backend Agg).
-- `demo.py`: render Base Symbol 1 ở 4 rotation (3 RIGHT: 0, 2, 6 + 1 LEFT: 10)
-  thành 1 ảnh lưới, xác nhận trực quan joint pose giữ nguyên còn wrist
-  orientation + chirality thay đổi.
+- `demo.py`: render 2 ảnh lưới — `index_finger_rotations.png` (rotation
+  sweep, fill=0 cố định, 3 RIGHT + 1 LEFT) và `index_finger_fills.png` (fill
+  sweep 0-5, rotation=0 cố định, "Six Palm Facings") — xác nhận trực quan
+  rotation chỉ đổi hướng ngón, fill chỉ đổi mặt bàn tay/mặt phẳng cánh tay.
 
 ## Trạng thái hiện tại
 
-- `fsw-r`: `mypy --strict` sạch (19 file), `pytest` 49/49 pass
-  (`test_group_01.py`, `test_hand_side.py`, `test_fsw_symbol_key.py`,
-  `test_fsw_ast.py`, `test_registry.py`, `test_fswr_converter.py`).
+- `fsw-r`: `mypy --strict` sạch (37 file), `pytest` 91/91 pass
+  (`test_group_01.py` .. `test_group_10.py`, `test_hand_side.py`,
+  `test_fsw_symbol_key.py`, `test_fsw_ast.py`, `test_registry.py`,
+  `test_fswr_converter.py`).
 - `fsw-r-viz`: `mypy --strict` sạch (6 file), `pytest` 4/4 pass
   (`test_hand_geometry.py`, `test_plot_hand.py`).
-- Demo trực quan (`python -m fsw_r_viz.demo`) render đúng: joint pose giống
-  hệt nhau ở mọi rotation/hand_side, chỉ hướng cổ tay + chirality khác.
-- `demo.py` của `fsw-r` giờ dựng instance qua `symbol_from_fsw("S10010")` —
-  key FSW thật — thay vì gọi thẳng constructor với int tự đặt.
+- Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
+  fill: joint pose giống hệt nhau ở mọi rotation/fill/hand_side, chỉ hướng
+  ngón (rotation) hoặc mặt bàn tay/mặt phẳng cánh tay (fill) thay đổi.
+- `demo.py` của `fsw-r` giờ có 3 phần: rotation sweep, FSW sign string 2 tay
+  (AST→FSWR), và fill sweep — đều dựng instance qua `symbol_from_fsw(...)`
+  với key FSW thật, không còn gọi thẳng constructor với int tự đặt.
 
 ## Việc còn để ngỏ / chưa làm
 
-- Chỉ mới đăng ký 2/652 base symbol Category 1 ("Index", "Index Bent") vào
-  registry — `symbol_from_fsw()` sẽ raise `ValueError` rõ ràng cho mọi key
-  khác cho đến khi mở rộng thêm group.
+- Chỉ mới đăng ký 3/261 base symbol Category 1 -- Hands ("Index", "Index
+  Bent", "Index Middle") vào registry — `symbol_from_fsw()` sẽ raise
+  `ValueError` rõ ràng cho mọi key khác cho đến khi mở rộng thêm group.
+  (261 là số base symbol thật của riêng Category 1, tính từ
+  `ranges.hand = [0x100, 0x204]` trong `fsw-structure.js` — số 652 nhắc ở
+  văn bản cũ của repo là tổng TOÀN BỘ 8 category ISWA, không phải riêng
+  Hands; xem `ROADMAP.md`.)
 - Góc khớp trong `group_01_index_finger.py` là baseline áng chừng, chưa tinh
   chỉnh theo rig/mesh 3D thật.
 - Dấu của `abduction` có thể cần đảo chiều cho tay trái tuỳ convention rig —

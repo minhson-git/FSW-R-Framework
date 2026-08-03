@@ -97,6 +97,38 @@ matching `symbol.hand_side` -- two genuinely separate rigs/meshes -- and only
 then applies `get_wrist_orientation()` + `get_joint_pose()` to whichever rig
 came back.
 
+### `fill` is the "Six Palm Facings" -- not the same thing as `rotation`
+
+Confirmed against the real chart at
+[signwriting.org's Index lesson](https://www.signwriting.org/lessons/iswa/group01/01-01-001-01.html)
+(`ISWA2010_Symbol_Charts/01-01-001-ISWA_Chart.jpg`): `rotation` sweeps which
+way the extended finger points on the page (0=up, 90=side, 180=down, ...).
+`fill` (0-5) never changes that -- it changes which side of the hand is
+presented, as two combined components:
+
+| fill | facing (fill % 3) | plane (fill // 3) |
+|---|---|---|
+| 0 | Palm of Hand | Wall Plane (front view, arm reaching forward) |
+| 1 | Side of Hand | Wall Plane |
+| 2 | Back of Hand | Wall Plane |
+| 3 | Palm of Hand | Floor Plane (top view, arm reaching down) |
+| 4 | Side of Hand | Floor Plane |
+| 5 | Back of Hand | Floor Plane |
+
+`FSWBaseSymbol._fill_facing_degrees()` (0/90/180, about the wrist-to-
+fingertip axis -- the same axis `rotation` deliberately does *not* use, see
+above) and `_fill_plane_degrees()` (0/-90, about the spread axis) implement
+this. `_default_wrist_orientation()` composes all three components as
+`compass * plane * facing` -- **facing must be applied before plane, not
+after**: pitching into the Floor Plane first rotates the palm-normal vector
+onto the same axis facing rotates around, so a later facing rotation can't
+change it at all (Palm and Back would collapse onto the same orientation --
+this was a real bug, caught by inspection against the chart, see
+`test_fill_palm_faces_up_in_floor_plane` /
+`test_fill_back_faces_down_in_floor_plane`). Base symbols with no quirks of
+their own just return `_default_wrist_orientation()` from
+`get_wrist_orientation()`.
+
 ## Layout
 
 ```
@@ -111,18 +143,30 @@ src/fsw_r/
     renderable_symbol.py          # FSWRenderableSymbol
     renderer.py                   # HandMeshRenderer3D, HandSkeleton, HandRigProvider (Protocol)
   groups/
-    group_01_index_finger.py            # SymbolGroup1IndexFinger + its base symbols (@register_symbol'd)
-    group_02_index_middle_fingers.py     # SymbolGroup2IndexMiddleFingers + its base symbol
+    group_01_index_finger.py            # 2/14 base symbols registered (Index, Index Bent)
+    group_02_index_middle_fingers.py     # 1 base symbol registered (Index Middle)
+    group_03_index_middle_thumb.py       # 1 base symbol registered (Index Middle Thumb)
+    group_04_four_fingers.py             # 1 base symbol registered (Four Fingers)
+    group_05_five_fingers.py             # 1 base symbol registered (Five Fingers Spread)
+    group_06_baby_finger.py              # 1 base symbol registered (Index Middle Ring)
+    group_07_ring_finger.py              # 1 base symbol registered (Index Middle Baby)
+    group_08_middle_finger.py            # 1 base symbol registered (Index Ring Baby)
+    group_09_index_thumb.py              # 1 base symbol registered (Middle Ring Baby)
+    group_10_thumb.py                    # 1 base symbol registered (Thumb)
   demo.py                      # python -m fsw_r.demo
 tests/
-  test_group_01.py
-  test_group_02.py
+  test_group_01.py .. test_group_10.py    # one per group
   test_hand_side.py
   test_fsw_symbol_key.py
   test_fsw_ast.py
   test_registry.py
   test_fswr_converter.py
 ```
+
+All 10 Hands groups now have at least one real, registered, tested base
+symbol (11 total registered so far, out of Category 1's 261) -- see
+`ROADMAP.md` for what's still missing within each group and the plan for
+the other 7 ISWA categories.
 
 ## Setup
 
@@ -162,11 +206,11 @@ this in `groups/group_02_index_middle_fingers.py`. The steps, in general:
    `@register_symbol(group=N, base_symbol_number=M)`, that calls
    `super().__init__(category=1, group=N, base_symbol_number=M, fill=fill, rotation=rotation)`
    in its `__init__(self, fill: int, rotation: int)`, implements
-   `get_wrist_orientation()` (typically
-   `Rotation.from_euler("z", self._rotation_angle_degrees(), degrees=True)`,
-   same as every other group -- the axis/formula is generic, not
-   group-specific), and only overrides `get_joint_pose()` if that particular
-   base symbol needs a distinct pose (e.g.
+   `get_wrist_orientation()` (typically just `return
+   self._default_wrist_orientation()` -- the rotation/fill formula is
+   generic, not group-specific, see "`fill` is the Six Palm Facings" above),
+   and only overrides `get_joint_pose()` if that particular base symbol
+   needs a distinct pose (e.g.
    `dataclasses.replace(self._default_joint_pose(), middle=...)`).
 5. To find that base symbol's real FSW key for testing: base hex code =
    the group's start boundary (see `_HAND_GROUP_START` in
@@ -192,13 +236,26 @@ moment its module is imported and its class is `@register_symbol`'d.
   `@register_symbol` decorator at import time). If you call either without
   importing `fsw_r.groups.group_01_index_finger` first, they'll raise
   `ValueError` even for `"S10011"`.
-- Only 3 of ISWA's ~652 Category-1 base symbols are registered so far
-  ("Index", "Index Bent", "Index Middle"). `symbol_from_fsw()` /
-  `fsw_to_fswr()` raise a clear `ValueError` naming the missing `(group,
-  base_symbol_number)` for anything else -- that's expected until more
+- Only 11 of ISWA Category 1's 261 base symbols are registered so far --
+  all 10 groups have at least one, but none has all of its own base symbols
+  yet. (261 is Category 1/Hands alone, from `ranges.hand = [0x100, 0x204]`
+  in `fsw-structure.js` -- 652 is the total across *all 8* ISWA categories;
+  an earlier version of this note conflated the two. See `../ROADMAP.md`
+  for the full category breakdown and per-group remaining counts.)
+  `symbol_from_fsw()` / `fsw_to_fswr()` raise a clear `ValueError` naming
+  the missing `(group, base_symbol_number)` for anything else -- that's
+  expected until more
   groups are added, not a bug.
 - Joint angles in `group_01_index_finger.py` are a baseline guess, not
   measured from a real rig/mesh -- expect to tune them once one is available.
+- `fill`'s "Floor Plane" component (`_fill_plane_degrees`) pitches the whole
+  hand 90 degrees, matching the chart's *description* ("top view, arm
+  reaching down") -- but the chart itself shows this from a camera looking
+  down from above, and neither `fsw-r` nor `fsw-r-viz` change the camera to
+  match. So the quaternion is internally consistent (pinned by
+  `test_fill_plane_differs_between_wall_and_floor`) but hasn't been visually
+  cross-checked against the chart's top-view photos the way the rotation
+  and facing behavior were -- worth another look once a real rig exists.
 - `JointAngle.abduction`'s sign may need flipping for the LEFT hand,
   depending on your 3D rig's convention -- not handled yet, since no real rig
   exists to verify against.

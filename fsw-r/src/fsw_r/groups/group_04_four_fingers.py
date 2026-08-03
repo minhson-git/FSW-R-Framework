@@ -1,9 +1,9 @@
-"""Symbol Group 2 -- Index & Middle Fingers.
+"""Symbol Group 4 -- Four Fingers.
 
-ASL handshape "2": index and middle fingers extended straight (spread
-apart), ring and pinky curled into the fist, thumb curled/tucked in
-against the palm (NOT extended -- only Groups 3, 5, and 10 have the thumb
-extended, confirmed by checking real symbol photos).
+Confirmed against the real symbol photo at
+https://www.signwriting.org/lessons/iswa/group04/01-04-001-01.html: index,
+middle, ring, and pinky all extended straight and spread apart, thumb
+curled/tucked into the palm.
 
 The angle values below are a starting baseline only -- they will need
 tuning against the actual rig/mesh once one is available.
@@ -20,15 +20,10 @@ from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
 
 
-class SymbolGroup2IndexMiddleFingers(FSWRenderableSymbol, ABC):
+class SymbolGroup4FourFingers(FSWRenderableSymbol, ABC):
     def _default_joint_pose(self) -> HandJointPose:
-        curled_into_fist = FingerPose(
-            mcp=JointAngle(flexion=90),
-            pip=JointAngle(flexion=100),
-            dip=JointAngle(flexion=80),
-        )
         straight_spread = FingerPose(
-            mcp=JointAngle(flexion=0, abduction=10),
+            mcp=JointAngle(flexion=0, abduction=8),
             pip=JointAngle(flexion=0),
             dip=JointAngle(flexion=0),
         )
@@ -37,20 +32,20 @@ class SymbolGroup2IndexMiddleFingers(FSWRenderableSymbol, ABC):
             thumb=thumb_curled,
             index=straight_spread,
             middle=straight_spread,
-            ring=curled_into_fist,
-            pinky=curled_into_fist,
+            ring=straight_spread,
+            pinky=straight_spread,
         )
 
     def get_joint_pose(self) -> HandJointPose:
         return self._default_joint_pose()
 
 
-@register_symbol(group=2, base_symbol_number=1)
-class BaseSymbol01_02_001_IndexMiddle(SymbolGroup2IndexMiddleFingers):
-    """01-02-001 "Index Middle" -- base symbol 1 of Group 2."""
+@register_symbol(group=4, base_symbol_number=1)
+class BaseSymbol01_04_001_FourFingers(SymbolGroup4FourFingers):
+    """01-04-001 "Four Fingers" -- base symbol 1 of Group 4."""
 
     def __init__(self, fill: int, rotation: int) -> None:
-        super().__init__(category=1, group=2, base_symbol_number=1, fill=fill, rotation=rotation)
+        super().__init__(category=1, group=4, base_symbol_number=1, fill=fill, rotation=rotation)
 
     def get_wrist_orientation(self) -> Rotation:
         return self._default_wrist_orientation()

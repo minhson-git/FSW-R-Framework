@@ -39,19 +39,26 @@ def _plot_on(ax: Axes3D, symbol: FSWRenderableSymbol, title: str) -> None:
         local_points = mirror_for_left_hand(local_points)
     world_points = apply_wrist_orientation(local_points, symbol.get_wrist_orientation())
 
+    # matplotlib's Axes3D always draws its 3rd plot argument ("Z") as the
+    # vertical screen axis, regardless of what we call our own axes. Our
+    # data convention has y = wrist->fingertip (the axis that should look
+    # vertical, e.g. index finger pointing "up") and z = palm normal (depth,
+    # toward the viewer) -- so we hand matplotlib (x, z, y), not (x, y, z),
+    # to make our y actually render vertically. This is a display-only
+    # swap; the underlying geometry/rotation math is untouched.
     for finger, points in world_points.items():
         xs = [p[0] for p in points]
-        ys = [p[1] for p in points]
-        zs = [p[2] for p in points]
-        ax.plot(xs, ys, zs, marker="o", color=_FINGER_COLORS[finger], label=finger)
+        depths = [p[2] for p in points]
+        heights = [p[1] for p in points]
+        ax.plot(xs, depths, heights, marker="o", color=_FINGER_COLORS[finger], label=finger)
 
     ax.set_title(title)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
+    ax.set_xlabel("x (spread)")
+    ax.set_ylabel("z (depth)")
+    ax.set_zlabel("y (up)")
     ax.set_xlim(-6, 6)
-    ax.set_ylim(-2, 10)
-    ax.set_zlim(-6, 6)
+    ax.set_ylim(-6, 6)
+    ax.set_zlim(-2, 10)
     # A genuine oblique 3D view (not a flattened top-down look) -- rotation
     # still spins the whole hand rigidly about the z axis (the wrist, not
     # the finger joints), it's just now viewed at an angle so the render
