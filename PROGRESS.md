@@ -308,6 +308,45 @@ lên `cmc=70, mcp=80, ip=60` (kiểm tra khoảng cách đầu ngón tới cổ 
 từ 11.5 xuống 3.2 đơn vị trước khi áp dụng) cho cả 7 group đó — giờ nhìn
 rõ ràng ngón cái cuộn sát vào, không còn giống nhóm ngón cái xoè.
 
+## Thay toàn bộ góc khớp đoán bằng dữ liệu thật (3d-hands-benchmark)
+
+Người dùng hỏi thẳng "project này có hardcode không" — câu trả lời: kiến
+trúc/công thức xoay thì không (generic, dùng chung), nhưng **góc khớp từng
+ngón tay thì 100% là tôi tự đoán**, không có nguồn nào xác nhận. Đã tìm
+cách khắc phục bằng dataset thật `sign-language-processing/3d-hands-benchmark`:
+
+- Dataset chứa: ảnh thật (1 bàn tay thật, 261 handshape ISWA × 6 góc chụp,
+  đặt tên file đúng bằng `symbol_id` của mình vd `01-01-001`) + pose 3D
+  ước lượng sẵn bằng MediaPipe (3 version, 48 lần chụp/symbol, dạng mảng
+  `(48, 261, 6, 21, 3)`).
+- Đọc script gốc sinh ra mảng này (`main.py` trong repo) để xác nhận thứ
+  tự index trong mảng khớp CHÍNH XÁC với thứ tự group/base_symbol_number
+  của mình (cả hai đều sort theo cùng thứ tự thư mục).
+- Xem 6 ảnh của symbol "Index" để xác nhận thứ tự 6 orientation trong
+  dataset khớp đúng thứ tự `fill` 0-5 (Palm/Side/Back × Wall/Floor) đã
+  dùng — khớp hoàn toàn.
+- Viết script tính góc `flexion` mỗi khớp = góc giữa 2 vector xương liên
+  tiếp (vd mcp flexion = góc giữa wrist→mcp và mcp→pip), lấy median qua 48
+  lần chụp để ổn định.
+- Kết quả xác nhận đúng hướng đã gán trước đó (vd "Index Bent" thật sự có
+  index bị gập khác "Index" thường — pip 46°/8° khác biệt rõ), nhưng con số
+  cụ thể lệch khá xa so với đoán (vd ngón "duỗi thẳng" thật ra không phải
+  0° mà 2-20°, ngón "cuộn" thật ra 104-167° chứ không phải 100°).
+- Đã thay góc khớp (`mcp`/`pip`/`dip`/`cmc`/`ip`) của **cả 11 symbol đã
+  đăng ký** bằng số liệu thật này, cập nhật docstring từng file ghi rõ
+  nguồn + phương pháp + giới hạn (đây là ước lượng MediaPipe trên ảnh
+  thật, KHÔNG phải motion-capture đã xác thực — bản thân benchmark cũng
+  không claim vậy). `abduction` (độ xoè ngón) chưa đo được bằng cách này,
+  vẫn giữ nguyên số đoán cũ.
+- Phát hiện phụ: Group 6 "Index Middle Ring" có ngón áp út (ring) ở tư thế
+  **lưng chừng** (không thẳng hẳn như index/middle, không cuộn hẳn như
+  pinky) — dữ liệu thật giữ nguyên sắc thái này thay vì ép về nhị phân
+  thẳng/cuộn như model cũ.
+- Cập nhật lại test đã pin cứng góc cũ (`test_group_02.py`..`test_group_10.py`,
+  `test_group_01.py`) theo số liệu mới. `mypy --strict` sạch, `pytest`
+  91/91 pass, đã render lại `fsw-r-viz` xác nhận bằng mắt (`IndexBent` giờ
+  thấy rõ ngón trỏ gập khác `Index`, Group 6 thấy đúng ring lưng chừng).
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc

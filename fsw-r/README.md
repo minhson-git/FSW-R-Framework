@@ -246,8 +246,19 @@ moment its module is imported and its class is `@register_symbol`'d.
   the missing `(group, base_symbol_number)` for anything else -- that's
   expected until more
   groups are added, not a bug.
-- Joint angles in `group_01_index_finger.py` are a baseline guess, not
-  measured from a real rig/mesh -- expect to tune them once one is available.
+- Joint angles for all 11 currently-registered base symbols are derived
+  from real data, not guessed: median 3D hand keypoints (MediaPipe v0.10.3,
+  48 crops) from
+  [sign-language-processing/3d-hands-benchmark](https://github.com/sign-language-processing/3d-hands-benchmark),
+  a real photographed hand posing all 261 ISWA Category-1 shapes at 6
+  orientations. Flexion = angle between consecutive bone vectors
+  (wrist->mcp->pip->dip->tip). This is MediaPipe's own pose *estimate* on a
+  real photo, not verified motion-capture ground truth (that benchmark
+  doesn't claim otherwise either) -- but it's real photographed data, not
+  an invented number. `abduction` (finger spread) isn't measured by this
+  method and is still a guess. Base symbols added beyond these 11 will need
+  the same treatment (map symbol_id -> dataset index, as documented in each
+  group file) or a real rig/mesh once one exists.
 - `fill`'s "Floor Plane" component (`_fill_plane_degrees`) pitches the whole
   hand 90 degrees, matching the chart's *description* ("top view, arm
   reaching down") -- but the chart itself shows this from a camera looking

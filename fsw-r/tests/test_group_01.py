@@ -124,7 +124,7 @@ def test_index_bent_overrides_only_index_finger() -> None:
     straight_pose = straight.get_joint_pose()
     bent_pose = bent.get_joint_pose()
 
-    assert bent_pose.index.pip.flexion == 90
+    assert bent_pose.index.pip.flexion == 46
     assert bent_pose.thumb == straight_pose.thumb
     assert bent_pose.middle == straight_pose.middle
     assert bent_pose.ring == straight_pose.ring

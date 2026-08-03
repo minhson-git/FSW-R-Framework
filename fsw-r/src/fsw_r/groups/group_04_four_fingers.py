@@ -5,8 +5,13 @@ https://www.signwriting.org/lessons/iswa/group04/01-04-001-01.html: index,
 middle, ring, and pinky all extended straight and spread apart, thumb
 curled/tucked into the palm.
 
-The angle values below are a starting baseline only -- they will need
-tuning against the actual rig/mesh once one is available.
+The angle values below are derived from real data, not guessed: median 3D
+hand keypoints (MediaPipe v0.10.3, 48 crops) from
+github.com/sign-language-processing/3d-hands-benchmark, symbol "01-04-001"
+("Four Fingers"), orientation 1 (fill=0, Palm of Hand/Wall Plane). See
+group_01_index_finger.py's docstring for the exact method and caveats.
+`abduction` (finger spread) isn't measured by this method -- still a
+guess, kept from the original baseline.
 """
 
 from __future__ import annotations
@@ -22,18 +27,12 @@ from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
 
 class SymbolGroup4FourFingers(FSWRenderableSymbol, ABC):
     def _default_joint_pose(self) -> HandJointPose:
-        straight_spread = FingerPose(
-            mcp=JointAngle(flexion=0, abduction=8),
-            pip=JointAngle(flexion=0),
-            dip=JointAngle(flexion=0),
-        )
-        thumb_curled = ThumbPose(cmc=JointAngle(70), mcp=JointAngle(80), ip=JointAngle(60))
         return HandJointPose(
-            thumb=thumb_curled,
-            index=straight_spread,
-            middle=straight_spread,
-            ring=straight_spread,
-            pinky=straight_spread,
+            thumb=ThumbPose(cmc=JointAngle(42), mcp=JointAngle(78), ip=JointAngle(22)),
+            index=FingerPose(mcp=JointAngle(4, abduction=8), pip=JointAngle(7), dip=JointAngle(4)),
+            middle=FingerPose(mcp=JointAngle(11, abduction=8), pip=JointAngle(9), dip=JointAngle(1)),
+            ring=FingerPose(mcp=JointAngle(7, abduction=8), pip=JointAngle(9), dip=JointAngle(4)),
+            pinky=FingerPose(mcp=JointAngle(15, abduction=8), pip=JointAngle(0), dip=JointAngle(6)),
         )
 
     def get_joint_pose(self) -> HandJointPose:

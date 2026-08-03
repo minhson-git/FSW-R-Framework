@@ -73,19 +73,35 @@ symbol số 1 KHÔNG phải là hình dạng đơn giản trùng tên group (vd 
 ngón út) — đã xác nhận bằng cách xem ảnh GIF thật của từng symbol trước khi
 viết joint pose, không suy đoán từ tên group.
 
+**Góc khớp của 11 base symbol đã làm giờ lấy từ dữ liệu thật** (không còn
+đoán): `sign-language-processing/3d-hands-benchmark` — ảnh thật của 1 bàn
+tay thật, 261 handshape × 6 góc, cộng pose 3D ước lượng sẵn bằng MediaPipe
+(3 phiên bản, 48 lần chụp/symbol). Cách làm: map symbol_id ISWA → index
+trong mảng `(48, 261, 6, 21, 3)` (thứ tự khớp `sorted(os.listdir(...))`
+đúng bằng thứ tự group/base_symbol_number của mình — đã verify bằng cách
+đọc script sinh dữ liệu gốc), lấy median qua 48 lần chụp, tính góc `flexion`
+= góc giữa 2 vector xương liên tiếp (wrist→mcp, mcp→pip, pip→dip, dip→tip).
+Đã cập nhật cả 11 file group + test tương ứng. Lưu ý quan trọng: đây là
+**ước lượng của MediaPipe trên ảnh thật, không phải motion-capture đã xác
+thực** (chính benchmark cũng không claim vậy) — nhưng đáng tin hơn nhiều so
+với số tự đoán. `abduction` (độ xoè ngón) KHÔNG đo được bằng cách này, vẫn
+là số đoán giữ nguyên từ baseline cũ.
+
 **Việc còn lại của Pha 1:**
 - [ ] Làm hết các base symbol còn lại trong mỗi group (vd Group 1 còn
-      12/14, Group 5 còn 57/58...) — cùng pattern đã có, mỗi symbol cần xem
-      ảnh thật trước khi viết joint pose (không đoán).
+      12/14, Group 5 còn 57/58...) — cùng pattern đã có, mỗi symbol giờ có
+      thể lấy góc khớp thật ngay từ dataset trên (không cần đoán nữa), chỉ
+      cần map đúng symbol_index rồi chạy lại cách tính đã có.
+- [ ] Tính lại `abduction` (độ xoè ngón) từ dữ liệu thật (hiện chưa làm —
+      cần thêm 1 bước tính góc chiếu ngang so với mặt phẳng lòng bàn tay,
+      phức tạp hơn flexion vì cần định nghĩa mặt phẳng tham chiếu).
 - [ ] Validate `rotation`/`fill` cho các group KHÁC group 1 — quy tắc
       `_rotation_angle_degrees()`/`_fill_facing_degrees()`/`_fill_plane_degrees()`
       hiện suy ra từ 1 group (Index) + 1 chart, cần kiểm tra xem có áp dụng
       y hệt cho toàn bộ 10 group hay có group nào khác quy tắc (ví dụ
       handshape đối xứng có thể có rotation/fill hoạt động khác — đã ghi
-      chú rủi ro này trong `fsw-r/README.md`).
-- [ ] (Tuỳ chọn, nếu có thời gian) đối chiếu định lượng với dataset
-      `sign-language-processing/3d-hands-benchmark` (261 handshape × 6 góc,
-      keypoint 3D thật) để có evaluation thay vì chỉ "nhìn hợp lý".
+      chú rủi ro này trong `fsw-r/README.md`). Dataset benchmark cũng có đủ
+      6 orientation/symbol — có thể dùng để validate luôn việc này.
 
 ### Pha 2 — Movement (Category 2)
 

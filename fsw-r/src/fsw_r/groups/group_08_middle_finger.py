@@ -6,8 +6,11 @@ photo at https://www.signwriting.org/lessons/iswa/group08/01-08-001-01.html:
 index, ring, and pinky (baby) fingers extended straight, middle finger
 curled, thumb curled/tucked against the palm.
 
-The angle values below are a starting baseline only -- they will need
-tuning against the actual rig/mesh once one is available.
+The angle values below are derived from real data, not guessed: median 3D
+hand keypoints (MediaPipe v0.10.3, 48 crops) from
+github.com/sign-language-processing/3d-hands-benchmark, symbol "01-08-001"
+("Index Ring Baby"), orientation 1 (fill=0, Palm of Hand/Wall Plane). See
+group_01_index_finger.py's docstring for the exact method and caveats.
 """
 
 from __future__ import annotations
@@ -23,23 +26,12 @@ from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
 
 class SymbolGroup8MiddleFinger(FSWRenderableSymbol, ABC):
     def _default_joint_pose(self) -> HandJointPose:
-        curled_into_fist = FingerPose(
-            mcp=JointAngle(flexion=90),
-            pip=JointAngle(flexion=100),
-            dip=JointAngle(flexion=80),
-        )
-        straight = FingerPose(
-            mcp=JointAngle(flexion=0),
-            pip=JointAngle(flexion=0),
-            dip=JointAngle(flexion=0),
-        )
-        thumb_curled = ThumbPose(cmc=JointAngle(70), mcp=JointAngle(80), ip=JointAngle(60))
         return HandJointPose(
-            thumb=thumb_curled,
-            index=straight,
-            middle=curled_into_fist,
-            ring=straight,
-            pinky=straight,
+            thumb=ThumbPose(cmc=JointAngle(50), mcp=JointAngle(41), ip=JointAngle(17)),
+            index=FingerPose(mcp=JointAngle(22), pip=JointAngle(16), dip=JointAngle(8)),
+            middle=FingerPose(mcp=JointAngle(54), pip=JointAngle(104), dip=JointAngle(22)),
+            ring=FingerPose(mcp=JointAngle(31), pip=JointAngle(25), dip=JointAngle(21)),
+            pinky=FingerPose(mcp=JointAngle(13), pip=JointAngle(5), dip=JointAngle(14)),
         )
 
     def get_joint_pose(self) -> HandJointPose:

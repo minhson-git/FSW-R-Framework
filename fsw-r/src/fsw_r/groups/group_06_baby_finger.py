@@ -7,8 +7,14 @@ https://www.signwriting.org/lessons/iswa/group06/01-06-001-01.html: index,
 middle, and ring fingers extended straight together, pinky curled, thumb
 curled/tucked against the palm.
 
-The angle values below are a starting baseline only -- they will need
-tuning against the actual rig/mesh once one is available.
+The angle values below are derived from real data, not guessed: median 3D
+hand keypoints (MediaPipe v0.10.3, 48 crops) from
+github.com/sign-language-processing/3d-hands-benchmark, symbol "01-06-001"
+("Index Middle Ring"), orientation 1 (fill=0, Palm of Hand/Wall Plane). See
+group_01_index_finger.py's docstring for the exact method and caveats. The
+real data shows ring only partially bent (not fully straight like
+index/middle, not fully curled like pinky) -- kept as measured, rather than
+forced into a straight/curled binary.
 """
 
 from __future__ import annotations
@@ -24,23 +30,12 @@ from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
 
 class SymbolGroup6BabyFinger(FSWRenderableSymbol, ABC):
     def _default_joint_pose(self) -> HandJointPose:
-        curled_into_fist = FingerPose(
-            mcp=JointAngle(flexion=90),
-            pip=JointAngle(flexion=100),
-            dip=JointAngle(flexion=80),
-        )
-        straight = FingerPose(
-            mcp=JointAngle(flexion=0),
-            pip=JointAngle(flexion=0),
-            dip=JointAngle(flexion=0),
-        )
-        thumb_curled = ThumbPose(cmc=JointAngle(70), mcp=JointAngle(80), ip=JointAngle(60))
         return HandJointPose(
-            thumb=thumb_curled,
-            index=straight,
-            middle=straight,
-            ring=straight,
-            pinky=curled_into_fist,
+            thumb=ThumbPose(cmc=JointAngle(59), mcp=JointAngle(58), ip=JointAngle(17)),
+            index=FingerPose(mcp=JointAngle(12), pip=JointAngle(6), dip=JointAngle(2)),
+            middle=FingerPose(mcp=JointAngle(6), pip=JointAngle(14), dip=JointAngle(1)),
+            ring=FingerPose(mcp=JointAngle(21), pip=JointAngle(20), dip=JointAngle(14)),
+            pinky=FingerPose(mcp=JointAngle(38), pip=JointAngle(116), dip=JointAngle(19)),
         )
 
     def get_joint_pose(self) -> HandJointPose:

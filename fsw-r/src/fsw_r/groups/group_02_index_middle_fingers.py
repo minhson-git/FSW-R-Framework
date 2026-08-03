@@ -5,8 +5,14 @@ apart), ring and pinky curled into the fist, thumb curled/tucked in
 against the palm (NOT extended -- only Groups 3, 5, and 10 have the thumb
 extended, confirmed by checking real symbol photos).
 
-The angle values below are a starting baseline only -- they will need
-tuning against the actual rig/mesh once one is available.
+The angle values below are derived from real data, not guessed: median 3D
+hand keypoints (MediaPipe v0.10.3, 48 crops) from
+github.com/sign-language-processing/3d-hands-benchmark, symbol "01-02-001"
+("Index Middle"), orientation 1 (fill=0, Palm of Hand/Wall Plane). See
+group_01_index_finger.py's docstring for the exact method and caveats
+(MediaPipe's own estimate on a real photo, not verified mocap ground
+truth). `abduction` (finger spread) isn't measured by this method -- it's
+still a guess, kept from the original baseline.
 """
 
 from __future__ import annotations
@@ -22,23 +28,12 @@ from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
 
 class SymbolGroup2IndexMiddleFingers(FSWRenderableSymbol, ABC):
     def _default_joint_pose(self) -> HandJointPose:
-        curled_into_fist = FingerPose(
-            mcp=JointAngle(flexion=90),
-            pip=JointAngle(flexion=100),
-            dip=JointAngle(flexion=80),
-        )
-        straight_spread = FingerPose(
-            mcp=JointAngle(flexion=0, abduction=10),
-            pip=JointAngle(flexion=0),
-            dip=JointAngle(flexion=0),
-        )
-        thumb_curled = ThumbPose(cmc=JointAngle(70), mcp=JointAngle(80), ip=JointAngle(60))
         return HandJointPose(
-            thumb=thumb_curled,
-            index=straight_spread,
-            middle=straight_spread,
-            ring=curled_into_fist,
-            pinky=curled_into_fist,
+            thumb=ThumbPose(cmc=JointAngle(48), mcp=JointAngle(43), ip=JointAngle(3)),
+            index=FingerPose(mcp=JointAngle(11, abduction=10), pip=JointAngle(2), dip=JointAngle(3)),
+            middle=FingerPose(mcp=JointAngle(19, abduction=10), pip=JointAngle(4), dip=JointAngle(10)),
+            ring=FingerPose(mcp=JointAngle(50), pip=JointAngle(115), dip=JointAngle(26)),
+            pinky=FingerPose(mcp=JointAngle(53), pip=JointAngle(113), dip=JointAngle(19)),
         )
 
     def get_joint_pose(self) -> HandJointPose:

@@ -16,11 +16,11 @@ def test_joint_pose_identical_across_rotations_and_hand_sides() -> None:
     assert all(pose == poses[0] for pose in poses)
 
     pose = poses[0]
-    assert pose.index.mcp.flexion == 90
-    assert pose.middle.mcp.flexion == 90
-    assert pose.ring.mcp.flexion == 90
-    assert pose.pinky.mcp.flexion == 90
-    assert pose.thumb.cmc.flexion == 45
+    assert pose.index.mcp.flexion == 53
+    assert pose.middle.mcp.flexion == 42
+    assert pose.ring.mcp.flexion == 36
+    assert pose.pinky.mcp.flexion == 19
+    assert pose.thumb.cmc.flexion == 31
 
 
 def test_wrist_orientation_differs_by_rotation() -> None:
