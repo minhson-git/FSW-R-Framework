@@ -295,8 +295,8 @@ hand_side đúng, `symbol_from_fsw()` parse ra đúng class). `demo.py` Part 4
 mới: parse base_symbol_number=1 của cả 10 group, xác nhận registry phủ đủ
 10/10 group.
 
-Tổng hiện tại: **11/261 base symbol Category 1** (còn thiếu base symbol
-trong mỗi group — xem `ROADMAP.md` bảng chi tiết số lượng từng group).
+Tổng cập nhật sau đó: **261/261 base symbol Category 1 — ĐÃ XONG HẾT** (xem
+mục "Làm full toàn bộ 261 base symbol" bên dưới).
 
 **Sửa lỗi ngón cái sau khi người dùng đối chiếu lại:** chỉ Group 3, 5, 10
 thật sự có ngón cái xoè ra (`ThumbPose` có `abduction`); 7 group còn lại
@@ -347,6 +347,48 @@ cách khắc phục bằng dataset thật `sign-language-processing/3d-hands-ben
   91/91 pass, đã render lại `fsw-r-viz` xác nhận bằng mắt (`IndexBent` giờ
   thấy rõ ngón trỏ gập khác `Index`, Group 6 thấy đúng ring lưng chừng).
 
+## Làm full toàn bộ 261 base symbol (cả 10 group Category 1)
+
+Sau khi đã có pipeline dữ liệu thật (dataset benchmark) chạy ổn cho 11 base
+symbol mẫu, người dùng yêu cầu làm full toàn bộ base symbol còn lại của cả
+10 group cùng phương pháp. Xây 2 script tự động hoá trong scratchpad:
+
+- `gen_group.py`: với 1 group + danh sách `base_symbol_number` cần thêm,
+  tự động (1) lấy tên thật từng symbol bằng cách tải trang
+  `signwriting.org` tương ứng và regex tiêu đề `<title>` (không đoán tên),
+  (2) tính góc khớp thật từ file `.npy` MediaPipe cục bộ (cùng phương pháp
+  median-flexion đã dùng cho 11 symbol đầu), (3) in ra code Python đã sẵn
+  sàng dán vào file group (đúng pattern `@register_symbol` + class kế thừa
+  template group + docstring nguồn).
+- `gen_test.py`: đọc lại chính file group `.py` vừa cập nhật (parse
+  `@register_symbol`/tên class bằng regex), sinh ra file test parametrize
+  hoá đầy đủ (`pytest.mark.parametrize` trên danh sách toàn bộ symbol trong
+  group) — thay cho việc viết tay từng hàm test riêng như 11 symbol đầu
+  (không scale được lên hàng trăm symbol).
+
+Chạy tuần tự cho từng group (từ nhỏ đến lớn để dễ phát hiện lỗi sớm): Group
+4 (8), Group 1 (14), Group 10 (16), Group 2 (16), Group 7 (22), Group 8
+(19), Group 6 (30), Group 3 (38), Group 9 (40), Group 5 (58, lớn nhất). Mỗi
+group sau khi thêm: `mypy --strict` sạch + `pytest tests/test_group_0N.py`
+pass toàn bộ trước khi sang group kế tiếp.
+
+**Kết quả: đủ 261/261 base symbol Category 1 (Hands), cả 10/10 group.**
+`mypy --strict` sạch (37 file), `pytest` **1358/1358 pass** (tăng từ 91 khi
+mới xong 11 symbol mẫu). Sau khi hoàn thành, 2 test kiểm tra "symbol chưa
+đăng ký sẽ raise `ValueError`" (`test_registry.py`,
+`test_fswr_converter.py`) bị hỏng — lý do: 2 test này trỏ tới key `"S14d10"`
+(group 5, base_symbol_number 2), giờ đã là symbol hợp lệ và có đăng ký, nên
+không còn raise nữa. Đã sửa: vì toàn bộ range hex hợp lệ của Category 1
+(`0x100–0x204`) giờ đã đăng ký kín (không có khoảng trống nào giữa 10
+group, đã verify bằng cách cộng dồn `_HAND_GROUP_START` + size từng group),
+không còn cách nào tạo ra 1 FSW key "hợp lệ nhưng chưa đăng ký" thật để test
+qua string. Chuyển sang test trực tiếp phần lõi: `test_registry.py` gọi
+thẳng `registry.build_symbol()` với 1 `ParsedFSWSymbol` tự tạo (group/
+base_symbol_number không tồn tại trong bảng registry); `test_fswr_converter.py`
+monkeypatch `build_symbol` để xác nhận `ast_to_fswr()` truyền đúng
+`ValueError` lên trên. `fsw-r-viz` (`mypy --strict` + `pytest`) vẫn xanh
+sau thay đổi lớn này ở `fsw-r`.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -362,7 +404,8 @@ cách khắc phục bằng dataset thật `sign-language-processing/3d-hands-ben
 
 ## Trạng thái hiện tại
 
-- `fsw-r`: `mypy --strict` sạch (37 file), `pytest` 91/91 pass
+- **Category 1 (Hands) đã xong 100%: 261/261 base symbol, đủ 10/10 group.**
+- `fsw-r`: `mypy --strict` sạch (37 file), `pytest` **1358/1358 pass**
   (`test_group_01.py` .. `test_group_10.py`, `test_hand_side.py`,
   `test_fsw_symbol_key.py`, `test_fsw_ast.py`, `test_registry.py`,
   `test_fswr_converter.py`).
@@ -377,21 +420,22 @@ cách khắc phục bằng dataset thật `sign-language-processing/3d-hands-ben
 
 ## Việc còn để ngỏ / chưa làm
 
-- Chỉ mới đăng ký 3/261 base symbol Category 1 -- Hands ("Index", "Index
-  Bent", "Index Middle") vào registry — `symbol_from_fsw()` sẽ raise
-  `ValueError` rõ ràng cho mọi key khác cho đến khi mở rộng thêm group.
-  (261 là số base symbol thật của riêng Category 1, tính từ
-  `ranges.hand = [0x100, 0x204]` trong `fsw-structure.js` — số 652 nhắc ở
-  văn bản cũ của repo là tổng TOÀN BỘ 8 category ISWA, không phải riêng
-  Hands; xem `ROADMAP.md`.)
-- Góc khớp trong `group_01_index_finger.py` là baseline áng chừng, chưa tinh
-  chỉnh theo rig/mesh 3D thật.
+- **Category 1 (Hands) đã xong: đủ 261/261 base symbol, cả 10/10 group** —
+  mục còn lại dưới đây là thứ CHƯA làm trong phạm vi Category 1, cộng toàn
+  bộ 7 category khác của ISWA (xem `ROADMAP.md` Pha 2 trở đi).
+- Góc khớp lấy từ dữ liệu thật (MediaPipe trên `3d-hands-benchmark`) nhưng
+  chưa tinh chỉnh theo rig/mesh 3D thật — vẫn là stick-figure debug.
+- `abduction` (độ xoè ngón) cho toàn bộ 261 symbol vẫn là số đoán — chưa đo
+  được từ dataset hiện có (cần định nghĩa mặt phẳng tham chiếu để tính góc
+  chiếu ngang, phức tạp hơn flexion).
 - Dấu của `abduction` có thể cần đảo chiều cho tay trái tuỳ convention rig —
   chưa xử lý (ghi chú trong code, chưa có rig thật để kiểm chứng).
 - Chưa có export JSON cho `HandJointPose`/wrist quaternion (cần nếu render
   cuối cùng là web three.js thay vì Blender/Open3D).
-- Mới có Group 1 / 2 base symbol (`Index`, `Index Bent`) — còn ~9 group và
-  ~650 base symbol khác của ISWA Category 1 cần mở rộng theo đúng pattern đã
-  thiết lập (xem README của `fsw-r` mục "Adding a new group").
+- 7 category khác của ISWA (Movement, Dynamics, Head & Face, Trunk, Limb,
+  Location, Punctuation — tổng ~391 base symbol còn lại trong số 652 base
+  symbol toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 2 trở đi, đòi hỏi
+  kiểu dữ liệu và (với Movement/Head&Face) thay đổi kiến trúc core, không
+  chỉ lặp lại pattern Category 1.
 - Môi trường dùng Python 3.10 (máy hiện có) thay vì 3.11+ như brief ban đầu
   yêu cầu — không ảnh hưởng vì không dùng feature riêng của 3.11.

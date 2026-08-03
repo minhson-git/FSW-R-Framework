@@ -4,7 +4,8 @@ import pytest
 
 # Importing this populates the registry (see core/registry.py docstring).
 import fsw_r.groups.group_01_index_finger  # noqa: F401
-from fsw_r.core.fsw_ast import parse_fsw_to_ast
+from fsw_r.core import fswr_converter
+from fsw_r.core.fsw_ast import FSWSignAST, FSWSymbolNode, parse_fsw_to_ast
 from fsw_r.core.fswr_converter import ast_to_fswr, fsw_to_fswr
 from fsw_r.core.types import HandSide
 from fsw_r.groups.group_01_index_finger import (
@@ -46,7 +47,20 @@ def test_fsw_to_fswr_empty_sign_returns_empty_tuple() -> None:
     assert fsw_to_fswr("M500x500") == ()
 
 
-def test_fsw_to_fswr_raises_for_unregistered_base_symbol() -> None:
-    # 0x101 = base_symbol_number 2 ("Index on Circle") -- not implemented/registered.
+def test_ast_to_fswr_raises_for_unregistered_base_symbol(monkeypatch: pytest.MonkeyPatch) -> None:
+    # All 261 Category-1 base symbols are registered now, so there's no
+    # valid-range Hands FSW key left that ``parse_fsw_symbol_key`` will
+    # accept and ``build_symbol`` will still reject -- exercise the
+    # propagation of build_symbol's ValueError directly instead.
+    def _always_unregistered(*_args: object, **_kwargs: object) -> object:
+        raise ValueError("no base symbol class registered for group=1, base_symbol_number=99")
+
+    monkeypatch.setattr(fswr_converter, "build_symbol", _always_unregistered)
+    ast = FSWSignAST(
+        box_symbol="M",
+        box_x=500,
+        box_y=500,
+        symbols=(FSWSymbolNode(key="S10010", x=480, y=480),),
+    )
     with pytest.raises(ValueError):
-        fsw_to_fswr("M500x500S10110480x480")
+        ast_to_fswr(ast)

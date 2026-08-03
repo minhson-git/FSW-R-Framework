@@ -2,42 +2,88 @@ from __future__ import annotations
 
 import pytest
 
+from fsw_r.core.registry import symbol_from_fsw
+from fsw_r.core.types import HandSide
 from fsw_r.groups.group_01_index_finger import (
     BaseSymbol01_01_001_Index,
+    BaseSymbol01_01_002_IndexOnCircle,
+    BaseSymbol01_01_003_IndexOnCup,
+    BaseSymbol01_01_004_IndexOnOval,
+    BaseSymbol01_01_005_IndexOnHinge,
+    BaseSymbol01_01_006_IndexOnAngle,
     BaseSymbol01_01_007_IndexBent,
+    BaseSymbol01_01_008_IndexBentOnCircle,
+    BaseSymbol01_01_009_IndexBentOnFistThumbUnder,
+    BaseSymbol01_01_010_IndexCup,
+    BaseSymbol01_01_011_IndexCup,
+    BaseSymbol01_01_012_IndexHinge,
+    BaseSymbol01_01_013_IndexHingeLow,
+    BaseSymbol01_01_014_IndexHingeOnCircle,
 )
 
+GROUP_1_SYMBOLS = [
+    (1, BaseSymbol01_01_001_Index),
+    (2, BaseSymbol01_01_002_IndexOnCircle),
+    (3, BaseSymbol01_01_003_IndexOnCup),
+    (4, BaseSymbol01_01_004_IndexOnOval),
+    (5, BaseSymbol01_01_005_IndexOnHinge),
+    (6, BaseSymbol01_01_006_IndexOnAngle),
+    (7, BaseSymbol01_01_007_IndexBent),
+    (8, BaseSymbol01_01_008_IndexBentOnCircle),
+    (9, BaseSymbol01_01_009_IndexBentOnFistThumbUnder),
+    (10, BaseSymbol01_01_010_IndexCup),
+    (11, BaseSymbol01_01_011_IndexCup),
+    (12, BaseSymbol01_01_012_IndexHinge),
+    (13, BaseSymbol01_01_013_IndexHingeLow),
+    (14, BaseSymbol01_01_014_IndexHingeOnCircle),
+]
+GROUP_1_BASE_HEX = 0x100  # group 1 starts here, see core/fsw_symbol_key.py
 
-def test_joint_pose_identical_across_rotations_and_hand_sides() -> None:
-    idx_front = BaseSymbol01_01_001_Index(fill=1, rotation=0)  # RIGHT
-    idx_side = BaseSymbol01_01_001_Index(fill=1, rotation=2)  # RIGHT
-    idx_back = BaseSymbol01_01_001_Index(fill=1, rotation=4)  # RIGHT
-    idx_mirrored = BaseSymbol01_01_001_Index(fill=1, rotation=10)  # LEFT
 
-    poses = [
-        idx_front.get_joint_pose(),
-        idx_side.get_joint_pose(),
-        idx_back.get_joint_pose(),
-        idx_mirrored.get_joint_pose(),
-    ]
+@pytest.mark.parametrize("base_symbol_number,cls", GROUP_1_SYMBOLS)
+def test_symbol_id_and_hand_side(base_symbol_number: int, cls: type) -> None:
+    right = cls(fill=1, rotation=0)
+    left = cls(fill=1, rotation=10)
+
+    assert right.symbol_id == f"01-01-{base_symbol_number:03d}"
+    assert right.hand_side == HandSide.RIGHT
+    assert left.hand_side == HandSide.LEFT
+
+
+@pytest.mark.parametrize("base_symbol_number,cls", GROUP_1_SYMBOLS)
+def test_joint_pose_identical_across_rotations_and_hand_sides(base_symbol_number: int, cls: type) -> None:
+    right_front = cls(fill=1, rotation=0)
+    right_side = cls(fill=1, rotation=2)
+    left_mirrored = cls(fill=1, rotation=10)
+
+    poses = [right_front.get_joint_pose(), right_side.get_joint_pose(), left_mirrored.get_joint_pose()]
     assert all(pose == poses[0] for pose in poses)
 
 
-def test_wrist_orientation_differs_by_rotation() -> None:
-    idx_front = BaseSymbol01_01_001_Index(fill=0, rotation=0)
-    idx_side = BaseSymbol01_01_001_Index(fill=0, rotation=2)
-    idx_back = BaseSymbol01_01_001_Index(fill=0, rotation=4)
+@pytest.mark.parametrize("base_symbol_number,cls", GROUP_1_SYMBOLS)
+def test_wrist_orientation_identity_at_rotation_zero(base_symbol_number: int, cls: type) -> None:
+    # fill=0 (Palm of Hand, Wall Plane) is the neutral fill -- identity.
+    symbol = cls(fill=0, rotation=0)
+    assert symbol.get_wrist_orientation().as_quat() == pytest.approx([0.0, 0.0, 0.0, 1.0])
 
-    front_quat = idx_front.get_wrist_orientation().as_quat()
-    side_quat = idx_side.get_wrist_orientation().as_quat()
-    back_quat = idx_back.get_wrist_orientation().as_quat()
 
-    assert front_quat != pytest.approx(side_quat)
-    assert front_quat != pytest.approx(back_quat)
-    assert side_quat != pytest.approx(back_quat)
+@pytest.mark.parametrize("base_symbol_number,cls", GROUP_1_SYMBOLS)
+def test_wrist_orientation_differs_by_rotation(base_symbol_number: int, cls: type) -> None:
+    front = cls(fill=1, rotation=0)
+    side = cls(fill=1, rotation=2)
+    assert front.get_wrist_orientation().as_quat() != pytest.approx(
+        side.get_wrist_orientation().as_quat()
+    )
 
-    # rotation=0 is the identity rotation
-    assert front_quat == pytest.approx([0.0, 0.0, 0.0, 1.0])
+
+@pytest.mark.parametrize("base_symbol_number,cls", GROUP_1_SYMBOLS)
+def test_symbol_from_fsw_builds_correct_class(base_symbol_number: int, cls: type) -> None:
+    base_hex = GROUP_1_BASE_HEX + (base_symbol_number - 1)
+    symbol = symbol_from_fsw(f"S{base_hex:03x}12")
+    assert isinstance(symbol, cls)
+    assert symbol.fill == 1
+    assert symbol.rotation == 2
+    assert symbol.symbol_id == f"01-01-{base_symbol_number:03d}"
 
 
 def test_wrist_orientation_points_finger_down_at_180_degrees() -> None:

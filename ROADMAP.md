@@ -36,7 +36,7 @@ symbol hay được trích dẫn.)
 
 ## Lộ trình theo pha
 
-### Pha 1 — Hands (Category 1) — ĐANG LÀM
+### Pha 1 — Hands (Category 1) — ĐÃ XONG (261/261 base symbol)
 
 **Lưu ý thuật ngữ (dễ nhầm, đã nhầm 1 lần):** "Category" và "Group" là 2
 tầng khác nhau trong ISWA, không dùng lẫn:
@@ -56,24 +56,26 @@ symbol đăng ký thật** (tên lấy từ ảnh/HTML thật signwriting.org, k
 
 | Group | Tên thật | Base symbol đã làm | Tổng base symbol group |
 |---|---|---|---|
-| 1 | Index Finger | 2/14 (Index, Index Bent) | 14 |
-| 2 | Index & Middle Fingers | 1 (Index Middle) | 16 |
-| 3 | Index, Middle, Thumb | 1 (Index Middle Thumb) | 38 |
-| 4 | Four Fingers | 1 (Four Fingers) | 8 |
-| 5 | Five Fingers | 1 (Five Fingers Spread) | 58 |
-| 6 | Baby Finger | 1 (Index Middle Ring) | 30 |
-| 7 | Ring Finger | 1 (Index Middle Baby) | 22 |
-| 8 | Middle Finger | 1 (Index Ring Baby) | 19 |
-| 9 | Index & Thumb | 1 (Middle Ring Baby) | 40 |
-| 10 | Thumb | 1 (Thumb) | 16 |
+| 1 | Index Finger | 14/14 | 14 |
+| 2 | Index & Middle Fingers | 16/16 | 16 |
+| 3 | Index, Middle, Thumb | 38/38 | 38 |
+| 4 | Four Fingers | 8/8 | 8 |
+| 5 | Five Fingers | 58/58 | 58 |
+| 6 | Baby Finger | 30/30 | 30 |
+| 7 | Ring Finger | 22/22 | 22 |
+| 8 | Middle Finger | 19/19 | 19 |
+| 9 | Index & Thumb | 40/40 | 40 |
+| 10 | Thumb | 16/16 | 16 |
 
-Tổng: **11/261 base symbol** của Category 1. Lưu ý: với group 6-9, base
+Tổng: **261/261 base symbol — ĐÃ XONG HẾT** Category 1 (chi tiết cách làm
+full, gồm 2 script tự động hoá `gen_group.py`/`gen_test.py`, xem
+`PROGRESS.md` mục "Làm full toàn bộ 261 base symbol"). Lưu ý: với group 6-9, base
 symbol số 1 KHÔNG phải là hình dạng đơn giản trùng tên group (vd group 6
 "Baby Finger" nhưng base symbol 1 lại là "Index Middle Ring", không có
 ngón út) — đã xác nhận bằng cách xem ảnh GIF thật của từng symbol trước khi
 viết joint pose, không suy đoán từ tên group.
 
-**Góc khớp của 11 base symbol đã làm giờ lấy từ dữ liệu thật** (không còn
+**Góc khớp của cả 261/261 base symbol giờ lấy từ dữ liệu thật** (không còn
 đoán): `sign-language-processing/3d-hands-benchmark` — ảnh thật của 1 bàn
 tay thật, 261 handshape × 6 góc, cộng pose 3D ước lượng sẵn bằng MediaPipe
 (3 phiên bản, 48 lần chụp/symbol). Cách làm: map symbol_id ISWA → index
@@ -81,17 +83,14 @@ trong mảng `(48, 261, 6, 21, 3)` (thứ tự khớp `sorted(os.listdir(...))`
 đúng bằng thứ tự group/base_symbol_number của mình — đã verify bằng cách
 đọc script sinh dữ liệu gốc), lấy median qua 48 lần chụp, tính góc `flexion`
 = góc giữa 2 vector xương liên tiếp (wrist→mcp, mcp→pip, pip→dip, dip→tip).
-Đã cập nhật cả 11 file group + test tương ứng. Lưu ý quan trọng: đây là
+Đã cập nhật cả 10 file group + test tương ứng (1358 test pass). Lưu ý quan trọng: đây là
 **ước lượng của MediaPipe trên ảnh thật, không phải motion-capture đã xác
 thực** (chính benchmark cũng không claim vậy) — nhưng đáng tin hơn nhiều so
 với số tự đoán. `abduction` (độ xoè ngón) KHÔNG đo được bằng cách này, vẫn
 là số đoán giữ nguyên từ baseline cũ.
 
-**Việc còn lại của Pha 1:**
-- [ ] Làm hết các base symbol còn lại trong mỗi group (vd Group 1 còn
-      12/14, Group 5 còn 57/58...) — cùng pattern đã có, mỗi symbol giờ có
-      thể lấy góc khớp thật ngay từ dataset trên (không cần đoán nữa), chỉ
-      cần map đúng symbol_index rồi chạy lại cách tính đã có.
+**Việc còn lại của Pha 1** (đã làm xong phần base symbol chính, còn 2 việc phụ):
+- [x] Làm hết các base symbol còn lại trong mỗi group — **xong, 261/261**.
 - [ ] Tính lại `abduction` (độ xoè ngón) từ dữ liệu thật (hiện chưa làm —
       cần thêm 1 bước tính góc chiếu ngang so với mặt phẳng lòng bàn tay,
       phức tạp hơn flexion vì cần định nghĩa mặt phẳng tham chiếu).

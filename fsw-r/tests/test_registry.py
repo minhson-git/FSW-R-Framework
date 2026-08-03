@@ -4,7 +4,8 @@ import pytest
 
 # Importing this populates the registry (see core/registry.py docstring).
 import fsw_r.groups.group_01_index_finger  # noqa: F401
-from fsw_r.core.registry import symbol_from_fsw
+from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol
+from fsw_r.core.registry import build_symbol, symbol_from_fsw
 from fsw_r.core.types import HandSide
 from fsw_r.groups.group_01_index_finger import (
     BaseSymbol01_01_001_Index,
@@ -39,10 +40,14 @@ def test_symbol_from_fsw_matches_direct_construction() -> None:
     )
 
 
-def test_symbol_from_fsw_raises_for_unregistered_base_symbol() -> None:
-    # 0x101 = base_symbol_number 2 ("Index on Circle") -- not implemented/registered.
+def test_build_symbol_raises_for_unregistered_base_symbol() -> None:
+    # All 261 Category-1 base symbols are registered now, so there's no
+    # valid-range Hands FSW key left to exercise this path through a real
+    # key string -- build a synthetic ParsedFSWSymbol instead, targeting a
+    # (group, base_symbol_number) pair that doesn't exist in any group.
+    parsed = ParsedFSWSymbol(category=1, group=1, base_symbol_number=99, fill=1, rotation=0)
     with pytest.raises(ValueError):
-        symbol_from_fsw("S10110")
+        build_symbol(parsed)
 
 
 def test_symbol_from_fsw_raises_for_malformed_key() -> None:

@@ -143,16 +143,16 @@ src/fsw_r/
     renderable_symbol.py          # FSWRenderableSymbol
     renderer.py                   # HandMeshRenderer3D, HandSkeleton, HandRigProvider (Protocol)
   groups/
-    group_01_index_finger.py            # 2/14 base symbols registered (Index, Index Bent)
-    group_02_index_middle_fingers.py     # 1 base symbol registered (Index Middle)
-    group_03_index_middle_thumb.py       # 1 base symbol registered (Index Middle Thumb)
-    group_04_four_fingers.py             # 1 base symbol registered (Four Fingers)
-    group_05_five_fingers.py             # 1 base symbol registered (Five Fingers Spread)
-    group_06_baby_finger.py              # 1 base symbol registered (Index Middle Ring)
-    group_07_ring_finger.py              # 1 base symbol registered (Index Middle Baby)
-    group_08_middle_finger.py            # 1 base symbol registered (Index Ring Baby)
-    group_09_index_thumb.py              # 1 base symbol registered (Middle Ring Baby)
-    group_10_thumb.py                    # 1 base symbol registered (Thumb)
+    group_01_index_finger.py            # 14/14 base symbols registered
+    group_02_index_middle_fingers.py     # 16/16 base symbols registered
+    group_03_index_middle_thumb.py       # 38/38 base symbols registered
+    group_04_four_fingers.py             # 8/8 base symbols registered
+    group_05_five_fingers.py             # 58/58 base symbols registered
+    group_06_baby_finger.py              # 30/30 base symbols registered
+    group_07_ring_finger.py              # 22/22 base symbols registered
+    group_08_middle_finger.py            # 19/19 base symbols registered
+    group_09_index_thumb.py              # 40/40 base symbols registered
+    group_10_thumb.py                    # 16/16 base symbols registered
   demo.py                      # python -m fsw_r.demo
 tests/
   test_group_01.py .. test_group_10.py    # one per group
@@ -163,10 +163,11 @@ tests/
   test_fswr_converter.py
 ```
 
-All 10 Hands groups now have at least one real, registered, tested base
-symbol (11 total registered so far, out of Category 1's 261) -- see
-`ROADMAP.md` for what's still missing within each group and the plan for
-the other 7 ISWA categories.
+All 10 Hands groups are now complete: all 261 of ISWA Category 1's base
+symbols are registered, real-named, and joint-pose-derived from real data
+(see "Notes / open items" below) -- see `ROADMAP.md` for the plan for the
+other 7 ISWA categories (Movement, Dynamics, Head & Face, Trunk, Limb,
+Location, Punctuation), not yet started.
 
 ## Setup
 
@@ -236,19 +237,14 @@ moment its module is imported and its class is `@register_symbol`'d.
   `@register_symbol` decorator at import time). If you call either without
   importing `fsw_r.groups.group_01_index_finger` first, they'll raise
   `ValueError` even for `"S10011"`.
-- Only 11 of ISWA Category 1's 261 base symbols are registered so far --
-  all 10 groups have at least one, but none has all of its own base symbols
-  yet. (261 is Category 1/Hands alone, from `ranges.hand = [0x100, 0x204]`
-  in `fsw-structure.js` -- 652 is the total across *all 8* ISWA categories;
-  an earlier version of this note conflated the two. See `../ROADMAP.md`
-  for the full category breakdown and per-group remaining counts.)
-  `symbol_from_fsw()` / `fsw_to_fswr()` raise a clear `ValueError` naming
-  the missing `(group, base_symbol_number)` for anything else -- that's
-  expected until more
-  groups are added, not a bug.
-- Joint angles for all 11 currently-registered base symbols are derived
-  from real data, not guessed: median 3D hand keypoints (MediaPipe v0.10.3,
-  48 crops) from
+- All 261 of ISWA Category 1's base symbols are now registered (all 10
+  groups complete). `symbol_from_fsw()` / `fsw_to_fswr()` raise a clear
+  `ValueError` naming the missing `(group, base_symbol_number)` only for
+  keys outside Category 1 (Hands) -- see `../ROADMAP.md` for the other 7
+  ISWA categories, not yet started.
+- Joint angles for all 261 registered base symbols are derived from real
+  data, not guessed: median 3D hand keypoints (MediaPipe v0.10.3, 48 crops)
+  from
   [sign-language-processing/3d-hands-benchmark](https://github.com/sign-language-processing/3d-hands-benchmark),
   a real photographed hand posing all 261 ISWA Category-1 shapes at 6
   orientations. Flexion = angle between consecutive bone vectors
@@ -256,9 +252,7 @@ moment its module is imported and its class is `@register_symbol`'d.
   real photo, not verified motion-capture ground truth (that benchmark
   doesn't claim otherwise either) -- but it's real photographed data, not
   an invented number. `abduction` (finger spread) isn't measured by this
-  method and is still a guess. Base symbols added beyond these 11 will need
-  the same treatment (map symbol_id -> dataset index, as documented in each
-  group file) or a real rig/mesh once one exists.
+  method and is still a guess.
 - `fill`'s "Floor Plane" component (`_fill_plane_degrees`) pitches the whole
   hand 90 degrees, matching the chart's *description* ("top view, arm
   reaching down") -- but the chart itself shows this from a camera looking
