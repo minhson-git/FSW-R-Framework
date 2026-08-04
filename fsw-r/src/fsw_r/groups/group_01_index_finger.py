@@ -21,7 +21,6 @@ over a hand-picked guess.
 from __future__ import annotations
 
 from abc import ABC
-from dataclasses import replace
 
 from scipy.spatial.transform import Rotation
 
@@ -63,30 +62,28 @@ class BaseSymbol01_01_001_Index(SymbolGroup1IndexFinger):
 
 @register_symbol(group=1, base_symbol_number=7)
 class BaseSymbol01_01_007_IndexBent(SymbolGroup1IndexFinger):
-    """01-01-007 "Index Bent". Illustrates why the default joint template
-    lives on the group while the override lives on the base symbol: this
-    variant only differs from "Index" in the index finger's flexion.
+    """01-01-007 "Index Bent" -- base symbol 7 of Group 1.
 
-    The index angles below are real data (same source/method as the group
-    docstring), from dataset symbol "01-01-007" -- the other four fingers
-    also measured slightly differently there than in "01-01-001" (natural
-    photo-to-photo variance, not part of what the symbol actually encodes),
-    so this only takes the index finger from that measurement and keeps the
-    rest of the pose from the shared group template, matching the ISWA
-    definition that "Index Bent" differs only in the index finger.
+    Angles are real data (same source/method as the group docstring), from
+    dataset symbol "01-01-007", all five digits independently -- unlike an
+    earlier version of this class, the other four fingers are NOT borrowed
+    from the "Index" (01-01-001) template: the measured differences there
+    (e.g. pinky pip 118 vs. 140, dip 58 vs. 30) are too large to dismiss as
+    photo-to-photo noise, so this symbol gets its own full measurement like
+    every other of the 261 base symbols, rather than a partial override.
     """
 
     def __init__(self, fill: int, rotation: int) -> None:
         super().__init__(category=1, group=1, base_symbol_number=7, fill=fill, rotation=rotation)
 
     def get_joint_pose(self) -> HandJointPose:
-        base = self._default_joint_pose()
-        bent_index = FingerPose(
-            mcp=JointAngle(flexion=32),
-            pip=JointAngle(flexion=46),
-            dip=JointAngle(flexion=69),
+        return HandJointPose(
+            thumb=ThumbPose(cmc=JointAngle(32), mcp=JointAngle(39), ip=JointAngle(11)),
+            index=FingerPose(mcp=JointAngle(32), pip=JointAngle(46), dip=JointAngle(69)),
+            middle=FingerPose(mcp=JointAngle(65), pip=JointAngle(114), dip=JointAngle(51)),
+            ring=FingerPose(mcp=JointAngle(69), pip=JointAngle(120), dip=JointAngle(71)),
+            pinky=FingerPose(mcp=JointAngle(65), pip=JointAngle(118), dip=JointAngle(58)),
         )
-        return replace(base, index=bent_index)
 
     def get_wrist_orientation(self) -> Rotation:
         return self._default_wrist_orientation()

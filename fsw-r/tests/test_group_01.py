@@ -163,7 +163,12 @@ def test_fill_side_in_floor_plane_differs_from_palm_and_back() -> None:
     assert result == pytest.approx([1.0, 0.0, 0.0])
 
 
-def test_index_bent_overrides_only_index_finger() -> None:
+def test_index_bent_has_its_own_real_measured_pose() -> None:
+    """"Index Bent" (01-01-007) gets its own full real measurement from the
+    dataset, like every other of the 261 base symbols -- it does NOT borrow
+    the other four fingers from the "Index" (01-01-001) template, since the
+    measured differences (e.g. pinky pip/dip) are too large to be
+    photo-to-photo noise."""
     straight = BaseSymbol01_01_001_Index(fill=1, rotation=0)
     bent = BaseSymbol01_01_007_IndexBent(fill=1, rotation=0)
 
@@ -171,7 +176,7 @@ def test_index_bent_overrides_only_index_finger() -> None:
     bent_pose = bent.get_joint_pose()
 
     assert bent_pose.index.pip.flexion == 46
-    assert bent_pose.thumb == straight_pose.thumb
-    assert bent_pose.middle == straight_pose.middle
-    assert bent_pose.ring == straight_pose.ring
-    assert bent_pose.pinky == straight_pose.pinky
+    assert bent_pose.thumb != straight_pose.thumb
+    assert bent_pose.middle != straight_pose.middle
+    assert bent_pose.ring != straight_pose.ring
+    assert bent_pose.pinky != straight_pose.pinky
