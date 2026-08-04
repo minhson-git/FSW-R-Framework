@@ -47,12 +47,20 @@ tầng khác nhau trong ISWA, không dùng lẫn:
   Group 2 "Index & Middle" = số khác, v.v. **Category 1 (Hands) = tổng cả
   10 group cộng lại = 261 base symbol**, không phải 14.
 
-**Trạng thái hiện tại:** khung kiến trúc 4 tầng đã xong và test kỹ
-(`FSWBaseSymbol` → `FSWRenderableSymbol` → `SymbolGroupN` → `BaseSymbolX`),
-parse FSW thật qua `sutton-signwriting`, `rotation`/`fill` → quaternion 3D đã
-xác nhận đúng qua chart gốc + test (kể cả bug gimbal-lock ở Floor Plane đã
-tìm ra và sửa). **Cả 10/10 group Hands giờ đã có file code + ít nhất 1 base
-symbol đăng ký thật** (tên lấy từ ảnh/HTML thật signwriting.org, không đoán):
+**Trạng thái hiện tại:** parse FSW thật qua `sutton-signwriting`,
+`rotation`/`fill` → quaternion 3D đã xác nhận đúng qua chart gốc + test (kể
+cả bug gimbal-lock ở Floor Plane đã tìm ra và sửa). **Đủ 10/10 group Hands,
+261/261 base symbol** (tên lấy từ ảnh/HTML thật signwriting.org, không
+đoán):
+
+**Kiến trúc đã đổi so với brief ban đầu:** 4 tầng class ban đầu
+(`FSWBaseSymbol` → `FSWRenderableSymbol` → `SymbolGroupN` → `BaseSymbolX`,
+1 class Python/base symbol) đã được refactor sang **data-driven**: 1 class
+`HandSymbol` duy nhất cho cả 261 base symbol, tra góc khớp từ
+`data/hand_joint_poses.json` (`core/pose_table.py`) thay vì hardcode trong
+từng class — xem `PROGRESS.md` mục "Refactor tầng Group sang data-driven"
+để biết lý do (261 class chỉ khác nhau ở 15 con số/class, tức là dữ liệu
+giả dạng behavior) và chi tiết. `groups/` (10 file cũ) đã xoá.
 
 | Group | Tên thật | Base symbol đã làm | Tổng base symbol group |
 |---|---|---|---|
@@ -83,7 +91,8 @@ trong mảng `(48, 261, 6, 21, 3)` (thứ tự khớp `sorted(os.listdir(...))`
 đúng bằng thứ tự group/base_symbol_number của mình — đã verify bằng cách
 đọc script sinh dữ liệu gốc), lấy median qua 48 lần chụp, tính góc `flexion`
 = góc giữa 2 vector xương liên tiếp (wrist→mcp, mcp→pip, pip→dip, dip→tip).
-Đã cập nhật cả 10 file group + test tương ứng (1358 test pass). Lưu ý quan trọng: đây là
+Đã cập nhật cả 10 file group + test tương ứng lúc đó (1358 test pass; sau
+refactor data-driven, còn 596 test — xem `PROGRESS.md`). Lưu ý quan trọng: đây là
 **ước lượng của MediaPipe trên ảnh thật, không phải motion-capture đã xác
 thực** (chính benchmark cũng không claim vậy) — nhưng đáng tin hơn nhiều so
 với số tự đoán. `abduction` (độ xoè ngón) KHÔNG đo được bằng cách này, vẫn
@@ -108,13 +117,30 @@ là số đoán giữ nguyên từ baseline cũ.
 (motion) — đúng nhu cầu ra clip 3D đã bàn trước đó. Không có Movement thì
 mãi mãi chỉ demo được ảnh tĩnh.
 
+**Dùng ngay pattern data-driven (bảng dữ liệu + 1 class generic), KHÔNG lặp
+lại pattern "1 class Python/base symbol" ban đầu của Category 1.** Category
+1 tự nó đã đi qua đúng bài học này: bắt đầu bằng 261 class riêng
+(`groups/`), rồi refactor sang 1 `HandSymbol` + bảng JSON vì 96% class chỉ
+khác nhau ở vài con số, không phải hành vi (xem `PROGRESS.md`). Pha 2 nên
+áp dụng data-driven pattern **ngay từ đầu**, không đợi tích luỹ 242 class
+rồi mới refactor lại.
+
+**Bảng ISWA valid combinations (`core/iswa_data.py`) là BẮT BUỘC cho
+Category 2, không phải tuỳ chọn như đã cân nhắc lúc đầu cho Category 1:**
+242 base symbol của Movement có **17 mẫu (fills, rotations) khác nhau**
+(nhiều base chỉ có 8 rotation hoặc 2-4 fill, xem số liệu tham khảo ở bảng
+category phía trên) — biến thiên nhiều hơn hẳn Category 1 (chỉ 2 mẫu: đủ
+6×16, hoặc 1 trong 8 ngoại lệ). `iswa_data.py` đã tổng quát hoá đủ để đọc
+range Category 2 (`0x205–0x2f6`) mà không cần sửa gì thêm — chỉ cần dùng.
+
 **Thay đổi kiến trúc cần có:**
 - `core/fsw_symbol_key.py` hiện **chỉ chấp nhận range Hands**
   (`0x100–0x204`, raise `ValueError` cho mọi range khác) — cần tổng quát
   hoá để nhận diện category từ base hex (dùng đủ bảng range ở trên), không
   chỉ validate riêng Hands.
-- `core/registry.py` hiện map `(group, base_symbol_number) → class` với giả
-  định ngầm là "Hands" — cần thêm `category` vào key của registry để không
+- `core/registry.py`/`HAND_POSE_TABLE` hiện đặt tên gắn với "Hands" — Category
+  2 cần bảng dữ liệu + class generic riêng của nó (vd `MovementSymbol` +
+  `data/movement_paths.json`), khoá theo `symbol_id` đủ category để không
   đụng độ với base_symbol_number của category khác.
 - Cần kiểu dữ liệu MỚI hoàn toàn (không tái dùng `HandJointPose`): 1
   "motion path" — chuỗi điểm/keyframe theo thời gian, có hướng

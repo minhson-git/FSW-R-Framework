@@ -389,6 +389,114 @@ monkeypatch `build_symbol` để xác nhận `ast_to_fswr()` truyền đúng
 `ValueError` lên trên. `fsw-r-viz` (`mypy --strict` + `pytest`) vẫn xanh
 sau thay đổi lớn này ở `fsw-r`.
 
+## Refactor tầng Group sang data-driven + bảng ISWA valid combinations
+
+Sau khi Category 1 xong 261/261, đo lại thực tế thì thấy tầng `groups/`
+(kiến trúc Template Method — `SymbolGroupN` cung cấp template, `BaseSymbolX`
+override) đã sụp đổ trên thực tế:
+
+| Chỉ số | Giá trị |
+|---|---|
+| Base symbol override `get_joint_pose()` (không dùng template) | **251/261 (96%)** |
+| Base symbol thực sự dùng `_default_joint_pose()` của group | 10/261 (đúng 1/group) |
+| `get_wrist_orientation()` có nội dung **y hệt** `return self._default_wrist_orientation()` | **261/261 (100%)** |
+| Dòng code `src/fsw_r/groups/` | 5810 dòng, cho 261 class chỉ khác nhau ở 15 con số/class |
+
+Kết luận: đây là **dữ liệu bị lưu dưới dạng class**, không phải hành vi
+(behavior) thật sự khác nhau giữa các symbol. Đồng thời phát hiện thêm 1 vấn
+đề đúng đắn khác: `FSWBaseSymbol.__init__` chỉ validate `fill`/`rotation`
+theo range TOÀN CỤC (0-5 / 0-15), trong khi ISWA thật ra định nghĩa tập hợp
+lệ RIÊNG cho từng base symbol (652 base × 6 fill × 16 rotation = 62.592 tổ
+hợp khả dĩ, nhưng chỉ 37.811 — 60,4% — là symbol thật) — framework cũ chấp
+nhận và render cả những symbol không tồn tại (vd `01-05-002` với `fill=0`)
+mà không báo lỗi.
+
+**Phần 1 — bảng ISWA valid combinations (làm trước, độc lập):**
+
+Nguồn dữ liệu: font TTF chính thức `@sutton-signwriting/font-ttf`
+(`SuttonSignWritingLine.ttf`) — cmap của font này chính là danh sách trắng
+37.811 symbol thật (đã verify: font Line và font Fill cho cùng tập id).
+`scripts/gen_valid_combinations.py` tải font qua `npm pack` (fetch package
+thật, không scrape web), decode cmap bằng công thức nghịch đảo của
+`convert.key2id` (`sutton-signwriting/core`), ghi ra
+`data/iswa_valid_combinations.json`. Script tự kiểm chứng số liệu ra so với
+số liệu đã verify độc lập trước (tổng 37.811 symbol, 652 base, tỉ lệ 60,4%,
+8 ngoại lệ của Category 1) và exit code khác 0 nếu sai khớp — chạy lại cho
+ra JSON **byte-for-byte giống hệt** file đã commit.
+
+`core/iswa_data.py` load bảng này (`importlib.resources`, load 1 lần lúc
+import) và expose `valid_combinations_for(base_hex)` /
+`is_valid_symbol(base_hex, fill, rotation)`. `FSWBaseSymbol.__init__` giờ
+validate theo bảng này thay vì range toàn cục — vd tạo `01-05-002` với
+`fill=0` giờ raise `ValueError` nêu rõ `fills=[1]` là tập hợp lệ thật, thay
+vì âm thầm chấp nhận. Hệ quả phụ: 7 base symbol (trong Group 5 và 10) không
+hỗ trợ `fill=0` — 2 test cũ giả định `fill=0` luôn hợp lệ với mọi symbol
+phải sửa lại (skip đúng 7 case đó thay vì assert sai).
+
+**Phần 2 — HandSymbol thay 261 class:**
+
+1. `scripts/export_joint_poses.py` (migrate 1 lần): import toàn bộ
+   `groups/*.py` cũ, gọi `get_joint_pose()` thật của từng class đã đăng ký,
+   ghi ra `data/hand_joint_poses.json` (261 entry, kèm tên thật + `_meta`
+   ghi rõ nguồn/phương pháp/giới hạn dữ liệu MediaPipe — giữ nguyên, không
+   mất, so với docstring cũ). KHÔNG tính lại góc nào — chỉ trích xuất số đã
+   có.
+2. `core/pose_table.py` load JSON này thành `HAND_POSE_TABLE`
+   (`symbol_id -> HandJointPose`) + `HAND_NAME_TABLE`, fail fast lúc import
+   nếu JSON thiếu/sai cấu trúc.
+3. `core/hand_symbol.py`: 1 class `HandSymbol` duy nhất cho cả 261 base
+   symbol — `get_joint_pose()` tra `HAND_POSE_TABLE[self.symbol_id]`,
+   `get_wrist_orientation()` vẫn `return self._default_wrist_orientation()`
+   (công thức generic, không đổi).
+4. `core/registry.py` viết lại: bỏ decorator `@register_symbol` + dict 261
+   entry, `build_symbol()` giờ chỉ cần `symbol_id in HAND_POSE_TABLE` là đủ.
+   Giữ `_OVERRIDES: dict[str, Constructor]` làm chỗ mở rộng cho tương lai
+   (phương án C) — hiện rỗng (0/261 symbol cần override hành vi riêng).
+5. **Kiểm chứng không đổi hành vi trước khi xoá `groups/`:** script tạm (không
+   commit) so `get_joint_pose()`/`get_wrist_orientation()`/`hand_side`/
+   `symbol_id` của cả 261 class cũ vs `HandSymbol` mới, qua ~6100 tổ hợp
+   (symbol × fill × rotation) — khớp tuyệt đối. Chỉ sau khi pass mới xoá
+   `groups/` (10 file, 5810 dòng).
+6. `demo.py` (`fsw-r`) và `demo.py`/2 file test (`fsw-r-viz`) trước đó import
+   thẳng class cụ thể từ `groups/*` — sửa lại dùng `symbol_from_fsw()` /
+   `HandSymbol(...)` trực tiếp. Render lại 2 ảnh demo của `fsw-r-viz`:
+   `index_finger_fills.png` (dùng "Index", không đổi logic) ra **byte-for-byte
+   giống hệt** ảnh trước refactor — bằng chứng trực quan công thức
+   rotation/fill không hề đổi.
+
+**Test suite viết lại, số lượng GIẢM MẠNH — đây là kết quả mong muốn, không
+phải hồi quy:** phần lớn trong 1358 test cũ (10 file `test_group_0N.py`,
+mỗi file parametrize hoá đầy đủ theo từng symbol trong group) đang so sánh
+dữ liệu với chính nó — vd "`get_joint_pose()` có bằng đúng giá trị nó được
+khởi tạo từ không" là tautology 1 khi góc khớp chuyển thành tra bảng
+(`HandSymbol.get_joint_pose()` CHỈ làm mỗi việc tra `HAND_POSE_TABLE`). Tệ
+hơn, nhiều thuộc tính (wrist orientation bất biến theo symbol, joint pose
+bất biến theo fill/rotation) vốn KHÔNG phụ thuộc symbol nào cả — công thức
+chỉ nhìn `fill`/`rotation` — nên test lặp lại cùng 1 khẳng định 261 lần
+không có thêm giá trị. Viết lại thành:
+- `test_pose_table.py`: tính toàn vẹn của bảng 261 entry (đủ số lượng,
+  không thiếu ngón/khớp, mọi flexion trong khoảng vật lý hợp lý), cộng vài
+  giá trị chốt cụ thể (Index, Index Bent) để bắt lỗi hỏng dữ liệu âm thầm.
+- `test_hand_symbol.py`: đúng phần THẬT SỰ khác nhau theo từng symbol —
+  dựng object + `symbol_id`/`name` đúng (261 case), và round-trip qua
+  `symbol_from_fsw()` thật cho cả 261 base hex (261 case, kiểm tra công thức
+  base_hex mỗi group không lệch 1 đơn vị nào) — cộng đúng 1 test (không
+  parametrize) khoá bất biến "joint pose không đổi theo fill/rotation".
+- `test_wrist_orientation.py`: giữ nguyên các test hành vi quan trọng nhất
+  từ `test_group_01.py` cũ (bug gimbal-lock, quy tắc 180°, Six Palm
+  Facings...), chỉ đổi từ `BaseSymbol01_01_001_Index` sang `HandSymbol` —
+  vẫn dùng "Index" làm ví dụ vì công thức không phụ thuộc symbol nào.
+- `test_hand_side.py`/`test_registry.py`/`test_fswr_converter.py`/
+  `test_iswa_data.py`: cập nhật để dựng `HandSymbol` trực tiếp thay vì
+  import class đã xoá, giữ nguyên nội dung test.
+
+Kết quả: `pytest` từ **1358 → 596** (fsw-r-viz vẫn 4/4), `mypy --strict`
+sạch (**41 → 25 file** — do 10 file `groups/*.py` + `__init__.py` bị xoá),
+dòng code `src/fsw_r` từ **~6300 → 858**. `renderer.py` vẫn hoàn toàn không
+biết gì về `HandSymbol` cụ thể (chỉ phụ thuộc `FSWRenderableSymbol` +
+`HandRigProvider`, cả 2 đều abstract) — nguyên tắc category/group-agnostic
+của renderer không đổi qua refactor này.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -404,11 +512,13 @@ sau thay đổi lớn này ở `fsw-r`.
 
 ## Trạng thái hiện tại
 
-- **Category 1 (Hands) đã xong 100%: 261/261 base symbol, đủ 10/10 group.**
-- `fsw-r`: `mypy --strict` sạch (37 file), `pytest` **1358/1358 pass**
-  (`test_group_01.py` .. `test_group_10.py`, `test_hand_side.py`,
-  `test_fsw_symbol_key.py`, `test_fsw_ast.py`, `test_registry.py`,
-  `test_fswr_converter.py`).
+- **Category 1 (Hands) đã xong 100%: 261/261 base symbol, đủ 10/10 group —
+  data-driven qua `HandSymbol` + `data/hand_joint_poses.json`, không còn
+  261 class riêng (`groups/` đã xoá).**
+- `fsw-r`: `mypy --strict` sạch (25 file), `pytest` **596/596 pass**
+  (`test_pose_table.py`, `test_hand_symbol.py`, `test_wrist_orientation.py`,
+  `test_hand_side.py`, `test_iswa_data.py`, `test_fsw_symbol_key.py`,
+  `test_fsw_ast.py`, `test_registry.py`, `test_fswr_converter.py`).
 - `fsw-r-viz`: `mypy --strict` sạch (6 file), `pytest` 4/4 pass
   (`test_hand_geometry.py`, `test_plot_hand.py`).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
@@ -430,8 +540,11 @@ sau thay đổi lớn này ở `fsw-r`.
   chiếu ngang, phức tạp hơn flexion).
 - Dấu của `abduction` có thể cần đảo chiều cho tay trái tuỳ convention rig —
   chưa xử lý (ghi chú trong code, chưa có rig thật để kiểm chứng).
-- Chưa có export JSON cho `HandJointPose`/wrist quaternion (cần nếu render
-  cuối cùng là web three.js thay vì Blender/Open3D).
+- `data/hand_joint_poses.json` là JSON nội bộ (nguồn cho `HAND_POSE_TABLE`,
+  không có wrist quaternion vì đó là hàm số của fill/rotation, tính lúc
+  chạy) — vẫn CHƯA có API export JSON công khai cho 1 symbol cụ thể (pose +
+  wrist quaternion đã tính) nếu render cuối cùng là web three.js thay vì
+  Blender/Open3D.
 - 7 category khác của ISWA (Movement, Dynamics, Head & Face, Trunk, Limb,
   Location, Punctuation — tổng ~391 base symbol còn lại trong số 652 base
   symbol toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 2 trở đi, đòi hỏi
