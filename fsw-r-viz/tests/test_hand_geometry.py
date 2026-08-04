@@ -8,7 +8,7 @@ from fsw_r_viz.hand_geometry import hand_local_points, mirror_for_left_hand
 
 
 def test_mirror_for_left_hand_flips_only_x() -> None:
-    symbol = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=0)
+    symbol = HandSymbol(base_hex=0x100, fill=1, rotation=0)
     original = hand_local_points(symbol.get_joint_pose())
     mirrored = mirror_for_left_hand(original)
 
@@ -20,7 +20,7 @@ def test_mirror_for_left_hand_flips_only_x() -> None:
 
 
 def test_mirror_for_left_hand_is_its_own_inverse() -> None:
-    symbol = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=0)
+    symbol = HandSymbol(base_hex=0x100, fill=1, rotation=0)
     original = hand_local_points(symbol.get_joint_pose())
     twice_mirrored = mirror_for_left_hand(mirror_for_left_hand(original))
 
@@ -37,7 +37,7 @@ def test_right_hand_thumb_is_on_the_viewers_left() -> None:
     put the thumb on the viewer's right instead). x here is the local
     spread axis, before any wrist rotation is applied, so this checks the
     base authoring directly, not a specific fill/rotation's rendering."""
-    symbol = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=0)
+    symbol = HandSymbol(base_hex=0x100, fill=1, rotation=0)
     points = hand_local_points(symbol.get_joint_pose())
 
     thumb_base_x = points["thumb"][1][0]  # index 0 is the wrist (x=0)

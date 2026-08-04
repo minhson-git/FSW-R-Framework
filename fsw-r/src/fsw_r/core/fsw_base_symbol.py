@@ -1,11 +1,14 @@
 """Mock of the pre-existing FSW parsing layer.
 
 The real system is assumed to already have a class that parses an ISWA/FSW
-symbol string into (category, group, base_symbol_number, fill, rotation) and
-computes a full wrist orientation from fill/rotation. This module only
-reproduces that contract so the fsw-r layer can inherit from it -- the
-in-plane angle helper below (``_rotation_angle_degrees``) is a stand-in for
-whatever richer logic the real system already has.
+symbol string into (base_hex, fill, rotation) and computes a full wrist
+orientation from fill/rotation. This module only reproduces that contract
+so the fsw-r layer can inherit from it -- the in-plane angle helper below
+(``_rotation_angle_degrees``) is a stand-in for whatever richer logic the
+real system already has. ``base_hex`` is kept as the one identity field
+(category/group/base_symbol_number are derived properties, see below) so
+category/group never need to be reconstructed from pieces further down the
+hierarchy -- see ``core/iswa_data.py``.
 
 If a real ``FSWBaseSymbol`` implementation exists elsewhere in the codebase,
 replace this module with an import of that implementation instead of the
@@ -48,16 +51,20 @@ from abc import ABC, abstractmethod
 
 from scipy.spatial.transform import Rotation
 
-from fsw_r.core.iswa_data import HAND_GROUP_START, valid_combinations_for
+from fsw_r.core.iswa_data import (
+    base_symbol_number_of,
+    category_of,
+    group_of,
+    symbol_id_of,
+    valid_combinations_for,
+)
 from fsw_r.core.types import HandSide
 
 
 class FSWBaseSymbol(ABC):
     def __init__(
         self,
-        category: int,  # 1 = Hands
-        group: int,  # 1..10
-        base_symbol_number: int,  # 1, 2, 3, ... (within group)
+        base_hex: int,  # ISWA base symbol code, e.g. 0x100 = "Index" (01-01-001)
         fill: int,  # 0..5 (6 syntactically valid ISWA fill values)
         rotation: int,  # 0..15 (16 syntactically valid ISWA rotation values, hex 0-f)
     ) -> None:
@@ -65,8 +72,7 @@ class FSWBaseSymbol(ABC):
         # per base symbol, not globally -- e.g. 01-05-002 only has fill=1,
         # while most Category 1 base symbols have all 6. See
         # core/iswa_data.py for where this table comes from.
-        base_hex = HAND_GROUP_START[group - 1] + (base_symbol_number - 1)
-        symbol_id = f"{category:02d}-{group:02d}-{base_symbol_number:03d}"
+        symbol_id = symbol_id_of(base_hex)  # also validates base_hex is a real ISWA base
         combos = valid_combinations_for(base_hex)
         if fill not in combos.fills:
             raise ValueError(
@@ -80,11 +86,21 @@ class FSWBaseSymbol(ABC):
                 f"ISWA only defines fills={sorted(combos.fills)}, "
                 f"rotations={sorted(combos.rotations)}"
             )
-        self.category = category
-        self.group = group
-        self.base_symbol_number = base_symbol_number
+        self.base_hex = base_hex
         self.fill = fill
         self.rotation = rotation
+
+    @property
+    def category(self) -> int:
+        return category_of(self.base_hex)
+
+    @property
+    def group(self) -> int:
+        return group_of(self.base_hex)
+
+    @property
+    def base_symbol_number(self) -> int:
+        return base_symbol_number_of(self.base_hex)
 
     @property
     def hand_side(self) -> HandSide:
@@ -154,4 +170,6 @@ class FSWBaseSymbol(ABC):
 
     @property
     def symbol_id(self) -> str:
-        return f"{self.category:02d}-{self.group:02d}-{self.base_symbol_number:03d}"
+        """Display-only ``"01-05-002"``-style id -- never used as a lookup
+        key, see ``core/iswa_data.py``'s ``symbol_id_of()``."""
+        return symbol_id_of(self.base_hex)

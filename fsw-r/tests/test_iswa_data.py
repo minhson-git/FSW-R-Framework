@@ -60,11 +60,11 @@ def test_is_valid_symbol_true_and_false_cases() -> None:
 def test_fsw_base_symbol_raises_for_invalid_fill() -> None:
     # 01-05-002 (base 0x14d) only has fill=1 in real ISWA.
     with pytest.raises(ValueError):
-        HandSymbol(category=1, group=5, base_symbol_number=2, fill=0, rotation=0)
+        HandSymbol(base_hex=0x14D, fill=0, rotation=0)
 
 
 def test_fsw_base_symbol_accepts_the_one_valid_fill() -> None:
-    symbol = HandSymbol(category=1, group=5, base_symbol_number=2, fill=1, rotation=0)
+    symbol = HandSymbol(base_hex=0x14D, fill=1, rotation=0)
     assert symbol.fill == 1
 
 
@@ -73,12 +73,6 @@ def test_every_category_1_base_symbol_constructible_with_its_own_first_valid_fil
         for base_symbol_number in range(1, size + 1):
             base_hex = HAND_GROUP_START[group - 1] + (base_symbol_number - 1)
             first_valid_fill = min(valid_combinations_for(base_hex).fills)
-            parsed = ParsedFSWSymbol(
-                category=1,
-                group=group,
-                base_symbol_number=base_symbol_number,
-                fill=first_valid_fill,
-                rotation=0,
-            )
+            parsed = ParsedFSWSymbol(base_hex=base_hex, fill=first_valid_fill, rotation=0)
             symbol = build_symbol(parsed)
             assert symbol.fill == first_valid_fill

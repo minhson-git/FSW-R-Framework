@@ -27,8 +27,8 @@ from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.pose_table import HAND_POSE_TABLE
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
-# A concrete symbol's constructor -- (category, group, base_symbol_number,
-# fill, rotation) -> FSWRenderableSymbol, the shape HandSymbol itself uses.
+# A concrete symbol's constructor -- (base_hex, fill, rotation) ->
+# FSWRenderableSymbol, the shape HandSymbol itself uses.
 _Constructor = Callable[..., FSWRenderableSymbol]
 
 # Escape hatch for a future base symbol needing distinct behavior, not just
@@ -38,29 +38,23 @@ _OVERRIDES: dict[str, _Constructor] = {}
 
 
 def build_symbol(parsed: ParsedFSWSymbol) -> FSWRenderableSymbol:
-    """Look up the given (category, group, base_symbol_number) and
-    instantiate the matching symbol with the decoded fill/rotation.
+    """Look up the given base_hex and instantiate the matching symbol with
+    the decoded fill/rotation.
 
     Raises ``ValueError`` if that symbol_id has no entry in
     ``HAND_POSE_TABLE`` -- for Category 1 keys parsed from a real FSW
     string this can no longer actually happen (all 261 are covered), but it
     remains reachable via a synthetic ``ParsedFSWSymbol`` naming a
-    (group, base_symbol_number) pair that doesn't exist in any group.
+    base_hex that doesn't exist in any group.
     """
-    symbol_id = f"{parsed.category:02d}-{parsed.group:02d}-{parsed.base_symbol_number:03d}"
+    symbol_id = parsed.symbol_id
     if symbol_id not in HAND_POSE_TABLE:
         raise ValueError(
-            f"no base symbol registered for group={parsed.group}, "
-            f"base_symbol_number={parsed.base_symbol_number} (symbol_id={symbol_id})"
+            f"no base symbol registered for base_hex=0x{parsed.base_hex:03x} "
+            f"(symbol_id={symbol_id})"
         )
     cls = _OVERRIDES.get(symbol_id, HandSymbol)
-    return cls(
-        category=parsed.category,
-        group=parsed.group,
-        base_symbol_number=parsed.base_symbol_number,
-        fill=parsed.fill,
-        rotation=parsed.rotation,
-    )
+    return cls(base_hex=parsed.base_hex, fill=parsed.fill, rotation=parsed.rotation)
 
 
 def symbol_from_fsw(key: str) -> FSWRenderableSymbol:

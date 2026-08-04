@@ -10,7 +10,7 @@ from fsw_r.core.types import HandSide
 
 
 def _index(fill: int, rotation: int) -> HandSymbol:
-    return HandSymbol(category=1, group=1, base_symbol_number=1, fill=fill, rotation=rotation)
+    return HandSymbol(base_hex=0x100, fill=fill, rotation=rotation)
 
 
 @pytest.mark.parametrize("rotation", range(0, 8))

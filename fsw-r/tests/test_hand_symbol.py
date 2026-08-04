@@ -36,8 +36,9 @@ def _base_hex(group: int, base_symbol_number: int) -> int:
 
 @pytest.mark.parametrize("group,base_symbol_number", ALL_SYMBOLS)
 def test_symbol_constructs_with_correct_id_and_name(group: int, base_symbol_number: int) -> None:
-    fill = min(valid_combinations_for(_base_hex(group, base_symbol_number)).fills)
-    symbol = HandSymbol(category=1, group=group, base_symbol_number=base_symbol_number, fill=fill, rotation=0)
+    base_hex = _base_hex(group, base_symbol_number)
+    fill = min(valid_combinations_for(base_hex).fills)
+    symbol = HandSymbol(base_hex=base_hex, fill=fill, rotation=0)
 
     symbol_id = f"01-{group:02d}-{base_symbol_number:03d}"
     assert symbol.symbol_id == symbol_id
@@ -67,7 +68,7 @@ def test_joint_pose_is_independent_of_fill_and_rotation() -> None:
     (not 261 times -- HandSymbol's get_joint_pose() ignores fill/rotation
     by construction, so any single example proves it for all of them)."""
     variants = [
-        HandSymbol(category=1, group=1, base_symbol_number=1, fill=fill, rotation=rotation)
+        HandSymbol(base_hex=0x100, fill=fill, rotation=rotation)
         for fill in range(6)
         for rotation in (0, 2, 9)
     ]

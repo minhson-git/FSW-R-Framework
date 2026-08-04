@@ -25,11 +25,11 @@ from fsw_r_viz.plot_hand import render_symbols_grid
 
 def _render_rotation_sweep(output_dir: Path) -> None:
     symbols = [
-        # (category, group, base_symbol_number, fill, rotation)
-        (HandSymbol(1, 1, 8, fill=0, rotation=0), "01-01-012 rotation=3 (RIGHT, finger up)"),  # Index Hinge
-        (HandSymbol(1, 1, 8, fill=0, rotation=5), "01-08-002 rotation=2 (RIGHT, finger sideways)"),  # Index Ring Baby on Circle
-        (HandSymbol(1, 1, 2, fill=0, rotation=2), "01-01-002 rotation=2 (RIGHT, finger down)"),  # Index on Circle
-        (HandSymbol(1, 9, 1, fill=0, rotation=12), "01-09-001 rotation=12 (LEFT, mirrored)"),  # Middle Ring Baby
+        # base_hex, fill, rotation
+        (HandSymbol(0x107, fill=0, rotation=0), "01-01-012 rotation=3 (RIGHT, finger up)"),  # Index Hinge
+        (HandSymbol(0x107, fill=0, rotation=5), "01-08-002 rotation=2 (RIGHT, finger sideways)"),  # Index Ring Baby on Circle
+        (HandSymbol(0x101, fill=0, rotation=2), "01-01-002 rotation=2 (RIGHT, finger down)"),  # Index on Circle
+        (HandSymbol(0x1CD, fill=0, rotation=12), "01-09-001 rotation=12 (LEFT, mirrored)"),  # Middle Ring Baby
     ]
     output_path = output_dir / "index_finger_rotations.png"
     render_symbols_grid(symbols, str(output_path))
@@ -46,7 +46,7 @@ def _render_fill_sweep(output_dir: Path) -> None:
         (5, "Back, Floor"),
     ]
     symbols = [
-        (HandSymbol(1, 1, 1, fill=fill, rotation=0), f"01-01-001 fill={fill} ({label})")  # Index
+        (HandSymbol(0x100, fill=fill, rotation=0), f"01-01-001 fill={fill} ({label})")  # Index
         for fill, label in fill_titles
     ]
     output_path = output_dir / "index_finger_fills.png"

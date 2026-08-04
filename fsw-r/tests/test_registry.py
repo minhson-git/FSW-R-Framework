@@ -28,20 +28,17 @@ def test_symbol_from_fsw_builds_index_bent() -> None:
 
 def test_symbol_from_fsw_matches_direct_construction() -> None:
     from_key = symbol_from_fsw("S10014")
-    direct = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=4)
+    direct = HandSymbol(base_hex=0x100, fill=1, rotation=4)
     assert from_key.get_joint_pose() == direct.get_joint_pose()
     assert from_key.get_wrist_orientation().as_quat() == pytest.approx(
         direct.get_wrist_orientation().as_quat()
     )
 
 
-def test_build_symbol_raises_for_unregistered_base_symbol() -> None:
-    # All 261 Category-1 base symbols are covered by HAND_POSE_TABLE, so
-    # there's no valid-range Hands FSW key left to exercise this path
-    # through a real key string -- build a synthetic ParsedFSWSymbol
-    # instead, targeting a (group, base_symbol_number) pair that doesn't
-    # exist in any group.
-    parsed = ParsedFSWSymbol(category=1, group=1, base_symbol_number=99, fill=1, rotation=0)
+def test_build_symbol_raises_for_unsupported_category() -> None:
+    # 0x22b is a real ISWA base (Category 2, Movement) -- parses fine, but
+    # no Movement symbol is registered in HAND_POSE_TABLE (Category 1 only).
+    parsed = ParsedFSWSymbol(base_hex=0x22B, fill=0, rotation=3)
     with pytest.raises(ValueError):
         build_symbol(parsed)
 

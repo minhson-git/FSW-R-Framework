@@ -20,14 +20,8 @@ from fsw_r.core.types import HandJointPose
 
 
 class HandSymbol(FSWRenderableSymbol):
-    def __init__(self, category: int, group: int, base_symbol_number: int, fill: int, rotation: int) -> None:
-        super().__init__(
-            category=category,
-            group=group,
-            base_symbol_number=base_symbol_number,
-            fill=fill,
-            rotation=rotation,
-        )
+    def __init__(self, base_hex: int, fill: int, rotation: int) -> None:
+        super().__init__(base_hex=base_hex, fill=fill, rotation=rotation)
 
     @property
     def name(self) -> str:

@@ -1,4 +1,4 @@
-"""Real parsing of ISWA/FSW hand-symbol keys -- no invented ranges here.
+"""Real parsing of ISWA/FSW symbol keys -- no invented ranges here.
 
 An FSW symbol key is 6 ASCII characters: ``S`` + 3 hex digits (base code) +
 1 hex digit fill (0-5) + 1 hex digit rotation (0-f), e.g. ``"S10011"``. This
@@ -8,16 +8,21 @@ sutton-signwriting/core) extracts via
 ``signwriting.utils.mirror.mirror_symbol`` (``base, fill = symbol[:4],
 symbol[4]; rotation = int(symbol[5], 16)``).
 
-The category/group ranges (``HAND_GROUP_START``/``HAND_RANGE_END``, imported
-from ``core/iswa_data.py`` -- the single place these boundaries are defined)
-are taken directly from sutton-signwriting/core's own source
-(``src/fsw/fsw-structure.js``, https://github.com/sutton-signwriting/core):
-``ranges.hand = [0x100, 0x204]`` (ISWA Category 1, Hands) and the ``group``
-boundary array's first 10 entries (the rest cover movement/head/trunk/etc,
-outside this prototype's scope):
-``0x100, 0x10e, 0x11e, 0x144, 0x14c, 0x186, 0x1a4, 0x1ba, 0x1cd, 0x1f5``,
-followed by ``0x205`` (the start of the next section, "movement"), used
-here as the closing edge of group 10.
+This module only knows the FSW key *grammar* -- it validates ``base_hex``
+against the full ISWA range (``core/iswa_data.py``'s ``GROUP_START[0]`` to
+``ISWA_LAST_BASE``, i.e. 0x100-0x38b, all 8 categories), not just Category 1
+(Hands). It does NOT know or care which categories are actually
+implemented -- ``S22b03`` (Category 2, Movement) parses successfully here;
+whether an object can actually be *built* for it is ``registry.py``'s
+concern (``build_symbol()`` raises there if the category isn't supported
+yet), not this module's. Keeping that check out of the parser is what lets
+adding a new category be "register one more entry in registry.py" instead
+of "also touch the parser."
+
+``base_hex`` flows through unchanged from the key -- category, group, and
+base_symbol_number are derived on demand (``core/iswa_data.py``), not
+computed and stored here, so there is exactly one place that turns a
+base_hex into those numbers.
 
 Group 1 (0x100-0x10d) is exactly 14 base codes, matching the 14 named base
 symbols listed at https://www.signwriting.org/lessons/iswa/group01/ (Index
@@ -32,52 +37,66 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from fsw_r.core.iswa_data import HAND_GROUP_START as _HAND_GROUP_START
-from fsw_r.core.iswa_data import HAND_RANGE_END as _HAND_RANGE_END
+from fsw_r.core.iswa_data import (
+    GROUP_START,
+    ISWA_LAST_BASE,
+    base_symbol_number_of,
+    category_of,
+    group_of,
+    symbol_id_of,
+)
 
 _SYMBOL_KEY_RE = re.compile(r"^S([0-9a-fA-F]{3})([0-5])([0-9a-fA-F])$")
 
 
 @dataclass(frozen=True)
 class ParsedFSWSymbol:
-    category: int
-    group: int
-    base_symbol_number: int
+    base_hex: int
     fill: int
     rotation: int
+
+    @property
+    def category(self) -> int:
+        return category_of(self.base_hex)
+
+    @property
+    def group(self) -> int:
+        return group_of(self.base_hex)
+
+    @property
+    def base_symbol_number(self) -> int:
+        return base_symbol_number_of(self.base_hex)
+
+    @property
+    def symbol_id(self) -> str:
+        """Display-only ``"01-05-002"``-style id -- never used as a lookup
+        key, see ``core/iswa_data.py``'s ``symbol_id_of()``."""
+        return symbol_id_of(self.base_hex)
 
 
 def parse_fsw_symbol_key(key: str) -> ParsedFSWSymbol:
     """Parse a single FSW symbol key (e.g. ``"S10011"``) into
-    category/group/base_symbol_number/fill/rotation.
+    base_hex/fill/rotation.
 
-    Raises ``ValueError`` for anything that isn't a well-formed key, or that
-    falls outside ISWA Category 1 (Hands, 0x100-0x204) -- the only category
-    this prototype's ``groups/`` classes model.
+    Raises ``ValueError`` for anything that isn't a well-formed key, or
+    whose base falls outside the full ISWA range (0x100-0x38b). Does NOT
+    raise for a base outside Category 1 -- see the module docstring for why
+    that check belongs in ``registry.py`` instead.
     """
     match = _SYMBOL_KEY_RE.match(key)
     if match is None:
         raise ValueError(f"not a valid FSW symbol key: {key!r}")
-    base_hex, fill_hex, rotation_hex = match.groups()
-    base_value = int(base_hex, 16)
+    base_hex_str, fill_hex, rotation_hex = match.groups()
+    base_hex = int(base_hex_str, 16)
 
-    if not (_HAND_GROUP_START[0] <= base_value < _HAND_RANGE_END):
+    if not (GROUP_START[0] <= base_hex <= ISWA_LAST_BASE):
         raise ValueError(
-            f"symbol base 0x{base_hex} is outside ISWA Category 1 (Hands, "
-            f"0x100-0x204) -- only Hands is modeled by this prototype"
+            f"symbol base 0x{base_hex_str} is outside the ISWA range "
+            f"0x{GROUP_START[0]:03x}-0x{ISWA_LAST_BASE:03x}"
         )
 
-    boundaries = (*_HAND_GROUP_START, _HAND_RANGE_END)
-    group_index = next(
-        i
-        for i in range(len(_HAND_GROUP_START))
-        if boundaries[i] <= base_value < boundaries[i + 1]
-    )
-
     return ParsedFSWSymbol(
-        category=1,
-        group=group_index + 1,
-        base_symbol_number=base_value - _HAND_GROUP_START[group_index] + 1,
+        base_hex=base_hex,
         fill=int(fill_hex, 16),
         rotation=int(rotation_hex, 16),
     )
