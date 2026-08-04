@@ -14,6 +14,13 @@ exactly what that code produced, just relocated -- a parity check (not
 committed) confirmed ``core/hand_symbol.py`` + this JSON agree with the old
 ``groups/`` classes before they were deleted.
 
+UPDATE (later than this script): the JSON's top-level keys were changed
+from ``symbol_id`` (``"01-05-002"``) to ``base_hex`` (``"14d"``) by a
+separate, also-not-committed migration script -- see PROGRESS.md's
+"base_hex as the single key" entry. ``symbol_id`` is kept as a field
+*inside* each entry. No angle value changed in that step either (verified
+the same way: a temp script diffed every entry before/after).
+
 This file is excluded from ``mypy --strict`` (see pyproject.toml) since its
 imports no longer resolve -- it documents *how* the migration was done, not
 something meant to run again.

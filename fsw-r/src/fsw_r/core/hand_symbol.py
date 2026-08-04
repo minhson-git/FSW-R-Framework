@@ -7,7 +7,7 @@ one of the 261 had a ``get_wrist_orientation()`` that just returned
 ``self._default_wrist_orientation()``. That's data pretending to be
 behavior; see PROGRESS.md's "Refactor tang Group sang data-driven" entry.
 ``HandSymbol`` replaces all 261 classes: it looks up its own pose in
-``core/pose_table.py`` by ``symbol_id`` instead of hardcoding it.
+``core/pose_table.py`` by ``base_hex`` instead of hardcoding it.
 """
 
 from __future__ import annotations
@@ -27,10 +27,10 @@ class HandSymbol(FSWRenderableSymbol):
     def name(self) -> str:
         """The base symbol's real name (e.g. "Index"), useful for demos and
         debugging -- not used by rendering itself."""
-        return HAND_NAME_TABLE[self.symbol_id]
+        return HAND_NAME_TABLE[self.base_hex]
 
     def get_joint_pose(self) -> HandJointPose:
-        return HAND_POSE_TABLE[self.symbol_id]
+        return HAND_POSE_TABLE[self.base_hex]
 
     def get_wrist_orientation(self) -> Rotation:
         return self._default_wrist_orientation()

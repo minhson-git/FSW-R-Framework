@@ -42,7 +42,7 @@ def test_symbol_constructs_with_correct_id_and_name(group: int, base_symbol_numb
 
     symbol_id = f"01-{group:02d}-{base_symbol_number:03d}"
     assert symbol.symbol_id == symbol_id
-    assert symbol.name == HAND_NAME_TABLE[symbol_id]
+    assert symbol.name == HAND_NAME_TABLE[base_hex]
     assert isinstance(symbol.get_joint_pose(), HandJointPose)
 
 
@@ -73,4 +73,4 @@ def test_joint_pose_is_independent_of_fill_and_rotation() -> None:
         for rotation in (0, 2, 9)
     ]
     poses = [symbol.get_joint_pose() for symbol in variants]
-    assert all(pose == HAND_POSE_TABLE["01-01-001"] for pose in poses)
+    assert all(pose == HAND_POSE_TABLE[0x100] for pose in poses)

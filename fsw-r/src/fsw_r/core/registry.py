@@ -2,15 +2,23 @@
 already-decoded FSW symbol -- e.g. a decoded "Index, fill=1, rotation=1"
 becomes a real ``HandSymbol`` instance, not a bag of raw ints.
 
-Category 1 (Hands) base symbols no longer need per-class registration: all
-261 resolve to ``HandSymbol`` (``core/hand_symbol.py``), which looks its
-pose up in ``core/pose_table.py`` by ``symbol_id``. ``_OVERRIDES`` is an
-explicit, currently-empty escape hatch for a future base symbol that needs
-genuinely distinct *behavior* (e.g. a wrist-orientation formula that turns
-out not to be generic) rather than just distinct joint angles -- see
-PROGRESS.md's "Refactor tang Group sang data-driven" entry for why the
-previous one-class-per-base-symbol design (and its ``@register_symbol``
-decorator) was replaced.
+Dispatch is by **category**, not by per-symbol registration: ``_CATEGORY_SYMBOL``
+maps a category number to the one class that handles every base symbol in
+it (``{1: HandSymbol}`` today). Adding a new category (once its own
+``PoseTable`` + symbol class exist, see ``core/pose_table.py``) is exactly
+one more entry here -- nothing else in ``core/`` needs to change. This is
+the whole point of keying everything by ``base_hex`` through the pipeline
+(``fsw_symbol_key.py``, ``fsw_base_symbol.py``): a category dispatch this
+simple wouldn't be possible if base_hex had already been decomposed into
+category/group/base_symbol_number and thrown away, the way it used to be.
+
+``_OVERRIDES`` is an explicit, currently-empty escape hatch for a future
+*individual* base symbol that needs genuinely distinct behavior (e.g. a
+wrist-orientation formula that turns out not to be generic) rather than
+just distinct joint angles -- keyed by ``base_hex``, checked before the
+category dispatch. See PROGRESS.md's "Refactor tang Group sang
+data-driven" entry for why the previous one-class-per-base-symbol design
+(and its ``@register_symbol`` decorator) was replaced.
 
 This is the "converter" half of the FSW -> AST -> FSWR pipeline (see
 ``fsw_ast.py`` for the AST half, ``fswr_converter.py`` for the version that
@@ -24,36 +32,41 @@ from typing import Callable
 
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
-from fsw_r.core.pose_table import HAND_POSE_TABLE
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
 # A concrete symbol's constructor -- (base_hex, fill, rotation) ->
 # FSWRenderableSymbol, the shape HandSymbol itself uses.
 _Constructor = Callable[..., FSWRenderableSymbol]
 
-# Escape hatch for a future base symbol needing distinct behavior, not just
-# distinct numbers -- keyed by symbol_id (e.g. "01-01-001"). Empty today:
-# 0/261 Category 1 base symbols need this: HandSymbol covers all of them.
-_OVERRIDES: dict[str, _Constructor] = {}
+# category -> the one class that covers every base symbol in it. Adding
+# Category 2 (Movement) is "add {2: MovementSymbol} here", once that class
+# and its own PoseTable exist -- nothing else in core/ changes.
+_CATEGORY_SYMBOL: dict[int, _Constructor] = {1: HandSymbol}
+
+# Escape hatch for a future INDIVIDUAL base symbol needing distinct
+# behavior, not just distinct numbers -- keyed by base_hex. Empty today:
+# 0/261 Category 1 base symbols need this.
+_OVERRIDES: dict[int, _Constructor] = {}
 
 
 def build_symbol(parsed: ParsedFSWSymbol) -> FSWRenderableSymbol:
-    """Look up the given base_hex and instantiate the matching symbol with
-    the decoded fill/rotation.
+    """Instantiate the symbol matching ``parsed.base_hex`` with the decoded
+    fill/rotation.
 
-    Raises ``ValueError`` if that symbol_id has no entry in
-    ``HAND_POSE_TABLE`` -- for Category 1 keys parsed from a real FSW
-    string this can no longer actually happen (all 261 are covered), but it
-    remains reachable via a synthetic ``ParsedFSWSymbol`` naming a
-    base_hex that doesn't exist in any group.
+    Raises ``ValueError`` if ``parsed``'s category has no entry in
+    ``_CATEGORY_SYMBOL`` yet -- e.g. a real, well-formed Category 2
+    (Movement) key parses fine (``parse_fsw_symbol_key`` doesn't block it)
+    but building an object for it fails here, honestly, as "category not
+    supported" rather than a parse error.
     """
-    symbol_id = parsed.symbol_id
-    if symbol_id not in HAND_POSE_TABLE:
-        raise ValueError(
-            f"no base symbol registered for base_hex=0x{parsed.base_hex:03x} "
-            f"(symbol_id={symbol_id})"
-        )
-    cls = _OVERRIDES.get(symbol_id, HandSymbol)
+    cls = _OVERRIDES.get(parsed.base_hex)
+    if cls is None:
+        cls = _CATEGORY_SYMBOL.get(parsed.category)
+        if cls is None:
+            raise ValueError(
+                f"Category {parsed.category} is not supported yet "
+                f"(base 0x{parsed.base_hex:03x}, symbol_id {parsed.symbol_id})"
+            )
     return cls(base_hex=parsed.base_hex, fill=parsed.fill, rotation=parsed.rotation)
 
 
