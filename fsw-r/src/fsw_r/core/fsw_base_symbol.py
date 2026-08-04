@@ -35,6 +35,11 @@ components:
 So fill 0-2 are Palm/Side/Back in the Wall Plane, and fill 3-5 are the same
 three in the Floor Plane, in that order -- matching the chart's 6 rows
 top-to-bottom.
+
+``fill``/``rotation`` validity is checked **per base symbol**, not just
+against the global 0-5/0-15 ranges -- see ``core/iswa_data.py`` for why
+(most Category 1 base symbols do have all 6 fills x 16 rotations, but 8 of
+them don't, e.g. 01-05-002 only has fill=1).
 """
 
 from __future__ import annotations
@@ -43,6 +48,7 @@ from abc import ABC, abstractmethod
 
 from scipy.spatial.transform import Rotation
 
+from fsw_r.core.iswa_data import HAND_GROUP_START, valid_combinations_for
 from fsw_r.core.types import HandSide
 
 
@@ -52,13 +58,28 @@ class FSWBaseSymbol(ABC):
         category: int,  # 1 = Hands
         group: int,  # 1..10
         base_symbol_number: int,  # 1, 2, 3, ... (within group)
-        fill: int,  # 0..5 (6 valid ISWA fill values)
-        rotation: int,  # 0..15 (16 valid ISWA rotation values, hex 0-f)
+        fill: int,  # 0..5 (6 syntactically valid ISWA fill values)
+        rotation: int,  # 0..15 (16 syntactically valid ISWA rotation values, hex 0-f)
     ) -> None:
-        if not (0 <= fill <= 5):
-            raise ValueError(f"fill must be in range 0-5, got {fill}")
-        if not (0 <= rotation <= 15):
-            raise ValueError(f"rotation must be in range 0-15, got {rotation}")
+        # ISWA defines which (fill, rotation) combinations actually exist
+        # per base symbol, not globally -- e.g. 01-05-002 only has fill=1,
+        # while most Category 1 base symbols have all 6. See
+        # core/iswa_data.py for where this table comes from.
+        base_hex = HAND_GROUP_START[group - 1] + (base_symbol_number - 1)
+        symbol_id = f"{category:02d}-{group:02d}-{base_symbol_number:03d}"
+        combos = valid_combinations_for(base_hex)
+        if fill not in combos.fills:
+            raise ValueError(
+                f"fill={fill} is not valid for {symbol_id} (base 0x{base_hex:03x}); "
+                f"ISWA only defines fills={sorted(combos.fills)}, "
+                f"rotations={sorted(combos.rotations)}"
+            )
+        if rotation not in combos.rotations:
+            raise ValueError(
+                f"rotation={rotation} is not valid for {symbol_id} (base 0x{base_hex:03x}); "
+                f"ISWA only defines fills={sorted(combos.fills)}, "
+                f"rotations={sorted(combos.rotations)}"
+            )
         self.category = category
         self.group = group
         self.base_symbol_number = base_symbol_number
