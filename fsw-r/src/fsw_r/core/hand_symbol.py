@@ -16,12 +16,23 @@ from scipy.spatial.transform import Rotation
 
 from fsw_r.core.pose_table import HAND_NAME_TABLE, HAND_POSE_TABLE
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
-from fsw_r.core.types import HandJointPose
+from fsw_r.core.types import HandJointPose, HandSide
 
 
 class HandSymbol(FSWRenderableSymbol):
     def __init__(self, base_hex: int, fill: int, rotation: int) -> None:
         super().__init__(base_hex=base_hex, fill=fill, rotation=rotation)
+
+    @property
+    def hand_side(self) -> HandSide:
+        """ISWA rule for Category 1 (Hands) specifically: rotation 0-7 ->
+        RIGHT, 8-15 -> LEFT (mirror half) -- confirmed against
+        ``signwriting.utils.mirror.mirror.py``'s own docstring. This is a
+        pure function of ``rotation``, identical for every Hands symbol --
+        it must NOT be assumed to hold for other categories (see
+        ``FSWBaseSymbol.hand_side``'s docstring for the corpus evidence
+        that Category 2 doesn't follow this rule)."""
+        return HandSide.LEFT if self.rotation >= 8 else HandSide.RIGHT
 
     @property
     def name(self) -> str:

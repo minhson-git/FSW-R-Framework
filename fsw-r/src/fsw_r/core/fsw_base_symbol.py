@@ -15,15 +15,19 @@ replace this module with an import of that implementation instead of the
 mock below -- nothing outside this file should need to change, since
 ``FSWRenderableSymbol`` only depends on the interface defined here.
 
-ISWA rotation rule (fixed, not a mock detail -- this is how the format
-actually encodes hand symbols): ``rotation`` is a hex digit 0-f, split into
-two halves of 8:
+ISWA rotation rule for **Category 1 (Hands) specifically** (fixed, not a
+mock detail -- this is how the format actually encodes hand symbols, see
+``HandSymbol.hand_side``'s docstring for why this is Category-1-only, not
+generic): ``rotation`` is a hex digit 0-f, split into two halves of 8:
   - 0-7: counter-clockwise, angle = (rotation % 8) * 45 degrees, RIGHT hand.
   - 8-f: clockwise (mirror of the 0-7 half), same angle formula, LEFT hand.
 16 rotation values exist (instead of 8) precisely because hand_side is
-encoded in *which half* rotation falls into -- ISWA has no separate
-left/right field. ``rotation`` changes which way the extended finger(s)
-point on the page, like a clock hand (0=up, 90=sideways, 180=down, ...).
+encoded in *which half* rotation falls into, for Hands -- ISWA has no
+separate left/right field. ``rotation`` changes which way the extended
+finger(s) point on the page, like a clock hand (0=up, 90=sideways,
+180=down, ...) -- verified against the real chart for Category 1 only (see
+ROADMAP.md's risk note); NOT assumed to generalize to other categories
+without its own verification.
 
 ISWA fill rule for hand symbols ("Six Palm Facings", confirmed against the
 real chart at
@@ -103,14 +107,30 @@ class FSWBaseSymbol(ABC):
         return base_symbol_number_of(self.base_hex)
 
     @property
-    def hand_side(self) -> HandSide:
-        """ISWA rule: rotation 0-7 -> RIGHT, 8-15 -> LEFT (mirror half).
+    @abstractmethod
+    def hand_side(self) -> HandSide | None:
+        """Which hand performs this symbol, if ISWA even encodes that in
+        this category's own symbols -- ``None`` means it doesn't.
 
-        This is a pure function of ``rotation``, identical for every symbol
-        in every group -- it is defined once here and must not be
-        overridden or re-derived further down the hierarchy.
+        How this is derived is NOT generic across categories: Category 1
+        (Hands) encodes it in ``rotation`` (0-7 -> RIGHT, 8-15 -> LEFT, see
+        ``HandSymbol.hand_side``), confirmed against
+        ``signwriting.utils.mirror.mirror.py``'s own docstring ("0-7 are
+        right-hand ... 8-15 are the corresponding left-hand variants").
+        Category 2 (Movement) does NOT follow this rule -- measured on
+        ``sign-language-processing/signbank-plus`` (257,800 signs): among
+        single-hand-symbol signs, Category 2 rotation 0-7 vs 8-15 occurs at
+        nearly the same rate (~62%/38%) regardless of which hand performs
+        the sign, so rotation alone doesn't predict hand_side there the way
+        it does in Category 1. ``fill`` correlates far better in that same
+        corpus (fill=0 vs fill=1 differs ~97%/3% by hand), but with enough
+        noise (~27% counterexamples) that this project isn't ready to
+        implement it as a hard rule yet -- see ROADMAP.md Pha 2 for the
+        numbers and open question. Left abstract here so each category's
+        symbol class states its own rule explicitly instead of inheriting
+        Category 1's by accident.
         """
-        return HandSide.LEFT if self.rotation >= 8 else HandSide.RIGHT
+        raise NotImplementedError
 
     def _rotation_angle_degrees(self) -> float:
         """In-plane rotation angle, within one hand's own 8-step half-circle."""

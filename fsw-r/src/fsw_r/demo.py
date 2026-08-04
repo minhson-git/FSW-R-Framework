@@ -75,7 +75,8 @@ def main() -> None:
     renderer = HandMeshRenderer3D(_MockRigProvider())
     symbols = (idx_front, idx_side, idx_back, idx_mirrored)
     for sym in symbols:
-        print(f"--- Rendering {sym.symbol_id}, rotation={sym.rotation}, hand_side={sym.hand_side.value} ---")
+        hand_side = sym.hand_side.value if sym.hand_side is not None else "none"
+        print(f"--- Rendering {sym.symbol_id}, rotation={sym.rotation}, hand_side={hand_side} ---")
         renderer.render(sym)
 
     poses = [sym.get_joint_pose() for sym in symbols]
@@ -96,9 +97,10 @@ def main() -> None:
     positioned_symbols = fsw_to_fswr(fsw_sign)
     assert len(positioned_symbols) == 2
     for positioned in positioned_symbols:
+        side = positioned.symbol.hand_side
         print(
             f"  {positioned.symbol.symbol_id} at ({positioned.x}, {positioned.y}), "
-            f"hand_side={positioned.symbol.hand_side.value}"
+            f"hand_side={side.value if side is not None else 'none'}"
         )
     print("OK: one real FSW sign string -> two positioned FSWRenderableSymbol instances.")
 

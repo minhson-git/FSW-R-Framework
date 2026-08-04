@@ -61,3 +61,18 @@ def test_renderer_selects_rig_matching_hand_side() -> None:
     called_rotation = left_rig.apply_wrist_orientation.call_args.args[0]
     assert called_rotation.as_quat() == pytest.approx(left_symbol.get_wrist_orientation().as_quat())
     left_rig.apply_joint_pose.assert_called_once_with(left_symbol.get_joint_pose())
+
+
+def test_renderer_raises_a_clear_error_for_a_symbol_with_no_hand_side() -> None:
+    """hand_side is abstract and per-category now (FSWBaseSymbol.hand_side)
+    -- no implemented category actually returns None today, but the
+    renderer must fail with a clear message rather than pass None through
+    to rig_provider.get_rig() if/when one does."""
+    symbol = Mock()
+    symbol.hand_side = None
+    symbol.symbol_id = "02-11-001"
+    symbol.category = 2
+
+    renderer = HandMeshRenderer3D(Mock())
+    with pytest.raises(ValueError):
+        renderer.render(symbol)
