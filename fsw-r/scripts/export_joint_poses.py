@@ -1,19 +1,22 @@
-"""One-time migration: extract the real, dataset-derived joint pose of every
-registered Category 1 (Hands) base symbol out of the ``groups/*.py`` class
-hierarchy and into ``src/fsw_r/data/hand_joint_poses.json`` -- the new
-single source of truth for joint angles (see PROGRESS.md's "Refactor tang
-Group sang data-driven" entry for why).
+"""FROZEN / HISTORICAL -- kept for provenance, not runnable or type-checked
+anymore (see PROGRESS.md's "Refactor tang Group sang data-driven" entry).
 
-This does NOT recompute or change any angle: it imports the existing
-``groups/`` modules, instantiates each registered class (using that base
-symbol's own first valid fill, from ``core/iswa_data.py``, and rotation=0
--- joint pose never varies with either), and calls the existing
-``get_joint_pose()``. The output is exactly what the current code already
-produces, just relocated.
+One-time migration: extract the real, dataset-derived joint pose of every
+registered Category 1 (Hands) base symbol out of the (since-deleted)
+``groups/*.py`` class hierarchy and into
+``src/fsw_r/data/hand_joint_poses.json`` -- the new single source of truth
+for joint angles. This did NOT recompute or change any angle: it imported
+the ``groups/`` modules, instantiated each registered class (using that
+base symbol's own first valid fill, from ``core/iswa_data.py``, and
+rotation=0 -- joint pose never varies with either), and called the
+existing ``get_joint_pose()``. The committed ``hand_joint_poses.json`` is
+exactly what that code produced, just relocated -- a parity check (not
+committed) confirmed ``core/hand_symbol.py`` + this JSON agree with the old
+``groups/`` classes before they were deleted.
 
-Run once against the ``groups/`` implementation; after
-``core/pose_table.py`` is reading from the JSON this produces and a parity
-check confirms the two agree, ``groups/`` is deleted.
+This file is excluded from ``mypy --strict`` (see pyproject.toml) since its
+imports no longer resolve -- it documents *how* the migration was done, not
+something meant to run again.
 """
 
 from __future__ import annotations

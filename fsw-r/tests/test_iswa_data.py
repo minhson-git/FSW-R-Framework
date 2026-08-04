@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from fsw_r.core.iswa_data import is_valid_symbol, valid_combinations_for
-from fsw_r.groups.group_05_five_fingers import BaseSymbol01_05_002_FiveFingersSpreadHeel
+from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol
+from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.iswa_data import HAND_GROUP_START, is_valid_symbol, valid_combinations_for
+from fsw_r.core.registry import build_symbol
 
 # The 8 Category 1 (Hands) base symbols that do NOT have all 6 fills x 16
 # rotations -- independently verified against the real ISWA font (see
@@ -18,6 +20,8 @@ CAT1_EXCEPTIONS = {
     0x1F6: [1],
     0x204: [1],
 }
+
+GROUP_SIZES = [14, 16, 38, 8, 58, 30, 22, 19, 40, 16]
 
 
 def test_table_has_652_base_symbols_and_37811_total_combinations() -> None:
@@ -54,32 +58,18 @@ def test_is_valid_symbol_true_and_false_cases() -> None:
 
 
 def test_fsw_base_symbol_raises_for_invalid_fill() -> None:
+    # 01-05-002 (base 0x14d) only has fill=1 in real ISWA.
     with pytest.raises(ValueError):
-        BaseSymbol01_05_002_FiveFingersSpreadHeel(fill=0, rotation=0)
+        HandSymbol(category=1, group=5, base_symbol_number=2, fill=0, rotation=0)
 
 
 def test_fsw_base_symbol_accepts_the_one_valid_fill() -> None:
-    symbol = BaseSymbol01_05_002_FiveFingersSpreadHeel(fill=1, rotation=0)
+    symbol = HandSymbol(category=1, group=5, base_symbol_number=2, fill=1, rotation=0)
     assert symbol.fill == 1
 
 
 def test_every_category_1_base_symbol_constructible_with_its_own_first_valid_fill() -> None:
-    import fsw_r.groups.group_01_index_finger  # noqa: F401
-    import fsw_r.groups.group_02_index_middle_fingers  # noqa: F401
-    import fsw_r.groups.group_03_index_middle_thumb  # noqa: F401
-    import fsw_r.groups.group_04_four_fingers  # noqa: F401
-    import fsw_r.groups.group_05_five_fingers  # noqa: F401
-    import fsw_r.groups.group_06_baby_finger  # noqa: F401
-    import fsw_r.groups.group_07_ring_finger  # noqa: F401
-    import fsw_r.groups.group_08_middle_finger  # noqa: F401
-    import fsw_r.groups.group_09_index_thumb  # noqa: F401
-    import fsw_r.groups.group_10_thumb  # noqa: F401
-    from fsw_r.core.iswa_data import HAND_GROUP_START
-    from fsw_r.core.registry import build_symbol
-    from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol
-
-    group_sizes = [14, 16, 38, 8, 58, 30, 22, 19, 40, 16]
-    for group, size in enumerate(group_sizes, start=1):
+    for group, size in enumerate(GROUP_SIZES, start=1):
         for base_symbol_number in range(1, size + 1):
             base_hex = HAND_GROUP_START[group - 1] + (base_symbol_number - 1)
             first_valid_fill = min(valid_combinations_for(base_hex).fills)

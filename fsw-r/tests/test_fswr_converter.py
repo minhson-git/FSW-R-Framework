@@ -2,16 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-# Importing this populates the registry (see core/registry.py docstring).
-import fsw_r.groups.group_01_index_finger  # noqa: F401
 from fsw_r.core import fswr_converter
 from fsw_r.core.fsw_ast import FSWSignAST, FSWSymbolNode, parse_fsw_to_ast
 from fsw_r.core.fswr_converter import ast_to_fswr, fsw_to_fswr
+from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.types import HandSide
-from fsw_r.groups.group_01_index_finger import (
-    BaseSymbol01_01_001_Index,
-    BaseSymbol01_01_007_IndexBent,
-)
 
 
 def test_fsw_to_fswr_converts_two_handed_sign() -> None:
@@ -20,11 +15,13 @@ def test_fsw_to_fswr_converts_two_handed_sign() -> None:
     assert len(positioned_symbols) == 2
 
     first, second = positioned_symbols
-    assert isinstance(first.symbol, BaseSymbol01_01_001_Index)
+    assert isinstance(first.symbol, HandSymbol)
+    assert first.symbol.symbol_id == "01-01-001"
     assert (first.x, first.y) == (480, 480)
     assert first.symbol.hand_side == HandSide.RIGHT
 
-    assert isinstance(second.symbol, BaseSymbol01_01_007_IndexBent)
+    assert isinstance(second.symbol, HandSymbol)
+    assert second.symbol.symbol_id == "01-01-007"
     assert (second.x, second.y) == (520, 520)
     assert second.symbol.hand_side == HandSide.LEFT
 
@@ -48,9 +45,9 @@ def test_fsw_to_fswr_empty_sign_returns_empty_tuple() -> None:
 
 
 def test_ast_to_fswr_raises_for_unregistered_base_symbol(monkeypatch: pytest.MonkeyPatch) -> None:
-    # All 261 Category-1 base symbols are registered now, so there's no
-    # valid-range Hands FSW key left that ``parse_fsw_symbol_key`` will
-    # accept and ``build_symbol`` will still reject -- exercise the
+    # All 261 Category-1 base symbols are covered by HAND_POSE_TABLE, so
+    # there's no valid-range Hands FSW key left that ``parse_fsw_symbol_key``
+    # will accept and ``build_symbol`` will still reject -- exercise the
     # propagation of build_symbol's ValueError directly instead.
     def _always_unregistered(*_args: object, **_kwargs: object) -> object:
         raise ValueError("no base symbol class registered for group=1, base_symbol_number=99")

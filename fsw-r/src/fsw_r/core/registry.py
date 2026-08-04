@@ -1,15 +1,16 @@
-"""Maps (group, base_symbol_number) to the concrete FSWRenderableSymbol
-subclass that implements it, so a real, already-decoded FSW symbol can be
-turned directly into the correctly-typed object -- e.g. a decoded "Index,
-fill=1, rotation=1" becomes a ``BaseSymbol01_01_001_Index`` instance, not a
-bag of raw ints.
+"""Builds an actual, correctly-typed ``FSWRenderableSymbol`` from an
+already-decoded FSW symbol -- e.g. a decoded "Index, fill=1, rotation=1"
+becomes a real ``HandSymbol`` instance, not a bag of raw ints.
 
-This module stays group-agnostic, exactly like ``renderer.py``: it knows
-nothing about Group 1 or "Index" specifically. Each ``groups/groupNN_*.py``
-module registers its own base symbol classes via ``@register_symbol`` when
-imported -- so the registry is only populated for base symbols whose module
-has actually been imported somewhere (e.g. by ``demo.py`` or the test
-suite).
+Category 1 (Hands) base symbols no longer need per-class registration: all
+261 resolve to ``HandSymbol`` (``core/hand_symbol.py``), which looks its
+pose up in ``core/pose_table.py`` by ``symbol_id``. ``_OVERRIDES`` is an
+explicit, currently-empty escape hatch for a future base symbol that needs
+genuinely distinct *behavior* (e.g. a wrist-orientation formula that turns
+out not to be generic) rather than just distinct joint angles -- see
+PROGRESS.md's "Refactor tang Group sang data-driven" entry for why the
+previous one-class-per-base-symbol design (and its ``@register_symbol``
+decorator) was replaced.
 
 This is the "converter" half of the FSW -> AST -> FSWR pipeline (see
 ``fsw_ast.py`` for the AST half, ``fswr_converter.py`` for the version that
@@ -19,52 +20,52 @@ convenience for the common single-key case.
 
 from __future__ import annotations
 
-from typing import Callable, TypeVar
+from typing import Callable
 
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
+from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.pose_table import HAND_POSE_TABLE
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
-# A registered class's constructor -- every concrete base symbol takes just
-# (fill, rotation); group/base_symbol_number are baked into the subclass.
+# A concrete symbol's constructor -- (category, group, base_symbol_number,
+# fill, rotation) -> FSWRenderableSymbol, the shape HandSymbol itself uses.
 _Constructor = Callable[..., FSWRenderableSymbol]
-_ClassT = TypeVar("_ClassT", bound=_Constructor)
 
-_REGISTRY: dict[tuple[int, int], _Constructor] = {}
-
-
-def register_symbol(group: int, base_symbol_number: int) -> Callable[[_ClassT], _ClassT]:
-    def decorator(cls: _ClassT) -> _ClassT:
-        key = (group, base_symbol_number)
-        if key in _REGISTRY:
-            raise ValueError(f"base symbol {key} is already registered to {_REGISTRY[key]}")
-        _REGISTRY[key] = cls
-        return cls
-
-    return decorator
+# Escape hatch for a future base symbol needing distinct behavior, not just
+# distinct numbers -- keyed by symbol_id (e.g. "01-01-001"). Empty today:
+# 0/261 Category 1 base symbols need this: HandSymbol covers all of them.
+_OVERRIDES: dict[str, _Constructor] = {}
 
 
 def build_symbol(parsed: ParsedFSWSymbol) -> FSWRenderableSymbol:
-    """Look up the registered class for an already-decoded FSW symbol and
-    instantiate it with the decoded fill/rotation.
+    """Look up the given (category, group, base_symbol_number) and
+    instantiate the matching symbol with the decoded fill/rotation.
 
-    Raises ``ValueError`` if no class is registered for that
-    (group, base_symbol_number) -- this prototype only implements a couple
-    of Group 1 base symbols out of ISWA's ~650, so most real symbols will
-    hit this until more groups/base symbols are added.
+    Raises ``ValueError`` if that symbol_id has no entry in
+    ``HAND_POSE_TABLE`` -- for Category 1 keys parsed from a real FSW
+    string this can no longer actually happen (all 261 are covered), but it
+    remains reachable via a synthetic ``ParsedFSWSymbol`` naming a
+    (group, base_symbol_number) pair that doesn't exist in any group.
     """
-    registry_key = (parsed.group, parsed.base_symbol_number)
-    cls = _REGISTRY.get(registry_key)
-    if cls is None:
+    symbol_id = f"{parsed.category:02d}-{parsed.group:02d}-{parsed.base_symbol_number:03d}"
+    if symbol_id not in HAND_POSE_TABLE:
         raise ValueError(
-            f"no base symbol class registered for group={parsed.group}, "
-            f"base_symbol_number={parsed.base_symbol_number}"
+            f"no base symbol registered for group={parsed.group}, "
+            f"base_symbol_number={parsed.base_symbol_number} (symbol_id={symbol_id})"
         )
-    return cls(fill=parsed.fill, rotation=parsed.rotation)
+    cls = _OVERRIDES.get(symbol_id, HandSymbol)
+    return cls(
+        category=parsed.category,
+        group=parsed.group,
+        base_symbol_number=parsed.base_symbol_number,
+        fill=parsed.fill,
+        rotation=parsed.rotation,
+    )
 
 
 def symbol_from_fsw(key: str) -> FSWRenderableSymbol:
     """Decode a single, bare real FSW symbol key (e.g. ``"S10011"``) and
-    instantiate the matching registered base symbol class.
+    instantiate the matching base symbol.
 
     Convenience wrapper around ``parse_fsw_symbol_key`` + ``build_symbol``
     for the common case of a single symbol, not a full multi-symbol sign --

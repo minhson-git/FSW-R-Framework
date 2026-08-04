@@ -4,38 +4,42 @@ from unittest.mock import Mock
 
 import pytest
 
+from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.renderer import HandMeshRenderer3D
 from fsw_r.core.types import HandSide
-from fsw_r.groups.group_01_index_finger import BaseSymbol01_01_001_Index
+
+
+def _index(fill: int, rotation: int) -> HandSymbol:
+    return HandSymbol(category=1, group=1, base_symbol_number=1, fill=fill, rotation=rotation)
 
 
 @pytest.mark.parametrize("rotation", range(0, 8))
 def test_hand_side_right_for_rotation_0_to_7(rotation: int) -> None:
-    symbol = BaseSymbol01_01_001_Index(fill=1, rotation=rotation)
+    symbol = _index(fill=1, rotation=rotation)
     assert symbol.hand_side == HandSide.RIGHT
 
 
 @pytest.mark.parametrize("rotation", range(8, 16))
 def test_hand_side_left_for_rotation_8_to_15(rotation: int) -> None:
-    symbol = BaseSymbol01_01_001_Index(fill=1, rotation=rotation)
+    symbol = _index(fill=1, rotation=rotation)
     assert symbol.hand_side == HandSide.LEFT
 
 
 @pytest.mark.parametrize("invalid_fill", [-1, 6, 100])
 def test_constructor_rejects_out_of_range_fill(invalid_fill: int) -> None:
     with pytest.raises(ValueError):
-        BaseSymbol01_01_001_Index(fill=invalid_fill, rotation=0)
+        _index(fill=invalid_fill, rotation=0)
 
 
 @pytest.mark.parametrize("invalid_rotation", [-1, 16, 100])
 def test_constructor_rejects_out_of_range_rotation(invalid_rotation: int) -> None:
     with pytest.raises(ValueError):
-        BaseSymbol01_01_001_Index(fill=1, rotation=invalid_rotation)
+        _index(fill=1, rotation=invalid_rotation)
 
 
 def test_renderer_selects_rig_matching_hand_side() -> None:
-    right_symbol = BaseSymbol01_01_001_Index(fill=1, rotation=1)
-    left_symbol = BaseSymbol01_01_001_Index(fill=1, rotation=9)
+    right_symbol = _index(fill=1, rotation=1)
+    left_symbol = _index(fill=1, rotation=9)
 
     right_rig = Mock()
     left_rig = Mock()

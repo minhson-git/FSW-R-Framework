@@ -20,10 +20,9 @@
    finger points, only which side of the hand shows (Palm/Side/Back) and
    which plane the arm reaches in (Wall/Floor).
 
-4. Parse base_symbol_number 1 of every one of the 10 Hands groups (Category
-   1's full 261 base symbols aren't all implemented yet -- see ROADMAP.md --
-   but every group now has its own module registered, confirming the
-   registry covers all 10 groups, not just Group 1).
+4. Parse base_symbol_number 1 of every one of the 10 Hands groups --
+   Category 1's full 261 base symbols are all implemented (data-driven, see
+   core/pose_table.py), confirming the registry covers all 10 groups.
 
 Run with: python -m fsw_r.demo
 """
@@ -33,22 +32,11 @@ from __future__ import annotations
 from scipy.spatial.transform import Rotation
 
 from fsw_r.core.fswr_converter import fsw_to_fswr
+from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.iswa_data import HAND_GROUP_START
 from fsw_r.core.registry import symbol_from_fsw
 from fsw_r.core.renderer import HandMeshRenderer3D, HandSkeleton
 from fsw_r.core.types import HandJointPose, HandSide
-
-# Importing these populates the registry that symbol_from_fsw() and
-# fsw_to_fswr() look up -- see core/registry.py.
-import fsw_r.groups.group_01_index_finger  # noqa: F401
-import fsw_r.groups.group_02_index_middle_fingers  # noqa: F401
-import fsw_r.groups.group_03_index_middle_thumb  # noqa: F401
-import fsw_r.groups.group_04_four_fingers  # noqa: F401
-import fsw_r.groups.group_05_five_fingers  # noqa: F401
-import fsw_r.groups.group_06_baby_finger  # noqa: F401
-import fsw_r.groups.group_07_ring_finger  # noqa: F401
-import fsw_r.groups.group_08_middle_finger  # noqa: F401
-import fsw_r.groups.group_09_index_thumb  # noqa: F401
-import fsw_r.groups.group_10_thumb  # noqa: F401
 
 
 class _MockRig:
@@ -137,11 +125,10 @@ def main() -> None:
 
     print()
     print("--- Part 4: base_symbol_number 1 of all 10 Hands groups ---")
-    # Group start hex codes, from core/fsw_symbol_key.py's _HAND_GROUP_START.
-    group_starts = [0x100, 0x10E, 0x11E, 0x144, 0x14C, 0x186, 0x1A4, 0x1BA, 0x1CD, 0x1F5]
-    group_symbols = [symbol_from_fsw(f"S{base:03x}10") for base in group_starts]
+    group_symbols = [symbol_from_fsw(f"S{base:03x}10") for base in HAND_GROUP_START]
     for symbol in group_symbols:
-        print(f"  group {symbol.group}: {symbol.symbol_id} ({type(symbol).__name__})")
+        assert isinstance(symbol, HandSymbol)
+        print(f"  group {symbol.group}: {symbol.symbol_id} ({symbol.name!r})")
     assert len(group_symbols) == 10
     assert [s.group for s in group_symbols] == list(range(1, 11))
     print("OK: all 10 Hands groups have at least one registered, parseable base symbol.")
