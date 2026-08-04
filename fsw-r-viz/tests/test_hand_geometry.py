@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from fsw_r.groups.group_01_index_finger import BaseSymbol01_01_001_Index
+from fsw_r.core.hand_symbol import HandSymbol
 
 from fsw_r_viz.hand_geometry import hand_local_points, mirror_for_left_hand
 
 
 def test_mirror_for_left_hand_flips_only_x() -> None:
-    symbol = BaseSymbol01_01_001_Index(fill=1, rotation=0)
+    symbol = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=0)
     original = hand_local_points(symbol.get_joint_pose())
     mirrored = mirror_for_left_hand(original)
 
@@ -20,7 +20,7 @@ def test_mirror_for_left_hand_flips_only_x() -> None:
 
 
 def test_mirror_for_left_hand_is_its_own_inverse() -> None:
-    symbol = BaseSymbol01_01_001_Index(fill=1, rotation=0)
+    symbol = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=0)
     original = hand_local_points(symbol.get_joint_pose())
     twice_mirrored = mirror_for_left_hand(mirror_for_left_hand(original))
 

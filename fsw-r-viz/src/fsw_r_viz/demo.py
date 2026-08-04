@@ -19,19 +19,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fsw_r.groups.group_01_index_finger import BaseSymbol01_01_001_Index
-
-from fsw_r.groups.group_06_baby_finger import BaseSymbol01_06_001_IndexMiddleRing
-from fsw_r.groups.group_09_index_thumb import BaseSymbol01_09_001_MiddleRingBaby
+from fsw_r.core.registry import symbol_from_fsw
 from fsw_r_viz.plot_hand import render_symbols_grid
 
 
 def _render_rotation_sweep(output_dir: Path) -> None:
     symbols = [
-        (BaseSymbol01_01_001_Index(fill=0, rotation=0), "01-01-001 rotation=0 (RIGHT, finger up)"),
-        (BaseSymbol01_06_001_IndexMiddleRing(fill=0, rotation=2), "01-01-001 rotation=2 (RIGHT, finger sideways)"),
-        (BaseSymbol01_01_001_Index(fill=0, rotation=4), "01-01-001 rotation=4 (RIGHT, finger down)"),
-        (BaseSymbol01_09_001_MiddleRingBaby(fill=0, rotation=12), "01-01-001 rotation=12 (LEFT, mirrored)"),
+        (symbol_from_fsw("S10b03"), "01-01-012 rotation=3 (RIGHT, finger up)"),  # Index Hinge
+        (symbol_from_fsw("S1bb02"), "01-08-002 rotation=2 (RIGHT, finger sideways)"),  # Index Ring Baby on Circle
+        (symbol_from_fsw("S10102"), "01-01-002 rotation=2 (RIGHT, finger down)"),  # Index on Circle
+        (symbol_from_fsw("S1cd0c"), "01-09-001 rotation=12 (LEFT, mirrored)"),  # Middle Ring Baby
     ]
     output_path = output_dir / "index_finger_rotations.png"
     render_symbols_grid(symbols, str(output_path))
@@ -48,7 +45,7 @@ def _render_fill_sweep(output_dir: Path) -> None:
         (5, "Back, Floor"),
     ]
     symbols = [
-        (BaseSymbol01_01_001_Index(fill=fill, rotation=0), f"01-01-001 fill={fill} ({label})")
+        (symbol_from_fsw(f"S100{fill}0"), f"01-01-001 fill={fill} ({label})")  # Index
         for fill, label in fill_titles
     ]
     output_path = output_dir / "index_finger_fills.png"
