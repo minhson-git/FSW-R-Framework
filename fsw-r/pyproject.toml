@@ -17,16 +17,23 @@ dev = [
     "pytest>=8.0",
     "mypy>=1.8",
 ]
+# Only needed to run scripts/gen_valid_combinations.py (regenerating
+# data/iswa_valid_combinations.json from the ISWA font) -- not a runtime
+# dependency of fsw_r itself.
+scripts = [
+    "fonttools>=4.50",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
 fsw_r = ["py.typed"]
+"fsw_r.data" = ["*.json"]
 
 [tool.mypy]
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "scripts"]
 
 [[tool.mypy.overrides]]
 module = "scipy.*"
@@ -34,6 +41,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "signwriting.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "fontTools.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
