@@ -13,18 +13,31 @@ pha, mỗi pha ra được kết quả dùng được ngay** — không làm 1 l
 
 ## Các category ISWA (nguồn: `sutton-signwriting/core`, `src/fsw/fsw-structure.js`)
 
+**Đã sửa lại bảng này** (trước đó liệt kê 8 dòng, tách riêng Trunk và
+Limb — SAI, chưa đối chiếu nguồn thật lúc viết). Đối chiếu trực tiếp mảng
+`category` thật trong `fsw-structure.js` (tải qua `npm pack`, không đoán):
+
+```js
+const category = [0x100, 0x205, 0x2f7, 0x2ff, 0x36d, 0x37f, 0x387];
+// "hand, movement, dynamics, head, trunk & limb, location, and punctuation"
+```
+
+Mảng này có đúng **7 phần tử** — Trunk và Limb dùng CHUNG 1 ranh giới
+category (`0x36d`), không phải 2 category riêng. `ranges` object trong cùng
+file JS vẫn có 2 key `trunk`/`limb` tách riêng để tra cứu tiện, nhưng đó
+KHÔNG phải là 2 category cấp cao nhất.
+
 | Category | Range hex | Số symbol (ước tính theo range) | Bản chất dữ liệu |
 |---|---|---|---|
-| Hands | `0x100–0x204` | 261 base symbol (10 group theo số đếm ASL 1-10) | Joint angle (góc gập khớp ngón) + wrist orientation (quaternion) |
-| Movement | `0x205–0x2f6` | 242 base symbol | Quỹ đạo chuyển động theo thời gian (đường thẳng/cong/vòng...) |
-| Dynamics | `0x2f7–0x2fe` | 8 base symbol | Tốc độ/nhịp/độ nhấn của chuyển động (đi kèm Movement) |
-| Head & Face | `0x2ff–0x36c` | ~110 base symbol | Biểu cảm mặt — blend-shape, KHÔNG phải joint-angle |
-| Trunk | `0x36d–0x375` | 9 base symbol | Chuyển động thân người |
-| Limb | `0x376–0x37e` | 9 base symbol | Vị trí/chuyển động tay-chân (không phải bàn tay) |
-| Location | `0x37f–0x386` | 8 base symbol | Điểm chạm/vị trí trong không gian ký hiệu |
-| Punctuation | `0x387–0x38b` | 5 base symbol | Dấu câu trong văn bản SignWriting |
+| 1. Hands | `0x100–0x204` | 261 base symbol (10 group theo số đếm ASL 1-10) | Joint angle (góc gập khớp ngón) + wrist orientation (quaternion) |
+| 2. Movement | `0x205–0x2f6` | 242 base symbol | Quỹ đạo chuyển động theo thời gian (đường thẳng/cong/vòng...) |
+| 3. Dynamics | `0x2f7–0x2fe` | 8 base symbol | Tốc độ/nhịp/độ nhấn của chuyển động (đi kèm Movement) |
+| 4. Head & Face | `0x2ff–0x36c` | ~110 base symbol | Biểu cảm mặt — blend-shape, KHÔNG phải joint-angle |
+| 5. Trunk & Limb | `0x36d–0x37e` | 18 base symbol (Trunk `0x36d–0x375` 9 + Limb `0x376–0x37e` 9) | Chuyển động thân người + vị trí/chuyển động tay-chân (không phải bàn tay) |
+| 6. Location | `0x37f–0x386` | 8 base symbol | Điểm chạm/vị trí trong không gian ký hiệu |
+| 7. Punctuation | `0x387–0x38b` | 5 base symbol | Dấu câu trong văn bản SignWriting |
 
-(Số symbol ở trên là **base symbol** — tổng cộng 8 category = 652 base
+(Số symbol ở trên là **base symbol** — tổng cộng 7 category = 652 base
 symbol, khớp với `ranges.all = [0x100, 0x38b]` trong `fsw-structure.js`, và
 gần đúng với con số "hơn 639 base symbol" hay thấy trích dẫn ở tài liệu
 SignWriting công khai. **Category 1 Hands chỉ có 261/652 base symbol** —
@@ -33,6 +46,9 @@ KHÔNG PHẢI là con số ~639/652 tổng, đây là lỗi đã lỡ ghi nhầm
 còn nhân thêm với số `fill × rotation` hợp lệ của riêng nó (Hands: tối đa
 6×16=96 biến thể/base symbol) — đây là nguồn gốc con số ISWA tổng ~37,000
 symbol hay được trích dẫn.)
+
+Chi tiết đầy đủ (30 ranh giới group, hàm decode/encode, test biên) nằm ở
+`fsw-r/src/fsw_r/core/iswa_data.py` — bảng ở đây chỉ để tham khảo nhanh.
 
 ## Lộ trình theo pha
 
@@ -133,22 +149,68 @@ category phía trên) — biến thiên nhiều hơn hẳn Category 1 (chỉ 2 m
 6×16, hoặc 1 trong 8 ngoại lệ). `iswa_data.py` đã tổng quát hoá đủ để đọc
 range Category 2 (`0x205–0x2f6`) mà không cần sửa gì thêm — chỉ cần dùng.
 
-**Thay đổi kiến trúc cần có:**
-- `core/fsw_symbol_key.py` hiện **chỉ chấp nhận range Hands**
-  (`0x100–0x204`, raise `ValueError` cho mọi range khác) — cần tổng quát
-  hoá để nhận diện category từ base hex (dùng đủ bảng range ở trên), không
-  chỉ validate riêng Hands.
-- `core/registry.py`/`HAND_POSE_TABLE` hiện đặt tên gắn với "Hands" — Category
-  2 cần bảng dữ liệu + class generic riêng của nó (vd `MovementSymbol` +
-  `data/movement_paths.json`), khoá theo `symbol_id` đủ category để không
-  đụng độ với base_symbol_number của category khác.
+**Cập nhật: phần hạ tầng "base_hex xuyên suốt + dispatch theo category" đã
+làm xong** (xem `PROGRESS.md` mục "base_hex làm khoá duy nhất") — cụ thể đã
+sẵn sàng cho Pha 2, không cần làm lại:
+- `core/fsw_symbol_key.py` giờ chấp nhận TOÀN BỘ range ISWA (`0x100–0x38b`),
+  không chặn riêng theo category nữa — `parse_fsw_symbol_key("S22b03")` (1
+  key Movement thật) đã parse thành công ngay bây giờ.
+- `core/registry.py` dispatch theo category qua `_CATEGORY_SYMBOL: dict[int,
+  Constructor]` (hiện chỉ có `{1: HandSymbol}`) — thêm Category 2 chỉ cần
+  thêm `{2: MovementSymbol}` vào dict này, không sửa gì khác trong
+  `registry.py`.
+- `core/pose_table.py`'s `PoseTable` là class generic (`Generic[PoseT]`),
+  thân class không biết gì về `HandJointPose` — Category 2 chỉ cần 1
+  `PoseTable[MotionPath](...)` instance riêng + hàm parse riêng, không cần
+  sửa class `PoseTable`.
+- `FSWBaseSymbol.hand_side` giờ là abstract, mỗi category tự quyết định
+  cách suy ra (hoặc trả `None` nếu category đó không mã hoá tay trong
+  symbol) — xem phát hiện quan trọng bên dưới, vì quy tắc của Category 1
+  (`rotation` quyết định tay) **không áp dụng được cho Category 2**.
+
+**Việc còn thật sự cần làm cho Pha 2:**
 - Cần kiểu dữ liệu MỚI hoàn toàn (không tái dùng `HandJointPose`): 1
   "motion path" — chuỗi điểm/keyframe theo thời gian, có hướng
   (thẳng/cong/vòng), tốc độ. Đây là điểm khác biệt lớn nhất so với Pha 1,
   vì Pha 1 chỉ có 1 pose tĩnh, Pha 2 bắt buộc phải có trục thời gian.
+- Class `MovementSymbol` mới (giống `HandSymbol` nhưng cho Category 2) +
+  file `data/movement_paths.json` mới.
 - Renderer (`HandMeshRenderer3D`) hiện chỉ gọi `apply_wrist_orientation` +
   `apply_joint_pose` 1 lần — cần renderer animation mới (interpolate giữa
   các keyframe theo thời gian), khác hẳn renderer tĩnh hiện tại.
+- `HandSide` cần thêm giá trị `BOTH` (xem phát hiện `fill` bên dưới) —
+  `renderer.py` hiện có sẵn nhánh phòng thủ cho `hand_side=None` nhưng CHƯA
+  xử lý `BOTH` thật sự.
+
+**Phát hiện quan trọng (đo trên corpus thật, CHƯA đối chiếu tài liệu chính
+thức — chỉ là số liệu, không phải quy tắc đã chốt để implement):** quy tắc
+`rotation >= 8 → LEFT` của Category 1 **không áp dụng cho Category 2**.
+Kiểm chứng trên `sign-language-processing/signbank-plus` (`data/raw.csv`,
+257.800 sign, 3,4 triệu symbol token) — lọc các sign chỉ có **đúng 1 symbol
+tay** (nên biết chắc symbol Category 2 trong sign đó thuộc tay nào), rồi
+đối chiếu với `rotation`/`fill` của symbol Category 2 xuất hiện trong sign:
+
+| Tay (suy từ symbol tay Cat 1 duy nhất trong sign) | Cat 2 rotation 0-7 | Cat 2 rotation 8-15 |
+|---|---|---|
+| RIGHT | 62,2% | 37,8% |
+| LEFT | 58,5% | 41,5% |
+
+Nếu `rotation >= 8 → LEFT` đúng cho Cat 2 thì hàng LEFT phải gần 100% —
+2 hàng gần như giống hệt nhau, tức **rotation không dự đoán được tay** ở
+Category 2.
+
+| Tay (suy từ Cat 1) | Cat 2 fill=0 | Cat 2 fill=1 |
+|---|---|---|
+| RIGHT | 97,4% | 0,5% |
+| LEFT | 72,0% | 26,7% |
+
+`fill` có tín hiệu RÕ hơn nhiều (fill=1 xuất hiện nhiều hơn ~53 lần khi tay
+là trái — khớp hướng với quy ước SignWriting: fill code 0/1/2 = ISWA fill
+1/2/3 = phải/trái/cả hai), nhưng vẫn còn nhiễu đáng kể (LEFT vẫn ra fill=0
+tới 72%). **Chưa đủ tin cậy để implement thành quy tắc cứng** — cần đối
+chiếu thêm Lessons in SignWriting chương 6 trước khi chốt. Đây là lý do
+`HandSide` cần thêm `BOTH` (giá trị ISWA fill code 2 ám chỉ) thay vì chỉ
+RIGHT/LEFT nhị phân.
 
 ### Pha 3 — Dynamics (Category 3)
 
@@ -163,13 +225,15 @@ hoàn toàn mới (`FaceExpressionPose` hay tương tự), không tái dùng đ�
 `HandJointPose`/`FingerPose`. Renderer cũng cần thêm khả năng áp blend-shape
 lên mesh mặt (không phải rig xương).
 
-### Pha 5 — Trunk & Limb (Category 5-6)
+### Pha 5 — Trunk & Limb (Category 5)
 
-Nhỏ (9+9 base symbol), mở rộng khung xương ra ngoài bàn tay (vai, thân,
-chân/tay không phải bàn tay). Có thể tái dùng phần lớn kiểu tư duy
-"joint-angle" của Pha 1 (vì đây cũng là khớp xương), chỉ khác bộ khớp.
+Nhỏ (9+9 base symbol, Trunk `0x36d–0x375` + Limb `0x376–0x37e` — 1 category
+chung theo `fsw-structure.js` thật, xem bảng category ở đầu file), mở rộng
+khung xương ra ngoài bàn tay (vai, thân, chân/tay không phải bàn tay). Có
+thể tái dùng phần lớn kiểu tư duy "joint-angle" của Pha 1 (vì đây cũng là
+khớp xương), chỉ khác bộ khớp.
 
-### Pha 6 — Location & Punctuation (Category 7-8)
+### Pha 6 — Location & Punctuation (Category 6-7)
 
 Nhỏ nhất (8+5 base symbol), mang tính bổ trợ:
 - Location: điểm chạm/vị trí trong không gian ký hiệu (ảnh hưởng vị trí đặt

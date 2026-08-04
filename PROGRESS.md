@@ -497,6 +497,106 @@ biết gì về `HandSymbol` cụ thể (chỉ phụ thuộc `FSWRenderableSymbo
 `HandRigProvider`, cả 2 đều abstract) — nguyên tắc category/group-agnostic
 của renderer không đổi qua refactor này.
 
+## `base_hex` làm khoá duy nhất xuyên suốt pipeline
+
+Sau đợt refactor data-driven ở trên, phát hiện thêm 1 vấn đề kiến trúc
+khác: `base_hex` (danh tính gốc của mọi symbol ISWA) bị **vứt đi ngay lúc
+parse rồi dựng lại ở tầng dưới** —
+`parse_fsw_symbol_key()` tách `base_hex` thành `(group, base_symbol_number)`
+rồi bỏ luôn số gốc; `FSWBaseSymbol.__init__` sau đó **dựng lại** `base_hex`
+từ `HAND_GROUP_START[group-1] + (base_symbol_number-1)`. Hệ quả đo được:
+
+1. **Parser không đọc nổi key ngoài Category 1** — `parse_fsw_symbol_key`
+   raise `ValueError` cho bất kỳ key nào ngoài range Hands
+   (`0x100–0x204`), dù `data/iswa_valid_combinations.json` (từ Phần 1) đã
+   có sẵn dữ liệu cho toàn bộ 652 base symbol của cả 7 category.
+2. **2 hệ khoá song song phải giữ đồng bộ thủ công**: bảng valid
+   combinations khoá `base_hex`, còn `hand_joint_poses.json` khoá
+   `symbol_id` (chuỗi `"01-05-002"`) — 2 cách biểu diễn cùng 1 con số,
+   không có gì đảm bảo chúng luôn khớp nhau ngoài kỷ luật code thủ công.
+3. **Lỗi im lặng ở chỗ dựng lại `base_hex`**: `group` ngoài phạm vi 1-10 ra
+   `IndexError`; `group` hợp lệ nhưng `base_symbol_number` quá lớn tính ra
+   1 `base_hex` thuộc group/category KHÁC mà không báo gì.
+4. **Thêm Category 2 trước đó sẽ phải sửa 6/9 file trong `core/`** — trái
+   hẳn nguyên tắc "thêm 1 category chỉ thêm code, không sửa code cũ" đã đặt
+   ra từ đầu dự án.
+
+**Sửa theo 4 phần, mỗi phần test xanh rồi mới sang phần tiếp, commit riêng
+từng phần:**
+
+**Phần A — `iswa_data.py` thành nguồn sự thật đầy đủ về cấu trúc ISWA.**
+Mở rộng từ chỉ có `HAND_GROUP_START` (10 ranh giới Category 1) thành đủ
+`GROUP_START` (30 ranh giới, toàn bộ ISWA) + `CATEGORY_START` (7 ranh
+giới) — lấy trực tiếp từ `fsw-structure.js` thật (tải qua `npm pack`, xem
+mục "Các category ISWA" ở `ROADMAP.md` để biết chi tiết + 1 lỗi đã phát
+hiện và sửa: bảng category thật có 7 phần tử chứ không phải 8 như bản nháp
+`ROADMAP.md` cũ đoán — Trunk và Limb dùng chung 1 category). Thêm các hàm
+dẫn xuất thuần (`category_of`, `group_of`, `base_symbol_number_of`,
+`symbol_id_of`, `base_hex_of`) — tất cả tính từ `base_hex`, không có state.
+Test round-trip đầy đủ cả 652 giá trị
+(`base_hex_of(category_of(b), group_of(b), base_symbol_number_of(b)) == b`)
++ test biên ở mọi ranh giới category/group.
+
+**Phần B — `base_hex` chảy xuyên suốt, không bị tách/dựng lại.**
+`ParsedFSWSymbol` và `FSWBaseSymbol` giờ chỉ giữ `base_hex` (+ `fill`,
+`rotation`) — `category`/`group`/`base_symbol_number`/`symbol_id` thành
+**property tính lúc cần** (gọi hàm ở Phần A), không còn field lưu trữ
+riêng nào có thể lệch pha với `base_hex`. `parse_fsw_symbol_key()` giờ chỉ
+validate range ISWA đầy đủ (`0x100–0x38b`), không chặn theo category nữa —
+`parse_fsw_symbol_key("S22b03")` (1 key Movement thật) giờ parse thành
+công; việc "category đó có được hỗ trợ không" chuyển hẳn xuống
+`registry.py` (đúng tầng của nó).
+
+**Phần C — bảng pose tổng quát hoá + registry dispatch theo category.**
+`core/pose_table.py`'s `PoseTable` giờ là class generic
+(`Generic[PoseT]`), khoá theo `base_hex`, thân class **không hề nhắc tới
+`HandJointPose`** — kiểu dữ liệu cụ thể do hàm `parse` truyền vào lúc khởi
+tạo quyết định. `data/hand_joint_poses.json` đổi khoá top-level từ
+`symbol_id` sang `base_hex` (giữ `symbol_id` làm 1 field bên trong mỗi
+entry để đọc bằng mắt còn dễ + dùng trong thông báo lỗi) — đã verify bằng
+script tạm (không commit) diff từng entry trước/sau: **không đổi 1 giá trị
+góc khớp nào**, chỉ đổi cấu trúc khoá. `registry.py` viết lại
+`build_symbol()` để dispatch theo `category_of(base_hex)` qua
+`_CATEGORY_SYMBOL: dict[int, Constructor]` (hiện `{1: HandSymbol}`) thay vì
+kiểm tra `symbol_id` có trong bảng pose hay không — `symbol_from_fsw("S22b03")`
+giờ raise đúng thông báo trung thực `"Category 2 is not supported yet"`
+thay vì lỗi parse chung chung.
+
+**Phần D — `hand_side` thành abstract, per-category.** `FSWBaseSymbol.hand_side`
+trước đó là property concrete giả định MỌI category đều mã hoá tay trong
+`rotation` giống Category 1. Kiểm chứng trên
+`sign-language-processing/signbank-plus` (257.800 sign) phát hiện **quy tắc
+này KHÔNG áp dụng cho Category 2** (Movement) — xem số liệu đầy đủ ở
+`ROADMAP.md` Pha 2. `hand_side` giờ abstract, trả `HandSide | None`;
+`HandSymbol` implement lại đúng quy tắc cũ (hành vi Category 1 không đổi 1
+chút nào). `HandMeshRenderer3D.render()` raise `ValueError` rõ ràng nếu
+`hand_side is None` thay vì truyền `None` xuống `HandRigProvider` một cách
+không định nghĩa.
+
+**Bài kiểm tra khả năng mở rộng (theo đúng yêu cầu của brief — báo cáo
+trung thực, không tự nói "đạt" nếu chưa đạt):** giờ muốn thêm Category 2
+(Movement) cần:
+- **Sửa đúng 1 dòng** trong 1 file `core/` đã có sẵn: thêm
+  `{2: MovementSymbol}` vào `_CATEGORY_SYMBOL` trong `registry.py`. Không
+  file `core/` nào khác (`fsw_symbol_key.py`, `fsw_base_symbol.py`,
+  `iswa_data.py`, `renderer.py`) cần sửa — tất cả đã category-agnostic.
+- Cộng thêm code **HOÀN TOÀN MỚI** (không phải sửa code cũ):
+  1 kiểu dữ liệu mới ("motion path", không tái dùng `HandJointPose`), 1
+  class `MovementSymbol` mới (giống `HandSymbol` nhưng implement
+  `hand_side` khác — xem phát hiện fill/rotation ở `ROADMAP.md`), 1
+  `PoseTable[MotionPath](...)` instance mới + hàm parse riêng, 1 file
+  `data/movement_paths.json` mới. Đây là việc **thêm**, không phải sửa hạ
+  tầng chung — đúng tinh thần "thêm category = thêm code, không sửa code
+  cũ" đã đặt ra.
+- Renderer animation (interpolate theo thời gian) vẫn là việc thật sự mới,
+  chưa có hạ tầng — `HandMeshRenderer3D` hiện chỉ render 1 pose tĩnh.
+
+Kết quả: `pytest` **615/615 pass** (fsw-r), `mypy --strict` sạch (26 file),
+`fsw-r-viz` vẫn 5/5 pass + ảnh demo render byte-identical (không đổi công
+thức số nào qua cả 4 phần). `grep -rn "symbol_id" src/` xác nhận
+`symbol_id` chỉ còn xuất hiện ở vai trò hiển thị/thông báo lỗi/field mô tả
+trong JSON — không còn làm khoá tra cứu ở bất kỳ đâu.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -515,11 +615,16 @@ của renderer không đổi qua refactor này.
 - **Category 1 (Hands) đã xong 100%: 261/261 base symbol, đủ 10/10 group —
   data-driven qua `HandSymbol` + `data/hand_joint_poses.json`, không còn
   261 class riêng (`groups/` đã xoá).**
-- `fsw-r`: `mypy --strict` sạch (25 file), `pytest` **596/596 pass**
-  (`test_pose_table.py`, `test_hand_symbol.py`, `test_wrist_orientation.py`,
-  `test_hand_side.py`, `test_iswa_data.py`, `test_fsw_symbol_key.py`,
-  `test_fsw_ast.py`, `test_registry.py`, `test_fswr_converter.py`).
-- `fsw-r-viz`: `mypy --strict` sạch (6 file), `pytest` 4/4 pass
+- **`base_hex` là khoá duy nhất xuyên suốt pipeline** (không còn bị tách
+  rồi dựng lại) — `registry.py` dispatch theo category
+  (`_CATEGORY_SYMBOL`), sẵn sàng thêm Category 2 chỉ bằng 1 dòng code mới
+  + code hoàn toàn mới cho riêng Category 2 (xem mục ngay phía trên).
+- `fsw-r`: `mypy --strict` sạch (26 file), `pytest` **615/615 pass**
+  (`test_iswa_structure.py`, `test_pose_table.py`, `test_hand_symbol.py`,
+  `test_wrist_orientation.py`, `test_hand_side.py`, `test_iswa_data.py`,
+  `test_fsw_symbol_key.py`, `test_fsw_ast.py`, `test_registry.py`,
+  `test_fswr_converter.py`).
+- `fsw-r-viz`: `mypy --strict` sạch (6 file), `pytest` 5/5 pass
   (`test_hand_geometry.py`, `test_plot_hand.py`).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
   fill: joint pose giống hệt nhau ở mọi rotation/fill/hand_side, chỉ hướng
@@ -531,8 +636,10 @@ của renderer không đổi qua refactor này.
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands) đã xong: đủ 261/261 base symbol, cả 10/10 group** —
-  mục còn lại dưới đây là thứ CHƯA làm trong phạm vi Category 1, cộng toàn
-  bộ 7 category khác của ISWA (xem `ROADMAP.md` Pha 2 trở đi).
+  mục còn lại dưới đây là thứ CHƯA làm trong phạm vi Category 1, cộng 6
+  category khác của ISWA (Trunk và Limb là 1 category chung, không phải 2
+  — xem `ROADMAP.md` mục "Các category ISWA" — nên tổng là 7 category, 6
+  category còn lại ngoài Hands; xem `ROADMAP.md` Pha 2 trở đi).
 - Góc khớp lấy từ dữ liệu thật (MediaPipe trên `3d-hands-benchmark`) nhưng
   chưa tinh chỉnh theo rig/mesh 3D thật — vẫn là stick-figure debug.
 - `abduction` (độ xoè ngón) cho toàn bộ 261 symbol vẫn là số đoán — chưa đo
@@ -545,10 +652,12 @@ của renderer không đổi qua refactor này.
   chạy) — vẫn CHƯA có API export JSON công khai cho 1 symbol cụ thể (pose +
   wrist quaternion đã tính) nếu render cuối cùng là web three.js thay vì
   Blender/Open3D.
-- 7 category khác của ISWA (Movement, Dynamics, Head & Face, Trunk, Limb,
+- 6 category khác của ISWA (Movement, Dynamics, Head & Face, Trunk & Limb,
   Location, Punctuation — tổng ~391 base symbol còn lại trong số 652 base
-  symbol toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 2 trở đi, đòi hỏi
-  kiểu dữ liệu và (với Movement/Head&Face) thay đổi kiến trúc core, không
-  chỉ lặp lại pattern Category 1.
+  symbol toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 2 trở đi. Hạ tầng
+  chung (`base_hex` xuyên suốt, dispatch theo category, `PoseTable`
+  generic) đã sẵn sàng; mỗi category vẫn cần kiểu dữ liệu pose riêng của nó
+  (vd Movement cần "motion path", Head&Face cần blend-shape) và class
+  symbol riêng, không tái dùng được `HandJointPose`/`HandSymbol`.
 - Môi trường dùng Python 3.10 (máy hiện có) thay vì 3.11+ như brief ban đầu
   yêu cầu — không ảnh hưởng vì không dùng feature riêng của 3.11.
