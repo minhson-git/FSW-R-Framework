@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from fsw_r.core.iswa_data import is_valid_symbol
 from fsw_r.core.registry import symbol_from_fsw
 from fsw_r.core.types import HandSide
 from fsw_r.groups.group_10_thumb import (
@@ -67,6 +68,12 @@ def test_joint_pose_identical_across_rotations_and_hand_sides(base_symbol_number
 @pytest.mark.parametrize("base_symbol_number,cls", GROUP_10_SYMBOLS)
 def test_wrist_orientation_identity_at_rotation_zero(base_symbol_number: int, cls: type) -> None:
     # fill=0 (Palm of Hand, Wall Plane) is the neutral fill -- identity.
+    # Not every base symbol has fill=0 in ISWA's per-symbol valid-combination
+    # table (see core/iswa_data.py) -- skip those rather than asserting
+    # identity for a fill they don't actually support.
+    base_hex = GROUP_10_BASE_HEX + (base_symbol_number - 1)
+    if not is_valid_symbol(base_hex, fill=0, rotation=0):
+        pytest.skip(f"fill=0 is not a valid ISWA combination for base 0x{base_hex:03x}")
     symbol = cls(fill=0, rotation=0)
     assert symbol.get_wrist_orientation().as_quat() == pytest.approx([0.0, 0.0, 0.0, 1.0])
 
