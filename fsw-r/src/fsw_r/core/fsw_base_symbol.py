@@ -102,9 +102,15 @@ class FSWBaseSymbol(ABC):
 
     def _fill_facing_degrees(self) -> float:
         """ISWA fill, lower component (fill % 3): which side of the hand
-        faces the viewer -- 0 = Palm of Hand, 90 = Side of Hand, 180 = Back
-        of Hand. See the "Six Palm Facings" rule documented above."""
-        return (self.fill % 3) * 90.0
+        faces the viewer -- 0 = Palm of Hand, -90 = Side of Hand, -180 =
+        Back of Hand. Negative so Side of Hand's palm normal ends up
+        pointing toward -x (confirmed concretely: fill=1, rotation=0 must
+        have the palm normal at -x, not +x) -- see
+        test_fill_facing_shows_palm_side_or_back_at_rest. Back of Hand
+        (180 vs -180) is unaffected by the sign either way, since a
+        half-turn of a vector along the rotation axis's perpendicular
+        lands in the same place regardless of direction."""
+        return -(self.fill % 3) * 90.0
 
     def _fill_plane_degrees(self) -> float:
         """ISWA fill, upper component (fill // 3): which plane the whole

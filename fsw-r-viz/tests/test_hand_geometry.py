@@ -27,3 +27,21 @@ def test_mirror_for_left_hand_is_its_own_inverse() -> None:
     for finger in original:
         for original_point, twice_point in zip(original[finger], twice_mirrored[finger]):
             assert np.allclose(original_point, twice_point)
+
+
+def test_right_hand_thumb_is_on_the_viewers_left() -> None:
+    """Regression test: a real right hand held up palm-out, fingers up
+    (e.g. an oath-taking photo) shows the thumb on the VIEWER'S LEFT and
+    the pinky on the viewer's right -- the earlier version of this rig had
+    this backwards (thumb authored at +x, which rendered unmirrored/RIGHT
+    put the thumb on the viewer's right instead). x here is the local
+    spread axis, before any wrist rotation is applied, so this checks the
+    base authoring directly, not a specific fill/rotation's rendering."""
+    symbol = HandSymbol(category=1, group=1, base_symbol_number=1, fill=1, rotation=0)
+    points = hand_local_points(symbol.get_joint_pose())
+
+    thumb_base_x = points["thumb"][1][0]  # index 0 is the wrist (x=0)
+    pinky_base_x = points["pinky"][1][0]
+    assert thumb_base_x < 0
+    assert pinky_base_x > 0
+    assert thumb_base_x < pinky_base_x

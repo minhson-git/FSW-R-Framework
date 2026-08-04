@@ -115,10 +115,16 @@ presented, as two combined components:
 | 4 | Side of Hand | Floor Plane |
 | 5 | Back of Hand | Floor Plane |
 
-`FSWBaseSymbol._fill_facing_degrees()` (0/90/180, about the wrist-to-
+`FSWBaseSymbol._fill_facing_degrees()` (0/-90/-180, about the wrist-to-
 fingertip axis -- the same axis `rotation` deliberately does *not* use, see
 above) and `_fill_plane_degrees()` (0/-90, about the spread axis) implement
-this. `_default_wrist_orientation()` composes all three components as
+this. The sign on facing (negative, not positive) is a concrete correction:
+fill=1 (Side of Hand)'s palm normal must point to -x, not +x -- not
+derivable from the chart's 2D photo alone (no depth cue says which edge of
+the hand faces the camera), confirmed directly instead. Back of Hand
+(fill%3=2, a half turn) lands in the same place either sign, so only Side
+of Hand is actually affected. `_default_wrist_orientation()` composes all
+three components as
 `compass * plane * facing` -- **facing must be applied before plane, not
 after**: pitching into the Floor Plane first rotates the palm-normal vector
 onto the same axis facing rotates around, so a later facing rotation can't

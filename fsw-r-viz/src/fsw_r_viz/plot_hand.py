@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Sequence
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")  # headless: save to file instead of opening a window
 
@@ -51,6 +52,23 @@ def _plot_on(ax: Axes3D, symbol: FSWRenderableSymbol, title: str) -> None:
         depths = [p[2] for p in points]
         heights = [p[1] for p in points]
         ax.plot(xs, depths, heights, marker="o", color=_FINGER_COLORS[finger], label=finger)
+
+    # A wireframe stick figure has no surface to shade, so "palm faces you"
+    # vs "back faces you" (fill's effect) isn't visually obvious from bone
+    # positions alone at a fixed camera angle -- draw the palm-normal vector
+    # explicitly (green = pointing at the viewer/palm, red = pointing away/
+    # back of hand) so fill's effect can actually be seen, not just trusted.
+    # mirror_for_left_hand only flips the spread axis (x), not z, so the
+    # local palm normal is still +z regardless of hand_side at this point.
+    palm_normal_local = np.array([0.0, 0.0, 1.0])
+    palm_normal_world = symbol.get_wrist_orientation().apply(palm_normal_local)
+    wrist = world_points["index"][0]
+    arrow_color = "green" if palm_normal_world[2] > 0 else "red"
+    ax.quiver(
+        wrist[0], wrist[2], wrist[1],
+        palm_normal_world[0], palm_normal_world[2], palm_normal_world[1],
+        length=4.0, color=arrow_color, linewidth=2,
+    )
 
     ax.set_title(title)
     ax.set_xlabel("x (spread)")

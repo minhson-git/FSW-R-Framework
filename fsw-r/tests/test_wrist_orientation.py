@@ -37,8 +37,10 @@ def test_fill_facing_shows_palm_side_or_back_at_rest() -> None:
     """ISWA fill's lower component (fill % 3) is the "Six Palm Facings":
     which side of the hand faces the viewer. At rest (rotation=0), the palm
     normal starts pointing at the viewer (+z, per hand_geometry's
-    convention) -- confirmed against the real chart at
-    signwriting.org/lessons/iswa/group01/01-01-001-01.html."""
+    convention). fill=1 (Side of Hand) must point to -x, not +x -- a
+    concrete, deliberate correction (not derivable from the 2D chart photo
+    alone, which has no depth cue to say which edge of the hand faces the
+    camera)."""
     palm_normal = [0.0, 0.0, 1.0]
 
     palm_facing = _index(fill=0, rotation=0)  # Palm of Hand
@@ -46,7 +48,7 @@ def test_fill_facing_shows_palm_side_or_back_at_rest() -> None:
     back_facing = _index(fill=2, rotation=0)  # Back of Hand
 
     assert palm_facing.get_wrist_orientation().apply(palm_normal) == pytest.approx([0.0, 0.0, 1.0])
-    assert side_facing.get_wrist_orientation().apply(palm_normal) == pytest.approx([1.0, 0.0, 0.0])
+    assert side_facing.get_wrist_orientation().apply(palm_normal) == pytest.approx([-1.0, 0.0, 0.0])
     assert back_facing.get_wrist_orientation().apply(palm_normal) == pytest.approx([0.0, 0.0, -1.0])
 
 
@@ -88,9 +90,10 @@ def test_fill_back_faces_down_in_floor_plane() -> None:
 
 def test_fill_side_in_floor_plane_differs_from_palm_and_back() -> None:
     """fill=4 (Side of Hand, Floor Plane) must be visually distinct from
-    both fill=3 (Palm) and fill=5 (Back) -- not collapsed onto either."""
+    both fill=3 (Palm) and fill=5 (Back) -- not collapsed onto either.
+    Sign matches fill=1's -x correction (same facing component, fill%3=1)."""
     palm_normal = [0.0, 0.0, 1.0]
     floor_side = _index(fill=4, rotation=0)
 
     result = floor_side.get_wrist_orientation().apply(palm_normal)
-    assert result == pytest.approx([1.0, 0.0, 0.0])
+    assert result == pytest.approx([-1.0, 0.0, 0.0])

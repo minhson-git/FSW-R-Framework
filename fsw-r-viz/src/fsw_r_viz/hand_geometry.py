@@ -90,6 +90,13 @@ def _thumb_chain(pose: ThumbPose) -> list[_Vec3]:
     return points
 
 
+def _flip_x(chains: dict[str, list[_Vec3]]) -> dict[str, list[_Vec3]]:
+    return {
+        finger: [np.array([-point[0], point[1], point[2]]) for point in points]
+        for finger, points in chains.items()
+    }
+
+
 def hand_local_points(pose: HandJointPose) -> dict[str, list[_Vec3]]:
     """Wrist, MCP, PIP/IP, DIP, tip positions for each finger, in the
     wrist-local frame (before wrist orientation is applied)."""
@@ -101,7 +108,16 @@ def hand_local_points(pose: HandJointPose) -> dict[str, list[_Vec3]]:
         "ring": [wrist, *_finger_chain(_FINGER_BASES["ring"], Rotation.identity(), pose.ring, _FINGER_LENGTHS["ring"])],
         "pinky": [wrist, *_finger_chain(_FINGER_BASES["pinky"], Rotation.identity(), pose.pinky, _FINGER_LENGTHS["pinky"])],
     }
-    return chains
+    # The base positions/rotations above put the thumb on local +x -- which,
+    # rendered unmirrored (RIGHT hand, palm facing the viewer, fingers up),
+    # puts the thumb on the viewer's RIGHT. That's backwards: a real right
+    # hand held up palm-out, fingers up (e.g. an oath-taking photo) shows
+    # the thumb on the viewer's LEFT. Flipping once here fixes this
+    # function's own output to be true RIGHT-hand chirality; mirroring
+    # rotations analytically (instead of flipping the already-computed
+    # points) would be much more error-prone, so the fix is applied to the
+    # final Cartesian points, exactly like mirror_for_left_hand below.
+    return _flip_x(chains)
 
 
 def apply_wrist_orientation(
@@ -115,12 +131,9 @@ def apply_wrist_orientation(
 
 def mirror_for_left_hand(chains: dict[str, list[_Vec3]]) -> dict[str, list[_Vec3]]:
     """A LEFT hand is a mirror image of a RIGHT hand, not a rotation of one.
-    All geometry above (bone lengths, base positions) is authored for a
-    RIGHT hand; flipping the x axis (the pinky<->thumb spread axis) turns it
-    into the correct LEFT-hand chirality before the wrist orientation is
+    ``hand_local_points`` above already returns true RIGHT-hand chirality;
+    flipping the x axis (the pinky<->thumb spread axis) again turns it into
+    the correct LEFT-hand chirality before the wrist orientation is
     applied. This stands in for what fsw-r's real HandRigProvider would do
     by picking a genuinely separate LEFT-hand rig/mesh instead."""
-    return {
-        finger: [np.array([-point[0], point[1], point[2]]) for point in points]
-        for finger, points in chains.items()
-    }
+    return _flip_x(chains)
