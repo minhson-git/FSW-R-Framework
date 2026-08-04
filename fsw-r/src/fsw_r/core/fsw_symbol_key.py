@@ -8,16 +8,16 @@ sutton-signwriting/core) extracts via
 ``signwriting.utils.mirror.mirror_symbol`` (``base, fill = symbol[:4],
 symbol[4]; rotation = int(symbol[5], 16)``).
 
-The category/group ranges below are taken directly from
-sutton-signwriting/core's own source
+The category/group ranges (``HAND_GROUP_START``/``HAND_RANGE_END``, imported
+from ``core/iswa_data.py`` -- the single place these boundaries are defined)
+are taken directly from sutton-signwriting/core's own source
 (``src/fsw/fsw-structure.js``, https://github.com/sutton-signwriting/core):
-
-- ``ranges.hand = [0x100, 0x204]`` -- ISWA Category 1 (Hands).
-- the ``group`` boundary array's first 10 entries (the rest cover
-  movement/head/trunk/etc, outside this prototype's scope):
-  ``0x100, 0x10e, 0x11e, 0x144, 0x14c, 0x186, 0x1a4, 0x1ba, 0x1cd, 0x1f5``,
-  followed by ``0x205`` (the start of the next section, "movement"), used
-  here as the closing edge of group 10.
+``ranges.hand = [0x100, 0x204]`` (ISWA Category 1, Hands) and the ``group``
+boundary array's first 10 entries (the rest cover movement/head/trunk/etc,
+outside this prototype's scope):
+``0x100, 0x10e, 0x11e, 0x144, 0x14c, 0x186, 0x1a4, 0x1ba, 0x1cd, 0x1f5``,
+followed by ``0x205`` (the start of the next section, "movement"), used
+here as the closing edge of group 10.
 
 Group 1 (0x100-0x10d) is exactly 14 base codes, matching the 14 named base
 symbols listed at https://www.signwriting.org/lessons/iswa/group01/ (Index
@@ -32,14 +32,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-_SYMBOL_KEY_RE = re.compile(r"^S([0-9a-fA-F]{3})([0-5])([0-9a-fA-F])$")
+from fsw_r.core.iswa_data import HAND_GROUP_START as _HAND_GROUP_START
+from fsw_r.core.iswa_data import HAND_RANGE_END as _HAND_RANGE_END
 
-# First 10 entries of sutton-signwriting/core's `group` boundary array --
-# the 10 ASL-counting hand groups within ISWA Category 1 (Hands).
-_HAND_GROUP_START: tuple[int, ...] = (
-    0x100, 0x10E, 0x11E, 0x144, 0x14C, 0x186, 0x1A4, 0x1BA, 0x1CD, 0x1F5,
-)
-_HAND_RANGE_END = 0x205  # exclusive; first base code of the next section ("movement")
+_SYMBOL_KEY_RE = re.compile(r"^S([0-9a-fA-F]{3})([0-5])([0-9a-fA-F])$")
 
 
 @dataclass(frozen=True)
