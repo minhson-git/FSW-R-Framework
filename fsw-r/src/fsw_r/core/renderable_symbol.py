@@ -1,16 +1,23 @@
-"""The fsw-r layer's new contract: joint pose for 3D rigging."""
+"""Marker for "a symbol that some category's renderer can consume".
+
+This used to declare an abstract ``get_joint_pose() -> HandJointPose``, but
+that pose type is hand-specific -- a facial-expression symbol has no joint
+pose (it's a blend-shape), and a movement symbol has a motion path. So the
+concrete pose accessor now lives on each category's own subclass
+(``HandSymbol.get_joint_pose()``, future ``FaceSymbol.get_expression()``,
+``HeadSymbol.get_head_orientation()``), not here -- see ``PHASE4_PLAN.md``
+(Bước 0). ``registry.build_symbol()`` and ``fswr_converter`` type against
+this marker; each category's renderer narrows to its own concrete class.
+"""
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 
 from fsw_r.core.fsw_base_symbol import FSWBaseSymbol
-from fsw_r.core.types import HandJointPose
 
 
 class FSWRenderableSymbol(FSWBaseSymbol, ABC):
-    @abstractmethod
-    def get_joint_pose(self) -> HandJointPose:
-        """Flexion/abduction angles for all five fingers, for forward
-        kinematics on a rigged 3D hand."""
-        raise NotImplementedError
+    """A renderable ISWA symbol. Still abstract via ``FSWBaseSymbol``'s
+    ``hand_side``; carries no pose contract of its own (pose shape is
+    per-category)."""

@@ -8,16 +8,16 @@ operator: it asks HandRigProvider for the rig matching the symbol's
 hand_side (two genuinely distinct rigs/meshes) and only then applies wrist
 orientation + joint pose to that rig.
 
-``hand_side`` can be ``None`` (``FSWBaseSymbol.hand_side`` is now abstract
-and per-category, see its docstring -- not every category encodes a hand at
-all). No category implemented so far actually returns ``None`` -- this is
-a defensive branch for when one does, so it fails with a clear message
-instead of ``rig_provider.get_rig(None)`` silently doing something
-undefined. TODO: once a category needs "both hands" (Category 2's ``fill``
-partially correlates with hand but also has a "both" value, per the corpus
-note in ``FSWBaseSymbol.hand_side``), ``HandSide`` will need a ``BOTH``
-member and this renderer will need real handling for it, not just this
-``None`` guard.
+This renderer only handles Category 1 (Hands). Other categories have their
+own pose types and their own renderers (a facial-expression blend-shape is
+not a hand joint pose) -- so a non-hand symbol routed here fails loudly with
+a clear message rather than via a missing ``get_joint_pose()`` attribute.
+The category dispatch that decides which renderer a symbol goes to lives
+above this class (in ``fsw-r-viz``); this ``isinstance`` check is the
+last-line guard. TODO: once a category needs "both hands" (Category 2's
+``fill`` partially correlates with hand but also has a "both" value, per the
+corpus note in ``FSWBaseSymbol.hand_side``), ``HandSide`` will need a
+``BOTH`` member and hand rendering will need real handling for it.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ from typing import Protocol
 
 from scipy.spatial.transform import Rotation
 
+from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 from fsw_r.core.types import HandJointPose, HandSide
 
@@ -47,10 +48,10 @@ class HandMeshRenderer3D:
         self._rig_provider = rig_provider
 
     def render(self, symbol: FSWRenderableSymbol) -> None:
-        if symbol.hand_side is None:
+        if not isinstance(symbol, HandSymbol):
             raise ValueError(
-                f"{symbol.symbol_id} (category {symbol.category}) doesn't encode a hand_side "
-                f"-- HandMeshRenderer3D can't pick a rig for it"
+                f"{symbol.symbol_id} (category {symbol.category}) is not a hand symbol "
+                f"-- HandMeshRenderer3D only renders Category 1 (Hands)"
             )
         rig = self._rig_provider.get_rig(symbol.hand_side)
         rig.apply_wrist_orientation(symbol.get_wrist_orientation())

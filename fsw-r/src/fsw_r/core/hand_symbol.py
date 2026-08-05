@@ -14,12 +14,13 @@ from __future__ import annotations
 
 from scipy.spatial.transform import Rotation
 
+from fsw_r.core.orientation import WristOrientationMixin
 from fsw_r.core.pose_table import HAND_NAME_TABLE, HAND_POSE_TABLE
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 from fsw_r.core.types import HandJointPose, HandSide
 
 
-class HandSymbol(FSWRenderableSymbol):
+class HandSymbol(FSWRenderableSymbol, WristOrientationMixin):
     def __init__(self, base_hex: int, fill: int, rotation: int) -> None:
         super().__init__(base_hex=base_hex, fill=fill, rotation=rotation)
 

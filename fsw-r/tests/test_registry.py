@@ -29,6 +29,7 @@ def test_symbol_from_fsw_builds_index_bent() -> None:
 def test_symbol_from_fsw_matches_direct_construction() -> None:
     from_key = symbol_from_fsw("S10014")
     direct = HandSymbol(base_hex=0x100, fill=1, rotation=4)
+    assert isinstance(from_key, HandSymbol)  # narrow the marker return type
     assert from_key.get_joint_pose() == direct.get_joint_pose()
     assert from_key.get_wrist_orientation().as_quat() == pytest.approx(
         direct.get_wrist_orientation().as_quat()
