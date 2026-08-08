@@ -22,6 +22,7 @@ from pathlib import Path
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.movement_symbol import MovementSymbol
+from fsw_r_viz.animate_movement import animate_movement_to_gif, render_movement_filmstrip
 from fsw_r_viz.plot_face import render_faces_grid
 from fsw_r_viz.plot_hand import render_symbols_grid
 from fsw_r_viz.plot_movement import render_movements_grid
@@ -103,6 +104,18 @@ def _render_movement_trajectories(output_dir: Path) -> None:
     print(f"Saved: {output_path}")
 
 
+def _render_movement_animation(output_dir: Path) -> None:
+    # Play a Movement symbol back over time: a marker travelling the path.
+    # A filmstrip (viewable as one image) + a real animated GIF, for Circle.
+    circle = MovementSymbol(0x2E3, fill=0, rotation=0)  # 02-20-001 Circle
+    filmstrip = output_dir / "movement_circle_filmstrip.png"
+    render_movement_filmstrip(circle, str(filmstrip))
+    print(f"Saved: {filmstrip}")
+    gif = output_dir / "movement_circle.gif"
+    animate_movement_to_gif(circle, str(gif))
+    print(f"Saved: {gif}")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -111,6 +124,7 @@ def main() -> None:
     _render_mouth_expressions(output_dir)
     _render_brow_eye_expressions(output_dir)
     _render_movement_trajectories(output_dir)
+    _render_movement_animation(output_dir)
 
 
 if __name__ == "__main__":
