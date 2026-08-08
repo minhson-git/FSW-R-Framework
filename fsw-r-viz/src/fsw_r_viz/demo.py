@@ -19,7 +19,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r_viz.plot_face import render_faces_grid
 from fsw_r_viz.plot_hand import render_symbols_grid
 
 
@@ -54,11 +56,27 @@ def _render_fill_sweep(output_dir: Path) -> None:
     print(f"Saved: {output_path}")
 
 
+def _render_mouth_expressions(output_dir: Path) -> None:
+    # Category 4 Group 25 (Mouth/Lips): a few distinct authored expressions,
+    # rendered as schematic faces so the blend-shapes are visible.
+    symbols = [
+        (FaceSymbol(0x33B, fill=0, rotation=0), "04-25-001 Mouth Closed Neutral"),
+        (FaceSymbol(0x33E, fill=0, rotation=0), "04-25-004 Mouth Smile"),
+        (FaceSymbol(0x341, fill=0, rotation=0), "04-25-007 Mouth Frown"),
+        (FaceSymbol(0x344, fill=0, rotation=0), "04-25-010 Mouth Open Circle"),
+        (FaceSymbol(0x34D, fill=0, rotation=0), "04-25-019 Mouth Kiss"),
+    ]
+    output_path = output_dir / "mouth_expressions.png"
+    render_faces_grid(symbols, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
     _render_rotation_sweep(output_dir)
     _render_fill_sweep(output_dir)
+    _render_mouth_expressions(output_dir)
 
 
 if __name__ == "__main__":
