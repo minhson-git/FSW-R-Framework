@@ -72,12 +72,27 @@ def _render_mouth_expressions(output_dir: Path) -> None:
     print(f"Saved: {output_path}")
 
 
+def _render_brow_eye_expressions(output_dir: Path) -> None:
+    # Category 4 Group 23 (Brow/Eyes): brows and eye-openness.
+    symbols = [
+        (FaceSymbol(0x30A, fill=0, rotation=0), "04-23-001 Eyebrows Straight Up"),
+        (FaceSymbol(0x30C, fill=0, rotation=0), "04-23-003 Eyebrows Straight Down"),
+        (FaceSymbol(0x316, fill=0, rotation=0), "04-23-013 Eyes Closed"),
+        (FaceSymbol(0x31A, fill=0, rotation=0), "04-23-017 Eyes Wide Open"),
+        (FaceSymbol(0x31D, fill=0, rotation=0), "04-23-020 Eye Wink"),
+    ]
+    output_path = output_dir / "brow_eye_expressions.png"
+    render_faces_grid(symbols, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
     _render_rotation_sweep(output_dir)
     _render_fill_sweep(output_dir)
     _render_mouth_expressions(output_dir)
+    _render_brow_eye_expressions(output_dir)
 
 
 if __name__ == "__main__":

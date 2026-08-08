@@ -1,13 +1,33 @@
 {
   "_meta": {
     "standard": "ARKit 52 blendshapes",
-    "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose subset), Group 26 (Tongue subset)",
+    "categories": "ISWA Category 4 (Head & Face): Group 23 (Brow/Eyes subset), Group 24 (Cheeks/Nose subset), Group 25 (Mouth/Lips), Group 26 (Tongue subset)",
     "rotation_note": "Face poses are keyed by (base_hex, fill) only -- rotation is not part of the expression here. For the tongue bases that use rotation as a *direction*, that direction is not representable in ARKit-52 (single non-directional tongueOut) and is collapsed. Eyegaze (Group 23) will need rotation->eyeLook* handling.",
     "names_source": "signbank.org ISWA 2010 reference (<hex>_sg.html) -- authoritative ISWA names",
     "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to blend-shapes (unlike hand_joint_poses.json, which is MediaPipe-measured). Confidence is lower; treat as a first interpretive pass.",
     "fills_source": "valid fills per base come from iswa_valid_combinations.json (the ISWA font cmap)",
     "fill_nuance": "UNRESOLVED: the semantic difference between a base's fills is not yet confirmed from the SignWriting Alphabet Manual, so every valid fill carries the same expression. Keyed by (base_hex, fill) so this becomes a data-only change later.",
     "deferred": {
+      "30d": "Dreamy Eyebrows Neutral Down -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+      "30e": "Dreamy Eyebrows Down Neutral -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+      "30f": "Dreamy Eyebrows Up Neutral -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+      "310": "Dreamy Eyebrows Neutral-Up -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+      "312": "Forehead Contact -- a contact/location annotation, not a deformation",
+      "317": "Eye Blink Single -- a blink is a movement (needs animation)",
+      "318": "Eye Blinks Multiple -- a movement (needs animation)",
+      "31c": "Eyes Widening Movement -- a movement (needs animation)",
+      "31e": "Eyelashes Up -- ARKit-52 has no eyelash target",
+      "31f": "Eyelashes Down -- ARKit-52 has no eyelash target",
+      "320": "Eyelashes Fluttering -- no ARKit target + movement",
+      "321": "Eyegaze Straight Wall Plane -- gaze direction (rotation) needs rotation->eyeLook* handling",
+      "322": "Eyegaze Straight Wall Double -- gaze direction needs rotation->eyeLook* handling",
+      "323": "Eyegaze Straight Wall Alternate -- gaze direction needs rotation->eyeLook* handling",
+      "324": "Eyegaze Straight Floor Plane -- gaze direction needs rotation->eyeLook* handling",
+      "325": "Eyegaze Straight Floor Double -- gaze direction needs rotation->eyeLook* handling",
+      "326": "Eyegaze Straight Floor Alternate -- gaze direction needs rotation->eyeLook* handling",
+      "327": "Eyegaze Curved Wall Plane -- gaze direction + curve/movement",
+      "328": "Eyegaze Curved Floor Plane -- gaze direction + curve/movement",
+      "329": "Eyegaze Circles Wall Plane -- gaze direction + movement",
       "32c": "Cheeks Sucked -- no ARKit-52 target for hollowed cheeks",
       "330": "Ears -- ARKit-52 has no ear targets (not a facial deformation)",
       "332": "Nose Contact -- a contact/location annotation, not a deformation",
@@ -40,6 +60,297 @@
       "36c": "Excitement -- abstract annotation, not a specific deformation"
     },
     "generated_by": "scripts/gen_face_poses.py"
+  },
+  "30a": {
+    "symbol_id": "04-23-001",
+    "name": "Eyebrows Straight Up",
+    "source": "name from signbank 04-23-001; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.7,
+        "browOuterUpRight": 0.7
+      },
+      "1": {
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.7,
+        "browOuterUpRight": 0.7
+      },
+      "2": {
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.7,
+        "browOuterUpRight": 0.7
+      },
+      "3": {
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.7,
+        "browOuterUpRight": 0.7
+      },
+      "4": {
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.7,
+        "browOuterUpRight": 0.7
+      },
+      "5": {
+        "browInnerUp": 0.6,
+        "browOuterUpLeft": 0.7,
+        "browOuterUpRight": 0.7
+      }
+    }
+  },
+  "30b": {
+    "symbol_id": "04-23-002",
+    "name": "Eyebrows Straight Neutral",
+    "source": "name from signbank 04-23-002; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {},
+      "1": {},
+      "2": {},
+      "3": {},
+      "4": {},
+      "5": {}
+    }
+  },
+  "30c": {
+    "symbol_id": "04-23-003",
+    "name": "Eyebrows Straight Down",
+    "source": "name from signbank 04-23-003; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "browDownLeft": 0.7,
+        "browDownRight": 0.7
+      },
+      "1": {
+        "browDownLeft": 0.7,
+        "browDownRight": 0.7
+      },
+      "2": {
+        "browDownLeft": 0.7,
+        "browDownRight": 0.7
+      },
+      "3": {
+        "browDownLeft": 0.7,
+        "browDownRight": 0.7
+      },
+      "4": {
+        "browDownLeft": 0.7,
+        "browDownRight": 0.7
+      },
+      "5": {
+        "browDownLeft": 0.7,
+        "browDownRight": 0.7
+      }
+    }
+  },
+  "311": {
+    "symbol_id": "04-23-008",
+    "name": "Forehead Neutral",
+    "source": "name from signbank 04-23-008; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {},
+      "1": {}
+    }
+  },
+  "313": {
+    "symbol_id": "04-23-010",
+    "name": "Forehead Wrinkled",
+    "source": "name from signbank 04-23-010; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "browInnerUp": 0.4,
+        "browOuterUpLeft": 0.4,
+        "browOuterUpRight": 0.4
+      },
+      "1": {
+        "browInnerUp": 0.4,
+        "browOuterUpLeft": 0.4,
+        "browOuterUpRight": 0.4
+      }
+    }
+  },
+  "314": {
+    "symbol_id": "04-23-011",
+    "name": "Eyes Open",
+    "source": "name from signbank 04-23-011; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {},
+      "1": {},
+      "2": {},
+      "3": {},
+      "4": {}
+    }
+  },
+  "315": {
+    "symbol_id": "04-23-012",
+    "name": "Eyes Squeezed",
+    "source": "name from signbank 04-23-012; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "eyeBlinkLeft": 0.8,
+        "eyeBlinkRight": 0.8,
+        "eyeSquintLeft": 0.7,
+        "eyeSquintRight": 0.7
+      },
+      "1": {
+        "eyeBlinkLeft": 0.8,
+        "eyeBlinkRight": 0.8,
+        "eyeSquintLeft": 0.7,
+        "eyeSquintRight": 0.7
+      },
+      "2": {
+        "eyeBlinkLeft": 0.8,
+        "eyeBlinkRight": 0.8,
+        "eyeSquintLeft": 0.7,
+        "eyeSquintRight": 0.7
+      },
+      "3": {
+        "eyeBlinkLeft": 0.8,
+        "eyeBlinkRight": 0.8,
+        "eyeSquintLeft": 0.7,
+        "eyeSquintRight": 0.7
+      },
+      "4": {
+        "eyeBlinkLeft": 0.8,
+        "eyeBlinkRight": 0.8,
+        "eyeSquintLeft": 0.7,
+        "eyeSquintRight": 0.7
+      }
+    }
+  },
+  "316": {
+    "symbol_id": "04-23-013",
+    "name": "Eyes Closed",
+    "source": "name from signbank 04-23-013; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "eyeBlinkLeft": 1.0,
+        "eyeBlinkRight": 1.0
+      },
+      "1": {
+        "eyeBlinkLeft": 1.0,
+        "eyeBlinkRight": 1.0
+      },
+      "2": {
+        "eyeBlinkLeft": 1.0,
+        "eyeBlinkRight": 1.0
+      },
+      "3": {
+        "eyeBlinkLeft": 1.0,
+        "eyeBlinkRight": 1.0
+      },
+      "4": {
+        "eyeBlinkLeft": 1.0,
+        "eyeBlinkRight": 1.0
+      }
+    }
+  },
+  "319": {
+    "symbol_id": "04-23-016",
+    "name": "Eyes Half Open",
+    "source": "name from signbank 04-23-016; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "1": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "2": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "3": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "4": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      }
+    }
+  },
+  "31a": {
+    "symbol_id": "04-23-017",
+    "name": "Eyes Wide Open",
+    "source": "name from signbank 04-23-017; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "eyeWideLeft": 0.8,
+        "eyeWideRight": 0.8
+      },
+      "1": {
+        "eyeWideLeft": 0.8,
+        "eyeWideRight": 0.8
+      },
+      "2": {
+        "eyeWideLeft": 0.8,
+        "eyeWideRight": 0.8
+      },
+      "3": {
+        "eyeWideLeft": 0.8,
+        "eyeWideRight": 0.8
+      },
+      "4": {
+        "eyeWideLeft": 0.8,
+        "eyeWideRight": 0.8
+      }
+    }
+  },
+  "31b": {
+    "symbol_id": "04-23-018",
+    "name": "Eyes Half Closed",
+    "source": "name from signbank 04-23-018; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "1": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "2": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "3": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      },
+      "4": {
+        "eyeBlinkLeft": 0.5,
+        "eyeBlinkRight": 0.5
+      }
+    }
+  },
+  "31d": {
+    "symbol_id": "04-23-020",
+    "name": "Eye Wink (Squeezed Eye Blink)",
+    "source": "name from signbank 04-23-020; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "eyeBlinkRight": 1.0,
+        "eyeSquintRight": 0.5
+      },
+      "1": {
+        "eyeBlinkRight": 1.0,
+        "eyeSquintRight": 0.5
+      },
+      "2": {
+        "eyeBlinkRight": 1.0,
+        "eyeSquintRight": 0.5
+      },
+      "3": {
+        "eyeBlinkRight": 1.0,
+        "eyeSquintRight": 0.5
+      },
+      "4": {
+        "eyeBlinkRight": 1.0,
+        "eyeSquintRight": 0.5
+      }
+    }
   },
   "32a": {
     "symbol_id": "04-24-001",

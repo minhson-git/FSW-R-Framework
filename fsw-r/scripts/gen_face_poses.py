@@ -28,6 +28,21 @@ from fsw_r.core.iswa_data import symbol_id_of, valid_combinations_for
 
 # base_hex -> (name, {arkit_blendshape: weight}). Names from signbank.org.
 AUTHORED: dict[int, tuple[str, dict[str, float]]] = {
+    # ---- Group 23: Brow / Eyes (0x30a-0x329), static brow & eye-openness ----
+    0x30A: ("Eyebrows Straight Up", {"browInnerUp": 0.6, "browOuterUpLeft": 0.7, "browOuterUpRight": 0.7}),
+    0x30B: ("Eyebrows Straight Neutral", {}),
+    0x30C: ("Eyebrows Straight Down", {"browDownLeft": 0.7, "browDownRight": 0.7}),
+    0x311: ("Forehead Neutral", {}),
+    0x313: ("Forehead Wrinkled", {"browInnerUp": 0.4, "browOuterUpLeft": 0.4, "browOuterUpRight": 0.4}),
+    0x314: ("Eyes Open", {}),
+    0x315: ("Eyes Squeezed",
+            {"eyeBlinkLeft": 0.8, "eyeBlinkRight": 0.8, "eyeSquintLeft": 0.7, "eyeSquintRight": 0.7}),
+    0x316: ("Eyes Closed", {"eyeBlinkLeft": 1.0, "eyeBlinkRight": 1.0}),
+    0x319: ("Eyes Half Open", {"eyeBlinkLeft": 0.5, "eyeBlinkRight": 0.5}),
+    0x31A: ("Eyes Wide Open", {"eyeWideLeft": 0.8, "eyeWideRight": 0.8}),
+    0x31B: ("Eyes Half Closed", {"eyeBlinkLeft": 0.5, "eyeBlinkRight": 0.5}),
+    # A wink is one eye; which eye is a drawing convention, taken as the right here.
+    0x31D: ("Eye Wink (Squeezed Eye Blink)", {"eyeBlinkRight": 1.0, "eyeSquintRight": 0.5}),
     # ---- Group 25: Mouth / Lips (0x33b-0x355), 27 shape symbols ----
     0x33B: ("Mouth Closed Neutral", {}),
     0x33C: ("Mouth Closed Forward", {"mouthPucker": 0.4}),
@@ -85,6 +100,27 @@ AUTHORED: dict[int, tuple[str, dict[str, float]]] = {
 # base_hex -> reason it is NOT authored (kept for the _meta record so the
 # gaps are explicit, not silent). registry.py raises for these.
 DEFERRED: dict[int, str] = {
+    # Group 23 (Brow/Eyes/Eyegaze)
+    0x30D: "Dreamy Eyebrows Neutral Down -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+    0x30E: "Dreamy Eyebrows Down Neutral -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+    0x30F: "Dreamy Eyebrows Up Neutral -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+    0x310: "Dreamy Eyebrows Neutral-Up -- asymmetric/angled brow, L/R ARKit mapping unconfirmed",
+    0x312: "Forehead Contact -- a contact/location annotation, not a deformation",
+    0x317: "Eye Blink Single -- a blink is a movement (needs animation)",
+    0x318: "Eye Blinks Multiple -- a movement (needs animation)",
+    0x31C: "Eyes Widening Movement -- a movement (needs animation)",
+    0x31E: "Eyelashes Up -- ARKit-52 has no eyelash target",
+    0x31F: "Eyelashes Down -- ARKit-52 has no eyelash target",
+    0x320: "Eyelashes Fluttering -- no ARKit target + movement",
+    0x321: "Eyegaze Straight Wall Plane -- gaze direction (rotation) needs rotation->eyeLook* handling",
+    0x322: "Eyegaze Straight Wall Double -- gaze direction needs rotation->eyeLook* handling",
+    0x323: "Eyegaze Straight Wall Alternate -- gaze direction needs rotation->eyeLook* handling",
+    0x324: "Eyegaze Straight Floor Plane -- gaze direction needs rotation->eyeLook* handling",
+    0x325: "Eyegaze Straight Floor Double -- gaze direction needs rotation->eyeLook* handling",
+    0x326: "Eyegaze Straight Floor Alternate -- gaze direction needs rotation->eyeLook* handling",
+    0x327: "Eyegaze Curved Wall Plane -- gaze direction + curve/movement",
+    0x328: "Eyegaze Curved Floor Plane -- gaze direction + curve/movement",
+    0x329: "Eyegaze Circles Wall Plane -- gaze direction + movement",
     # Group 24
     0x32C: "Cheeks Sucked -- no ARKit-52 target for hollowed cheeks",
     0x330: "Ears -- ARKit-52 has no ear targets (not a facial deformation)",
@@ -125,8 +161,8 @@ def build() -> dict[str, object]:
     out: dict[str, object] = {
         "_meta": {
             "standard": "ARKit 52 blendshapes",
-            "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose "
-                          "subset), Group 26 (Tongue subset)",
+            "categories": "ISWA Category 4 (Head & Face): Group 23 (Brow/Eyes subset), Group 24 "
+                          "(Cheeks/Nose subset), Group 25 (Mouth/Lips), Group 26 (Tongue subset)",
             "rotation_note": "Face poses are keyed by (base_hex, fill) only -- rotation is not part of the "
                              "expression here. For the tongue bases that use rotation as a *direction*, that "
                              "direction is not representable in ARKit-52 (single non-directional tongueOut) "

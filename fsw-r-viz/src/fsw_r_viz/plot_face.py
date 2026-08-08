@@ -2,14 +2,16 @@
 an authored facial expression can be sanity-checked visually.
 
 Like plot_hand for hands, this is a debugging aid, not the final renderer.
-Only the mouth is expression-driven so far (Category 4 Group 25); the head
-outline, eyes, brows and nose are drawn neutral as reference features. It
-takes FaceSymbol directly (it calls get_expression()).
+The mouth/tongue (Group 25/26) and brows + eye-openness (Group 23) are
+expression-driven; the nose and head outline are neutral reference, and
+cheek/nose blend-shapes (Group 24) aren't drawn yet. It takes FaceSymbol
+directly (it calls get_expression()). Left/Right ARKit targets are drawn in
+the viewer's frame (Left = viewer's left eye), fine for a schematic check.
 """
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import matplotlib
 
@@ -17,23 +19,46 @@ matplotlib.use("Agg")  # headless: save to file instead of opening a window
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Ellipse
 
 from fsw_r.core.face_symbol import FaceSymbol
 
 from fsw_r_viz.face_geometry import mouth_outline
 
+# side label -> (eye center x, ARKit suffix)
+_EYES = (("left", -0.35, "Left"), ("right", 0.35, "Right"))
+
+
+def _draw_eye_and_brow(ax: Axes, bs: Mapping[str, float], cx: float, suffix: str) -> None:
+    blink = bs.get(f"eyeBlink{suffix}", 0.0)
+    wide = bs.get(f"eyeWide{suffix}", 0.0)
+    squint = bs.get(f"eyeSquint{suffix}", 0.0)
+    openness = max(0.0, 1.0 - blink - 0.4 * squint) + 0.5 * wide
+
+    eye_ry = 0.09 * openness
+    eye_rx = 0.11 * (1.0 + 0.15 * wide)
+    if eye_ry < 0.02:  # effectively closed -> a lid line
+        ax.plot([cx - eye_rx, cx + eye_rx], [0.35, 0.35], color="0.4", linewidth=2)
+    else:
+        ax.add_patch(Ellipse((cx, 0.35), 2 * eye_rx, 2 * eye_ry, color="0.4"))
+
+    # Brow: raised by outer/inner-up, lowered by brow-down.
+    brow_up = bs.get(f"browOuterUp{suffix}", 0.0) + 0.6 * bs.get("browInnerUp", 0.0)
+    brow_down = bs.get(f"browDown{suffix}", 0.0)
+    brow_y = 0.55 + 0.14 * brow_up - 0.12 * brow_down
+    inner_lift = 0.06 * bs.get("browInnerUp", 0.0)  # inner end pulled up
+    inner_x, outer_x = (cx + 0.15, cx - 0.15) if cx < 0 else (cx - 0.15, cx + 0.15)
+    ax.plot([inner_x, outer_x], [brow_y + inner_lift, brow_y], color="0.6", linewidth=2)
+
 
 def _plot_on(ax: Axes, symbol: FaceSymbol, title: str) -> None:
-    # Neutral reference features (head, eyes, brows, nose).
+    blendshapes = symbol.get_expression().blendshapes
+
     head = Circle((0.0, 0.0), 1.0, fill=False, color="0.6", linewidth=1.5)
     ax.add_patch(head)
-    for eye_x in (-0.35, 0.35):
-        ax.add_patch(Circle((eye_x, 0.35), 0.09, color="0.4"))
-        ax.plot([eye_x - 0.15, eye_x + 0.15], [0.55, 0.55], color="0.6", linewidth=2)  # brow
-    ax.plot([0.0, 0.0], [0.2, -0.1], color="0.7", linewidth=1.5)  # nose
-
-    blendshapes = symbol.get_expression().blendshapes
+    for _side, cx, suffix in _EYES:
+        _draw_eye_and_brow(ax, blendshapes, cx, suffix)
+    ax.plot([0.0, 0.0], [0.2, -0.1], color="0.7", linewidth=1.5)  # nose (neutral)
 
     # A protruding tongue hangs below the mouth, length scaled by tongueOut
     # (drawn first so the mouth outline sits on top of it).

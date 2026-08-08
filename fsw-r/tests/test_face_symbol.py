@@ -62,10 +62,10 @@ def test_known_symbol_expression_is_meaningful() -> None:
 
 def test_deferred_and_head_movement_raise_clearly() -> None:
     # Un-authored Category 4 bases must fail honestly, not build a wrong
-    # symbol: 0x356 Mouth Corners (annotation mark), 0x330 Ears / 0x335 Air
-    # Blowing Out (Group 24 non-deformation), 0x361 Teeth / 0x36a Neck
-    # (Group 26 non-deformation), 0x301 Head Movement Straight (needs
-    # Category 2 / Movement infra).
-    for key in ("S35600", "S33000", "S33500", "S36100", "S36a00", "S30100"):
+    # symbol: 0x321 Eyegaze (Group 23 directional), 0x356 Mouth Corners
+    # (annotation mark), 0x330 Ears / 0x335 Air Blowing Out (Group 24),
+    # 0x361 Teeth / 0x36a Neck (Group 26), 0x301 Head Movement Straight
+    # (needs Category 2 / Movement infra).
+    for key in ("S32100", "S35600", "S33000", "S33500", "S36100", "S36a00", "S30100"):
         with pytest.raises(ValueError):
             symbol_from_fsw(key)
