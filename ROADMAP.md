@@ -127,11 +127,27 @@ là số đoán giữ nguyên từ baseline cũ.
       chú rủi ro này trong `fsw-r/README.md`). Dataset benchmark cũng có đủ
       6 orientation/symbol — có thể dùng để validate luôn việc này.
 
-### Pha 2 — Movement (Category 2)
+### Pha 2 — Movement (Category 2) — ĐÃ XONG (242/242 base symbol)
 
 **Vì sao làm ngay sau Hands:** đây là thứ biến pose tĩnh thành "động tác"
 (motion) — đúng nhu cầu ra clip 3D đã bàn trước đó. Không có Movement thì
 mãi mãi chỉ demo được ảnh tĩnh.
+
+**Trạng thái:** xong — đủ 242/242 base symbol, `MovementSymbol` +
+`data/movement_paths.json` (sinh bằng công thức từ bảng
+`(path_type × plane)`, không đo). Chi tiết đầy đủ (bài kiểm tra khả năng mở
+rộng cho Category 5, danh sách giả định chưa kiểm chứng, số liệu
+`hand_side`) xem `PROGRESS.md` mục "Pha 2 — Category 2". Tóm tắt nhanh:
+- `hand_side` trả `None` (chưa chốt quy tắc thật — xem số liệu bên dưới,
+  vẫn giữ nguyên vì đây là phát hiện gốc, không phải việc còn phải làm).
+- Nhiều tham số hình học (`curvature`/`amplitude`/`repeat`, `plane` của
+  group 11/12/20, ngữ nghĩa `is_hit`) là giả định CHƯA kiểm chứng, ghi rõ
+  trong `_meta` của `data/movement_paths.json` và trong
+  `core/movement_paths.py`'s docstring.
+- Renderer animation (interpolate theo thời gian, hiển thị `MotionPath`
+  thành chuyển động thật) CHƯA làm — `sample_trajectory()` mới sinh được
+  điểm 3D tĩnh (24 điểm mặc định), chưa có renderer riêng cho Category 2
+  (khác `HandMeshRenderer3D`, vốn chỉ nhận `FSWHandRenderable`).
 
 **Dùng ngay pattern data-driven (bảng dữ liệu + 1 class generic), KHÔNG lặp
 lại pattern "1 class Python/base symbol" ban đầu của Category 1.** Category
@@ -149,46 +165,29 @@ category phía trên) — biến thiên nhiều hơn hẳn Category 1 (chỉ 2 m
 6×16, hoặc 1 trong 8 ngoại lệ). `iswa_data.py` đã tổng quát hoá đủ để đọc
 range Category 2 (`0x205–0x2f6`) mà không cần sửa gì thêm — chỉ cần dùng.
 
-**Cập nhật (đã sửa lại — bản trước nói "hạ tầng đã sẵn sàng cho Pha 2" là
-CHƯA đúng, phát hiện khi thật sự bắt tay làm Category 2):** phần hạ tầng
-"base_hex xuyên suốt + dispatch theo category" đã xong (xem `PROGRESS.md`
-mục "base_hex làm khoá duy nhất"), nhưng **contract trừu tượng ở
-`core/renderable_symbol.py` thì CHƯA generic** — `FSWRenderableSymbol` hồi
-đó khai `get_joint_pose() -> HandJointPose` làm abstract method cứng, tức
-mọi symbol (kể cả Category 2, vốn không có góc khớp mà có quỹ đạo chuyển
-động) đều bị ép implement đúng chữ ký đó. `MovementSymbol` không thể kế
-thừa `FSWRenderableSymbol` cho tới khi tách lại thành 1 marker chung +
-contract riêng theo category (`FSWHandRenderable`/`FSWMotionRenderable`) —
-đây là việc ĐẦU TIÊN của Pha 2, làm trước khi viết `MovementSymbol`. Sau
-khi tách xong mới đúng là:
-- `core/fsw_symbol_key.py` chấp nhận TOÀN BỘ range ISWA (`0x100–0x38b`),
-  không chặn riêng theo category — `parse_fsw_symbol_key("S22b03")` (1
-  key Movement thật) parse thành công.
-- `core/registry.py` dispatch theo category qua `_CATEGORY_SYMBOL: dict[int,
-  Constructor]` — thêm Category 2 chỉ cần thêm `{2: MovementSymbol}` vào
-  dict này, không sửa gì khác trong `registry.py`.
-- `core/pose_table.py`'s `PoseTable` là class generic (`Generic[PoseT]`),
-  thân class không biết gì về `HandJointPose` — Category 2 chỉ cần 1
-  `PoseTable[MotionPath](...)` instance riêng + hàm parse riêng, không cần
-  sửa class `PoseTable`.
-- `FSWBaseSymbol.hand_side` là abstract, mỗi category tự quyết định cách
-  suy ra (hoặc trả `None` nếu category đó không mã hoá tay trong symbol) —
-  xem phát hiện quan trọng bên dưới, vì quy tắc của Category 1 (`rotation`
-  quyết định tay) **không áp dụng được cho Category 2**.
+**Đã làm xong (xem `PROGRESS.md` mục "Pha 2 — Category 2" để biết chi tiết
+đầy đủ):** phát hiện + sửa contract trừu tượng ở `core/renderable_symbol.py`
+CHƯA generic (`FSWRenderableSymbol` cũ khai `get_joint_pose() -> HandJointPose`
+làm abstract cứng, `MovementSymbol` không kế thừa nổi — tách lại thành
+marker chung + `FSWHandRenderable`/`FSWMotionRenderable`, làm TRƯỚC khi
+viết `MovementSymbol`, đúng như phải làm); `parse_fsw_symbol_key("S22b03")`
+parse thành công; `_CATEGORY_SYMBOL = {1: HandSymbol, 2: MovementSymbol}`
+(đúng 1 dòng mới trong `registry.py`, cộng các file `core/` khác chỉ bị
+THÊM MỚI thuần tuý — không sửa logic cũ, xem bài kiểm tra khả năng mở rộng
+ở `PROGRESS.md`); `MotionPath`/`PathType`/`MovementPlane` (kiểu dữ liệu
+mới, không tái dùng `HandJointPose`); `data/movement_paths.json` (242 entry,
+sinh bằng công thức từ bảng `(path_type × plane)`, không đo).
 
-**Việc còn thật sự cần làm cho Pha 2:**
-- Cần kiểu dữ liệu MỚI hoàn toàn (không tái dùng `HandJointPose`): 1
-  "motion path" — chuỗi điểm/keyframe theo thời gian, có hướng
-  (thẳng/cong/vòng), tốc độ. Đây là điểm khác biệt lớn nhất so với Pha 1,
-  vì Pha 1 chỉ có 1 pose tĩnh, Pha 2 bắt buộc phải có trục thời gian.
-- Class `MovementSymbol` mới (giống `HandSymbol` nhưng cho Category 2) +
-  file `data/movement_paths.json` mới.
-- Renderer (`HandMeshRenderer3D`) hiện chỉ gọi `apply_wrist_orientation` +
-  `apply_joint_pose` 1 lần — cần renderer animation mới (interpolate giữa
-  các keyframe theo thời gian), khác hẳn renderer tĩnh hiện tại.
+**Việc còn lại của Pha 2 (chưa làm, không phải đã làm sai):**
+- Renderer animation (interpolate theo thời gian, biến `MotionPath` /
+  `sample_trajectory()` thành chuyển động thật) — `HandMeshRenderer3D` chỉ
+  render 1 pose tĩnh, chưa có renderer riêng cho Category 2.
 - `HandSide` cần thêm giá trị `BOTH` (xem phát hiện `fill` bên dưới) —
-  `renderer.py` hiện có sẵn nhánh phòng thủ cho `hand_side=None` nhưng CHƯA
-  xử lý `BOTH` thật sự.
+  chưa thêm, vì `hand_side` của Category 2 hiện trả `None` chứ chưa gán
+  `BOTH` cho trường hợp nào.
+- Nhiều tham số hình học (`curvature`/`amplitude`/`repeat` theo từng symbol
+  cụ thể, `plane` của group 11/12/20, ngữ nghĩa `is_hit`) vẫn là giả định
+  chưa kiểm chứng — danh sách đầy đủ ở `PROGRESS.md`.
 
 **Phát hiện quan trọng (đo trên corpus thật, CHƯA đối chiếu tài liệu chính
 thức — chỉ là số liệu, không phải quy tắc đã chốt để implement):** quy tắc
@@ -227,19 +226,32 @@ hoặc ngay sau Pha 2, tái dùng phần lớn hạ tầng "motion path" của P
 
 ### Pha 4 — Head & Face (Category 4)
 
+**Ngoài phạm vi của phần việc này — thành viên khác trong nhóm phụ trách
+Category 4.** Giữ mục này lại chỉ để tham khảo cấu trúc chung, không phải
+việc cần làm tiếp theo ở đây.
+
 **Khác biệt lớn:** không phải joint-angle (khớp xương) mà là **blend-shape**
 (biểu cảm mặt: nhướng mày, chu miệng...). Cần thiết kế 1 hệ kiểu dữ liệu
 hoàn toàn mới (`FaceExpressionPose` hay tương tự), không tái dùng được
 `HandJointPose`/`FingerPose`. Renderer cũng cần thêm khả năng áp blend-shape
 lên mesh mặt (không phải rig xương).
 
-### Pha 5 — Trunk & Limb (Category 5)
+### Pha 5 — Trunk & Limb / "Body" (Category 5) — PHA TIẾP THEO
 
-Nhỏ (9+9 base symbol, Trunk `0x36d–0x375` + Limb `0x376–0x37e` — 1 category
-chung theo `fsw-structure.js` thật, xem bảng category ở đầu file), mở rộng
-khung xương ra ngoài bàn tay (vai, thân, chân/tay không phải bàn tay). Có
-thể tái dùng phần lớn kiểu tư duy "joint-angle" của Pha 1 (vì đây cũng là
-khớp xương), chỉ khác bộ khớp.
+**Đây là pha kế tiếp cần làm** (sau khi Pha 1-2 đã xong; Pha 3 nhỏ và có
+thể gộp làm cùng, Pha 4 do thành viên khác phụ trách — xem ghi chú ở trên).
+
+Nhỏ (9+9 = 18 base symbol, group 27-28 theo `GROUP_START` — Trunk
+`0x36d–0x375` (group 27) + Limb `0x376–0x37e` (group 28), 1 category chung
+theo `fsw-structure.js` thật, xem bảng category ở đầu file), mở rộng khung
+xương ra ngoài bàn tay (vai, thân, chân/tay không phải bàn tay). Có thể tái
+dùng phần lớn kiểu tư duy "joint-angle" của Pha 1 (vì đây cũng là khớp
+xương), chỉ khác bộ khớp — nhưng vẫn cần kiểu dữ liệu (`BodyPose`) và
+contract render (`FSWBodyRenderable`) riêng, không tái dùng thẳng
+`HandJointPose`/`FSWHandRenderable` (tên gọi lẫn ý nghĩa đều khác). Bài
+kiểm tra khả năng mở rộng dự kiến cho category này đã viết sẵn ở
+`PROGRESS.md` mục "Pha 2 — Category 2" (phần cuối) — làm theo đúng mẫu đã
+áp dụng cho Category 2.
 
 ### Pha 6 — Location & Punctuation (Category 6-7)
 

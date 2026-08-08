@@ -597,6 +597,145 @@ thức số nào qua cả 4 phần). `grep -rn "symbol_id" src/` xác nhận
 `symbol_id` chỉ còn xuất hiện ở vai trò hiển thị/thông báo lỗi/field mô tả
 trong JSON — không còn làm khoá tra cứu ở bất kỳ đâu.
 
+## Pha 2 — Category 2 (Movement): contract trừu tượng generic + `MovementSymbol`
+
+### Phần 0 — phát hiện: "hạ tầng đã sẵn sàng" là SAI
+
+Bắt tay làm `MovementSymbol` thì phát hiện ngay: `core/renderable_symbol.py`'s
+`FSWRenderableSymbol` khai `get_joint_pose() -> HandJointPose` làm
+**abstract method cứng** — nghĩa là MỌI symbol (kể cả Category 2, vốn không
+có góc khớp mà có quỹ đạo chuyển động) đều bị ép implement đúng chữ ký đó.
+`MovementSymbol` không kế thừa nổi class này. `PoseTable` và
+`registry.py`'s category dispatch (từ đợt refactor `base_hex` trước) đã
+generic thật, nhưng **contract render thì chưa** — ghi chú "hạ tầng đã sẵn
+sàng cho Pha 2" ở `ROADMAP.md` là sai, đã sửa lại (xem commit riêng, trước
+khi viết bất kỳ dòng nào của `MovementSymbol`).
+
+### Phần A — tách contract trừu tượng theo category
+
+`core/renderable_symbol.py`: `FSWRenderableSymbol` giờ chỉ là **marker
+chung** (không method nào) — `FSWHandRenderable` (Category 1,
+`get_joint_pose()`) và `FSWMotionRenderable` (Category 2,
+`get_motion_path()`) là 2 subclass riêng khai đúng contract của category
+mình. `HandMeshRenderer3D.render()` (core) và `plot_hand.py` (fsw-r-viz)
+đổi type hint sang `FSWHandRenderable` cụ thể — **không thêm `isinstance`
+phân nhánh theo category ở đâu cả**, đúng ràng buộc đề ra: nhầm category là
+lỗi kiểu tĩnh (mypy), không phải nhánh runtime. `registry.py`/
+`fswr_converter.py` vốn đã dùng kiểu chung `FSWRenderableSymbol` từ đợt
+refactor trước nên không cần đổi gì.
+
+### Phần B — phát hiện cấu trúc `(path_type × plane)`
+
+10 group của Category 2 KHÔNG phải 10 khái niệm độc lập (khác Category 1,
+nơi 10 group là 10 dáng tay giải phẫu độc lập, không phân rã được) — chúng
+là tích của 2 trục trực giao, đọc thẳng ra được từ chính TÊN group thật
+(ISWA Manual Chapter 2):
+
+| Group | Tên thật | path_type | plane | is_hit |
+|---|---|---|---|---|
+| 11 | Contact | CONTACT | *(không rõ)* | |
+| 12 | Finger Movement | FINGER | *(không rõ)* | |
+| 13 | Straight Wall Plane | STRAIGHT | WALL | |
+| 14 | Straight Diagonal Plane | STRAIGHT | DIAGONAL | |
+| 15 | Straight Floor Plane | STRAIGHT | FLOOR | |
+| 16 | Curves Wall Plane | CURVED | WALL | |
+| 17 | Curves Hit Wall Plane | CURVED | WALL | ✓ |
+| 18 | Curves Hit Floor Plane | CURVED | FLOOR | ✓ |
+| 19 | Curves Floor Plane | CURVED | FLOOR | |
+| 20 | Circles | CIRCLE | *(không rõ)* | |
+
+Hệ quả: 242 base symbol phủ được bằng **5 path primitive (`PathType`) + 3
+plane (`MovementPlane`) + 1 bảng tra 10 dòng**, không cần "đo" như Category
+1's 261 dáng tay riêng biệt. `MotionPath`/`PathType`/`MovementPlane` thêm
+vào `core/types.py`. `core/movement_paths.py`'s `sample_trajectory()` sinh
+điểm 3D thật (dùng `scipy.spatial.transform.Rotation`, không tự viết
+quaternion) — canonical shape theo `path_type` → xoay quanh Z bằng đúng
+công thức compass của Category 1 (`(rotation % 8) * 45°`, tái dùng nguyên
+văn) → đưa vào `plane` (tái dùng cách xử lý Wall/Floor Plane của Category
+1). Test khoá: `STRAIGHT` trong `WALL` nằm trong mặt XY (Z≈0), trong
+`FLOOR` nằm trong mặt XZ (Y≈0).
+
+### Phần C — `MovementSymbol` + sinh bảng bằng công thức
+
+`scripts/gen_movement_paths.py` sinh `data/movement_paths.json` (242 entry,
+khoá `base_hex`) **bằng công thức** từ bảng 10 dòng ở Phần B +
+`GROUP_START` — khác hẳn Category 1 (phải "đo" từng symbol từ
+`3d-hands-benchmark`), vì hình học Category 2 hoàn toàn suy ra được từ
+group. `core/pose_table.py` thêm `MOVEMENT_PATH_TABLE: PoseTable[MotionPath]`
+(instance thứ 2, class `PoseTable` không cần sửa gì). `core/movement_symbol.py`'s
+`MovementSymbol(FSWMotionRenderable)` là class duy nhất cho cả 242 base
+symbol. `registry.py`: `_CATEGORY_SYMBOL = {1: HandSymbol, 2: MovementSymbol}`.
+
+**Quyết định `hand_side = None` cho Category 2 (bằng chứng đo trên
+`sign-language-processing/signbank-plus`, 257.800 sign, lọc sign chỉ có
+đúng 1 symbol tay):**
+
+| Tay (suy từ Cat 1) | Cat 2 rotation 0-7 | Cat 2 rotation 8-15 |
+|---|---|---|
+| RIGHT | 62,2% | 37,8% |
+| LEFT | 58,5% | 41,5% |
+
+Nếu `rotation ≥ 8 → LEFT` đúng cho Cat 2 thì hàng LEFT phải gần 100% — 2
+hàng gần như giống hệt nhau, tức **`rotation` không mã hoá tay ở Category
+2** (nó là hướng/gương của bản thân động tác).
+
+| Tay (suy từ Cat 1) | Cat 2 fill=0 | Cat 2 fill=1 |
+|---|---|---|
+| RIGHT | 97,4% | 0,5% |
+| LEFT | 72,0% | 26,7% |
+
+`fill` có tín hiệu rõ hơn nhiều (fill=1 nhiều hơn ~53 lần khi tay trái —
+khớp quy ước SignWriting: fill code 0/1/2 = ISWA fill 1/2/3 =
+phải/trái/cả hai) nhưng vẫn còn nhiễu thật (LEFT vẫn 72% dùng fill=0).
+**Chưa đủ tin cậy để implement thành quy tắc cứng** — `MovementSymbol.hand_side`
+trả `None`, trung thực hơn đoán sai ~28%. Cần đối chiếu Lessons in
+SignWriting chương 6 trước khi chốt quy tắc thật. Chưa thêm `HandSide.BOTH`
+(chưa cần, vì hiện `None` chứ chưa gán giá trị nào).
+
+### Danh sách giả định CHƯA kiểm chứng (tách riêng, không chôn trong docstring)
+
+1. `plane` của group 11 (Contact), 12 (Finger Movement), 20 (Circles) —
+   tên group không nói rõ; lưu `null`, `sample_trajectory()` fallback về
+   WALL lúc render (lựa chọn ít tuỳ tiện nhất, không phải quy tắc đã xác nhận).
+2. `is_hit` — mới là cờ mang theo, CHƯA có ngữ nghĩa hình học/render nào cả.
+3. `curvature`/`amplitude`/`repeat` — hằng số theo `path_type`/group, KHÔNG
+   suy từ `base_symbol_number` — chưa rõ nguồn nào cho biết các symbol
+   trong cùng 1 group khác nhau cụ thể ra sao (ISWA chắc có mã hoá, nhưng
+   chưa xác định được).
+4. Hình dạng canonical của từng `PathType` (đường thẳng, cung tròn, dao
+   động nhỏ cho FINGER...) — tự thiết kế hợp lý, không suy từ đo đạc/spec ISWA nào.
+5. Công thức xoay `rotation`/`plane` cho Category 2 — tái dùng nguyên công
+   thức đã chart-verify của Category 1, CHƯA verify độc lập cho Category 2.
+6. `MovementSymbol.get_wrist_orientation()` — cũng tái dùng công thức
+   Category 1 (`_default_wrist_orientation()`), cùng lý do/rủi ro như trên.
+7. `hand_side` của Category 2 — xem quyết định `None` ở trên, đây là điểm
+   chưa chốt lớn nhất, không phải chi tiết nhỏ.
+
+### Bài kiểm tra khả năng mở rộng (Category 5 — Body, group 27-28, 18 base symbol)
+
+Báo cáo trung thực theo đúng yêu cầu, **không tô hồng**: thêm Category 2 lần
+này KHÔNG chỉ sửa đúng 1 dòng `registry.py` như ghi chú (đã sửa) ở
+`ROADMAP.md` từng khẳng định — thực tế còn cần sửa THÊM `core/types.py`
+(thêm `MotionPath`/`PathType`/`MovementPlane`) và `core/pose_table.py`
+(thêm `MOVEMENT_PATH_TABLE` + hàm parse), cả hai đều là file `core/` ĐÃ CÓ
+SẴN. Điểm quan trọng: **mọi thay đổi ở 2 file này đều là THÊM MỚI thuần tuý
+(thêm class/hàm mới), không sửa/xoá 1 dòng code cũ nào** — khác hẳn kiểu
+"sửa lại logic cũ" mà nguyên tắc ban đầu muốn tránh. Với Category 5, dự
+kiến cần đúng những việc THÊM MỚI tương tự:
+- `core/types.py`: thêm 1 kiểu pose mới (vd `BodyPose`) — thêm class, không sửa gì cũ.
+- `core/renderable_symbol.py`: thêm 1 abstract contract mới (vd
+  `FSWBodyRenderable(FSWRenderableSymbol)`) — thêm class, không sửa gì cũ.
+- `core/pose_table.py`: thêm 1 `PoseTable[BodyPose]` instance + hàm parse —
+  thêm hàm/biến, không sửa gì cũ.
+- `core/registry.py`: thêm đúng 1 dòng `{5: BodySymbol}` vào `_CATEGORY_SYMBOL`.
+- File mới hoàn toàn: `core/body_symbol.py`, `data/body_poses.json` +
+  script sinh, có thể `core/body_geometry.py` nếu cần hình học riêng.
+
+Không có file nào cần SỬA LOGIC ĐÃ CÓ (chỉ thêm mới) — nên Phần A (tách
+contract) coi như đã đạt đúng mục tiêu, chỉ là "1 dòng registry.py" ở
+`ROADMAP.md` cũ nói chưa đủ chính xác, đã sửa lại thành mô tả đúng thực tế
+trên.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -616,11 +755,17 @@ trong JSON — không còn làm khoá tra cứu ở bất kỳ đâu.
   data-driven qua `HandSymbol` + `data/hand_joint_poses.json`, không còn
   261 class riêng (`groups/` đã xoá).**
 - **`base_hex` là khoá duy nhất xuyên suốt pipeline** (không còn bị tách
-  rồi dựng lại) — `registry.py` dispatch theo category
-  (`_CATEGORY_SYMBOL`), sẵn sàng thêm Category 2 chỉ bằng 1 dòng code mới
-  + code hoàn toàn mới cho riêng Category 2 (xem mục ngay phía trên).
-- `fsw-r`: `mypy --strict` sạch (26 file), `pytest` **615/615 pass**
-  (`test_iswa_structure.py`, `test_pose_table.py`, `test_hand_symbol.py`,
+  rồi dựng lại) — `registry.py` dispatch theo category (`_CATEGORY_SYMBOL`).
+- **Category 2 (Movement) đã xong: đủ 242/242 base symbol**, data-driven
+  qua `MovementSymbol` + `data/movement_paths.json` (sinh bằng công thức,
+  không đo) — nhưng `hand_side` trả `None` (chưa chốt quy tắc thật) và
+  nhiều tham số hình học vẫn là giả định chưa kiểm chứng, xem mục "Pha 2 —
+  Category 2" ở trên.
+- `fsw-r`: `mypy --strict` sạch (31 file), `pytest` **893/893 pass**
+  (615 test Category 1 không đổi + 278 test Category 2 mới:
+  `test_movement_paths.py`, `test_movement_path_table.py`,
+  `test_movement_symbol.py`, cộng các file Category 1 cũ:
+  `test_iswa_structure.py`, `test_pose_table.py`, `test_hand_symbol.py`,
   `test_wrist_orientation.py`, `test_hand_side.py`, `test_iswa_data.py`,
   `test_fsw_symbol_key.py`, `test_fsw_ast.py`, `test_registry.py`,
   `test_fswr_converter.py`).
@@ -635,11 +780,17 @@ trong JSON — không còn làm khoá tra cứu ở bất kỳ đâu.
 
 ## Việc còn để ngỏ / chưa làm
 
-- **Category 1 (Hands) đã xong: đủ 261/261 base symbol, cả 10/10 group** —
-  mục còn lại dưới đây là thứ CHƯA làm trong phạm vi Category 1, cộng 6
-  category khác của ISWA (Trunk và Limb là 1 category chung, không phải 2
-  — xem `ROADMAP.md` mục "Các category ISWA" — nên tổng là 7 category, 6
-  category còn lại ngoài Hands; xem `ROADMAP.md` Pha 2 trở đi).
+- **Category 1 (Hands) và Category 2 (Movement) đã xong: 261/261 + 242/242
+  base symbol** — mục còn lại dưới đây cộng 5 category khác của ISWA
+  (Trunk và Limb là 1 category chung, không phải 2 — xem `ROADMAP.md` mục
+  "Các category ISWA" — nên tổng 7 category, 5 category còn lại ngoài
+  Hands/Movement: Dynamics, Head & Face, Trunk & Limb, Location,
+  Punctuation; xem `ROADMAP.md` Pha 3 trở đi).
+- **Category 2's `hand_side` trả `None`** (chưa chốt được quy tắc thật —
+  `rotation` của Cat 1 không áp dụng được, `fill` có tín hiệu nhưng còn
+  nhiễu ~27%) — cần đối chiếu Lessons in SignWriting chương 6 trước khi
+  implement thành quy tắc cứng. Danh sách đầy đủ các giả định Category 2
+  chưa kiểm chứng khác nằm ở mục "Pha 2 — Category 2" phía trên.
 - Góc khớp lấy từ dữ liệu thật (MediaPipe trên `3d-hands-benchmark`) nhưng
   chưa tinh chỉnh theo rig/mesh 3D thật — vẫn là stick-figure debug.
 - `abduction` (độ xoè ngón) cho toàn bộ 261 symbol vẫn là số đoán — chưa đo
@@ -652,12 +803,13 @@ trong JSON — không còn làm khoá tra cứu ở bất kỳ đâu.
   chạy) — vẫn CHƯA có API export JSON công khai cho 1 symbol cụ thể (pose +
   wrist quaternion đã tính) nếu render cuối cùng là web three.js thay vì
   Blender/Open3D.
-- 6 category khác của ISWA (Movement, Dynamics, Head & Face, Trunk & Limb,
-  Location, Punctuation — tổng ~391 base symbol còn lại trong số 652 base
-  symbol toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 2 trở đi. Hạ tầng
-  chung (`base_hex` xuyên suốt, dispatch theo category, `PoseTable`
-  generic) đã sẵn sàng; mỗi category vẫn cần kiểu dữ liệu pose riêng của nó
-  (vd Movement cần "motion path", Head&Face cần blend-shape) và class
-  symbol riêng, không tái dùng được `HandJointPose`/`HandSymbol`.
+- 5 category khác của ISWA (Dynamics, Head & Face, Trunk & Limb, Location,
+  Punctuation — tổng ~149 base symbol còn lại trong số 652 base symbol
+  toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 3 trở đi. Hạ tầng chung
+  (`base_hex` xuyên suốt, dispatch theo category, `PoseTable` generic,
+  contract render tách theo category kể từ Pha 2) đã sẵn sàng; mỗi category
+  vẫn cần kiểu dữ liệu pose riêng của nó (vd Head&Face cần blend-shape) và
+  class symbol riêng, không tái dùng được `HandJointPose`/`HandSymbol`
+  hay `MotionPath`/`MovementSymbol`.
 - Môi trường dùng Python 3.10 (máy hiện có) thay vì 3.11+ như brief ban đầu
   yêu cầu — không ảnh hưởng vì không dùng feature riêng của 3.11.
