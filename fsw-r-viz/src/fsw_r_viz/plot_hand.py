@@ -1,10 +1,14 @@
-"""Renders a fsw_r.FSWRenderableSymbol as a 3D stick-figure hand, using
+"""Renders a fsw_r.FSWHandRenderable as a 3D stick-figure hand, using
 matplotlib, so a joint pose + wrist orientation can be sanity-checked
 visually instead of just reading numbers off a dataclass.
 
 This is a debugging aid, not the final renderer. It depends on fsw_r's
-public types only (FSWRenderableSymbol, HandJointPose) -- fsw_r itself has
-no knowledge of this package or of matplotlib.
+public types only (FSWHandRenderable, HandJointPose) -- fsw_r itself has
+no knowledge of this package or of matplotlib. Takes FSWHandRenderable
+specifically (not the generic FSWRenderableSymbol marker), same reasoning
+as fsw_r.core.renderer.HandMeshRenderer3D: this module only knows how to
+draw a hand, so its signature says so -- a Category 2 (Movement) symbol is
+a type error here, not a runtime isinstance branch.
 """
 
 from __future__ import annotations
@@ -20,7 +24,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 
-from fsw_r.core.renderable_symbol import FSWRenderableSymbol
+from fsw_r.core.renderable_symbol import FSWHandRenderable
 from fsw_r.core.types import HandSide
 
 from fsw_r_viz.hand_geometry import apply_wrist_orientation, hand_local_points, mirror_for_left_hand
@@ -34,7 +38,7 @@ _FINGER_COLORS: dict[str, str] = {
 }
 
 
-def _plot_on(ax: Axes3D, symbol: FSWRenderableSymbol, title: str) -> None:
+def _plot_on(ax: Axes3D, symbol: FSWHandRenderable, title: str) -> None:
     local_points = hand_local_points(symbol.get_joint_pose())
     if symbol.hand_side == HandSide.LEFT:
         local_points = mirror_for_left_hand(local_points)
@@ -84,7 +88,7 @@ def _plot_on(ax: Axes3D, symbol: FSWRenderableSymbol, title: str) -> None:
     ax.view_init(elev=20, azim=-60)
 
 
-def render_symbol_to_file(symbol: FSWRenderableSymbol, output_path: str, title: str | None = None) -> None:
+def render_symbol_to_file(symbol: FSWHandRenderable, output_path: str, title: str | None = None) -> None:
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(111, projection="3d")
     _plot_on(ax, symbol, title or symbol.symbol_id)
@@ -95,7 +99,7 @@ def render_symbol_to_file(symbol: FSWRenderableSymbol, output_path: str, title: 
 
 
 def render_symbols_grid(
-    symbols: Sequence[tuple[FSWRenderableSymbol, str]], output_path: str
+    symbols: Sequence[tuple[FSWHandRenderable, str]], output_path: str
 ) -> None:
     fig = plt.figure(figsize=(6 * len(symbols), 6))
     for i, (symbol, title) in enumerate(symbols):

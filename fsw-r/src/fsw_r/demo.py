@@ -39,6 +39,16 @@ from fsw_r.core.renderer import HandMeshRenderer3D, HandSkeleton
 from fsw_r.core.types import HandJointPose, HandSide
 
 
+def _as_hand_symbol(key: str) -> HandSymbol:
+    """symbol_from_fsw() returns the generic FSWRenderableSymbol marker
+    (it could be any category) -- every key used in this demo is a real
+    Category 1 (Hands) key, so narrow it here rather than repeating the
+    isinstance check at every call site."""
+    symbol = symbol_from_fsw(key)
+    assert isinstance(symbol, HandSymbol)
+    return symbol
+
+
 class _MockRig:
     """Stand-in for a real rigged mesh (e.g. in Blender/Open3D)."""
 
@@ -67,10 +77,10 @@ def main() -> None:
     print("--- Part 1: rotation sweeps which way the finger points ---")
     # Real FSW symbol keys for "Index" (base 0x100), fill=0 (Palm of Hand,
     # Wall Plane -- the neutral fill): "S100" + fill + rotation.
-    idx_front = symbol_from_fsw("S10000")  # rotation=0, RIGHT, finger points up
-    idx_side = symbol_from_fsw("S10002")  # rotation=2, RIGHT, finger points sideways
-    idx_back = symbol_from_fsw("S10004")  # rotation=4, RIGHT, finger points down
-    idx_mirrored = symbol_from_fsw("S1000a")  # rotation=10 (0xa) -> LEFT hand
+    idx_front = _as_hand_symbol("S10000")  # rotation=0, RIGHT, finger points up
+    idx_side = _as_hand_symbol("S10002")  # rotation=2, RIGHT, finger points sideways
+    idx_back = _as_hand_symbol("S10004")  # rotation=4, RIGHT, finger points down
+    idx_mirrored = _as_hand_symbol("S1000a")  # rotation=10 (0xa) -> LEFT hand
 
     renderer = HandMeshRenderer3D(_MockRigProvider())
     symbols = (idx_front, idx_side, idx_back, idx_mirrored)
@@ -114,7 +124,7 @@ def main() -> None:
         (4, "Side of Hand, Floor Plane"),
         (5, "Back of Hand, Floor Plane"),
     ]
-    fill_symbols = [symbol_from_fsw(f"S100{fill}0") for fill, _ in fill_descriptions]
+    fill_symbols = [_as_hand_symbol(f"S100{fill}0") for fill, _ in fill_descriptions]
     for symbol, (fill, description) in zip(fill_symbols, fill_descriptions):
         quat = symbol.get_wrist_orientation().as_quat()
         print(f"  fill={fill} ({description}): wrist quat (x,y,z,w)={quat}")
@@ -127,9 +137,8 @@ def main() -> None:
 
     print()
     print("--- Part 4: base_symbol_number 1 of all 10 Hands groups ---")
-    group_symbols = [symbol_from_fsw(f"S{base:03x}10") for base in HAND_GROUP_START]
+    group_symbols = [_as_hand_symbol(f"S{base:03x}10") for base in HAND_GROUP_START]
     for symbol in group_symbols:
-        assert isinstance(symbol, HandSymbol)
         print(f"  group {symbol.group}: {symbol.symbol_id} ({symbol.name!r})")
     assert len(group_symbols) == 10
     assert [s.group for s in group_symbols] == list(range(1, 11))

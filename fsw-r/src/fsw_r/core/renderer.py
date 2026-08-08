@@ -1,6 +1,12 @@
-"""3D renderer. Depends only on FSWRenderableSymbol and HandRigProvider
-(both abstract) -- adding a new group or base symbol never requires
-touching this file.
+"""3D renderer. Depends only on FSWHandRenderable and HandRigProvider (both
+abstract) -- adding a new Hands group/base symbol never requires touching
+this file. Takes ``FSWHandRenderable`` specifically, not the generic
+``FSWRenderableSymbol`` marker -- this renderer only knows how to draw a
+hand (wrist orientation + joint pose), so its type signature says so; a
+Category 2 (Movement) ``FSWMotionRenderable`` symbol is a type error here,
+not a runtime ``isinstance`` branch. A future movement renderer would be
+its own class taking ``FSWMotionRenderable``, not a branch added to this
+one.
 
 A left hand is not a right hand rotated by some angle -- it is a different
 chirality (mirror image). So this renderer never mirrors via a rotation
@@ -26,7 +32,7 @@ from typing import Protocol
 
 from scipy.spatial.transform import Rotation
 
-from fsw_r.core.renderable_symbol import FSWRenderableSymbol
+from fsw_r.core.renderable_symbol import FSWHandRenderable
 from fsw_r.core.types import HandJointPose, HandSide
 
 
@@ -46,7 +52,7 @@ class HandMeshRenderer3D:
     def __init__(self, rig_provider: HandRigProvider) -> None:
         self._rig_provider = rig_provider
 
-    def render(self, symbol: FSWRenderableSymbol) -> None:
+    def render(self, symbol: FSWHandRenderable) -> None:
         if symbol.hand_side is None:
             raise ValueError(
                 f"{symbol.symbol_id} (category {symbol.category}) doesn't encode a hand_side "

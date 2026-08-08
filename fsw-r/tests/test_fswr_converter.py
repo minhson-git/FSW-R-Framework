@@ -37,7 +37,10 @@ def test_ast_to_fswr_matches_fsw_to_fswr() -> None:
     assert from_ast[0].x == from_fsw[0].x
     assert from_ast[0].y == from_fsw[0].y
     assert from_ast[0].symbol.symbol_id == from_fsw[0].symbol.symbol_id
-    assert from_ast[0].symbol.get_joint_pose() == from_fsw[0].symbol.get_joint_pose()
+    ast_symbol, fsw_symbol = from_ast[0].symbol, from_fsw[0].symbol
+    assert isinstance(ast_symbol, HandSymbol)
+    assert isinstance(fsw_symbol, HandSymbol)
+    assert ast_symbol.get_joint_pose() == fsw_symbol.get_joint_pose()
 
 
 def test_fsw_to_fswr_empty_sign_returns_empty_tuple() -> None:
