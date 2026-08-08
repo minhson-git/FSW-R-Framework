@@ -32,16 +32,18 @@ from typing import Callable
 
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.movement_symbol import MovementSymbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
 # A concrete symbol's constructor -- (base_hex, fill, rotation) ->
-# FSWRenderableSymbol, the shape HandSymbol itself uses.
+# FSWRenderableSymbol, the shape HandSymbol/MovementSymbol both use.
 _Constructor = Callable[..., FSWRenderableSymbol]
 
-# category -> the one class that covers every base symbol in it. Adding
-# Category 2 (Movement) is "add {2: MovementSymbol} here", once that class
-# and its own PoseTable exist -- nothing else in core/ changes.
-_CATEGORY_SYMBOL: dict[int, _Constructor] = {1: HandSymbol}
+# category -> the one class that covers every base symbol in it. This is
+# the entire integration point for a new category -- see PROGRESS.md's
+# Phase 2 entry for the "extensibility check" confirming nothing else in
+# core/ needed to change to add {2: MovementSymbol} here.
+_CATEGORY_SYMBOL: dict[int, _Constructor] = {1: HandSymbol, 2: MovementSymbol}
 
 # Escape hatch for a future INDIVIDUAL base symbol needing distinct
 # behavior, not just distinct numbers -- keyed by base_hex. Empty today:
