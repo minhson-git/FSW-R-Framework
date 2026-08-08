@@ -1,16 +1,16 @@
-"""Renders two comparison grids as 3D stick-figure hands:
+"""Renders comparison grids covering every category fsw_r currently
+supports, as a visual sanity-check:
 
-1. index_finger_rotations.png -- Base Symbol 1 ("Index", 01-01-001) at a
-   fixed fill (0 = Palm of Hand, Wall Plane) across four rotations -- three
-   in the RIGHT-hand half (0-7) and one in the LEFT-hand half (8-15) -- so
-   both the finger-pointing sweep and the RIGHT/LEFT mirroring can be
-   checked visually.
-
-2. index_finger_fills.png -- the same base symbol at a fixed rotation (0)
-   across all 6 fill values -- the "Six Palm Facings"
-   (https://www.signwriting.org/lessons/iswa/group01/01-01-001-01.html) --
-   so fill's effect (which side of the hand shows, which plane the arm
-   reaches in) can be checked visually, distinct from rotation's effect.
+1. index_finger_rotations.png -- "Index" (01-01-001) at a fixed fill across
+   four rotations (three RIGHT, one LEFT), so the finger-pointing sweep and
+   the RIGHT/LEFT mirroring are both visible.
+2. index_finger_fills.png -- the same symbol across all 6 fills, the "Six
+   Palm Facings", distinct from rotation's effect.
+3. mouth_expressions.png / 4. brow_eye_expressions.png -- Category 4
+   (Head & Face) blend-shape expressions (mouth/tongue, brows, eye-openness).
+5. movement_trajectories.png -- Category 2 (Movement): one symbol per
+   PathType (contact/finger/straight/curved/circle), each drawn as its 3D
+   trajectory (start green, end red).
 
 Run with: python -m fsw_r_viz.demo
 """
@@ -21,8 +21,10 @@ from pathlib import Path
 
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.movement_symbol import MovementSymbol
 from fsw_r_viz.plot_face import render_faces_grid
 from fsw_r_viz.plot_hand import render_symbols_grid
+from fsw_r_viz.plot_movement import render_movements_grid
 
 
 def _render_rotation_sweep(output_dir: Path) -> None:
@@ -86,6 +88,21 @@ def _render_brow_eye_expressions(output_dir: Path) -> None:
     print(f"Saved: {output_path}")
 
 
+def _render_movement_trajectories(output_dir: Path) -> None:
+    # Category 2 (Movement): one symbol per PathType, so the 5 movement
+    # primitives (contact/finger/straight/curved/circle) are visibly distinct.
+    symbols = [
+        (MovementSymbol(0x205, fill=0, rotation=0), "02-11-001 Contact"),
+        (MovementSymbol(0x216, fill=0, rotation=0), "02-12-001 Finger Movement"),
+        (MovementSymbol(0x22A, fill=0, rotation=0), "02-13-001 Straight"),
+        (MovementSymbol(0x288, fill=0, rotation=0), "02-16-001 Curved"),
+        (MovementSymbol(0x2E3, fill=0, rotation=0), "02-20-001 Circle"),
+    ]
+    output_path = output_dir / "movement_trajectories.png"
+    render_movements_grid(symbols, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -93,6 +110,7 @@ def main() -> None:
     _render_fill_sweep(output_dir)
     _render_mouth_expressions(output_dir)
     _render_brow_eye_expressions(output_dir)
+    _render_movement_trajectories(output_dir)
 
 
 if __name__ == "__main__":
