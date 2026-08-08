@@ -1,0 +1,136 @@
+"""Regenerates ``data/face_expression_poses.json`` for ISWA Category 4
+(Head & Face) facial-expression symbols.
+
+Provenance, stated honestly: the base-symbol NAMES are authoritative ISWA
+names (signbank.org/iswa/<hex>_sg.html). The blend-shape VECTORS are
+AUTHORED -- a human reading of each name mapped to the ARKit-52 standard --
+NOT measured (there is no dataset keying ISWA face symbols to blend-shapes
+the way 3d-hands-benchmark measured hand joints). Only symbols that are a
+real facial *deformation* representable in ARKit-52 are authored; airflow /
+breath / ears / contact / movement symbols are DEFERRED with a reason,
+rather than faked.
+
+The valid ``fill`` values per base come from the authoritative
+``iswa_valid_combinations.json`` (the ISWA font cmap), so this file can
+never disagree with it. fill nuance (what fill 0 vs 1 *means*) is still
+unresolved, so every valid fill of a base currently carries the same
+expression -- keyed by (base_hex, fill) so that's a data-only change later.
+
+Run:  python scripts/gen_face_poses.py
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from fsw_r.core.iswa_data import symbol_id_of, valid_combinations_for
+
+# base_hex -> (name, {arkit_blendshape: weight}). Names from signbank.org.
+AUTHORED: dict[int, tuple[str, dict[str, float]]] = {
+    # ---- Group 25: Mouth / Lips (0x33b-0x355), 27 shape symbols ----
+    0x33B: ("Mouth Closed Neutral", {}),
+    0x33C: ("Mouth Closed Forward", {"mouthPucker": 0.4}),
+    0x33D: ("Mouth Closed Contact", {"mouthPressLeft": 0.3, "mouthPressRight": 0.3}),
+    0x33E: ("Mouth Smile", {"mouthSmileLeft": 0.8, "mouthSmileRight": 0.8}),
+    0x33F: ("Mouth Smile Wrinkled",
+            {"mouthSmileLeft": 0.8, "mouthSmileRight": 0.8, "cheekSquintLeft": 0.5, "cheekSquintRight": 0.5}),
+    0x340: ("Mouth Smile Open", {"mouthSmileLeft": 0.7, "mouthSmileRight": 0.7, "jawOpen": 0.3}),
+    0x341: ("Mouth Frown", {"mouthFrownLeft": 0.8, "mouthFrownRight": 0.8}),
+    0x342: ("Mouth Frown Wrinkled",
+            {"mouthFrownLeft": 0.8, "mouthFrownRight": 0.8, "cheekSquintLeft": 0.4, "cheekSquintRight": 0.4}),
+    0x343: ("Mouth Frown Open", {"mouthFrownLeft": 0.7, "mouthFrownRight": 0.7, "jawOpen": 0.3}),
+    0x344: ("Mouth Open Circle", {"jawOpen": 0.4, "mouthFunnel": 0.5}),
+    0x345: ("Mouth Open Forward", {"jawOpen": 0.3, "mouthFunnel": 0.4, "mouthPucker": 0.2}),
+    0x346: ("Mouth Open Wrinkled",
+            {"jawOpen": 0.4, "mouthFunnel": 0.4, "cheekSquintLeft": 0.3, "cheekSquintRight": 0.3}),
+    0x347: ("Mouth Open Oval", {"jawOpen": 0.5, "mouthFunnel": 0.3}),
+    0x348: ("Mouth Open Oval Wrinkled",
+            {"jawOpen": 0.5, "mouthFunnel": 0.3, "cheekSquintLeft": 0.3, "cheekSquintRight": 0.3}),
+    0x349: ("Mouth Open Oval Yawn", {"jawOpen": 0.8, "mouthFunnel": 0.2}),
+    0x34A: ("Mouth Open Rectangle", {"jawOpen": 0.5, "mouthStretchLeft": 0.4, "mouthStretchRight": 0.4}),
+    0x34B: ("Mouth Open Rectangle Wrinkled",
+            {"jawOpen": 0.5, "mouthStretchLeft": 0.4, "mouthStretchRight": 0.4,
+             "cheekSquintLeft": 0.3, "cheekSquintRight": 0.3}),
+    0x34C: ("Mouth Open Rectangle Yawn", {"jawOpen": 0.8, "mouthStretchLeft": 0.4, "mouthStretchRight": 0.4}),
+    0x34D: ("Mouth Kiss", {"mouthPucker": 0.9}),
+    0x34E: ("Mouth Kiss Forward", {"mouthPucker": 0.8, "mouthFunnel": 0.3}),
+    0x34F: ("Mouth Kiss Wrinkled", {"mouthPucker": 0.9, "cheekSquintLeft": 0.3, "cheekSquintRight": 0.3}),
+    0x350: ("Mouth Tense", {"mouthPressLeft": 0.5, "mouthPressRight": 0.5, "mouthClose": 0.2}),
+    0x351: ("Mouth Tense Forward", {"mouthPressLeft": 0.4, "mouthPressRight": 0.4, "mouthPucker": 0.3}),
+    0x352: ("Mouth Tense Sucked", {"mouthRollLower": 0.6, "mouthRollUpper": 0.6}),
+    0x353: ("Lips Pressed Together", {"mouthPressLeft": 0.6, "mouthPressRight": 0.6, "mouthClose": 0.3}),
+    0x354: ("Lip Lower Over Upper", {"mouthShrugLower": 0.5, "mouthRollUpper": 0.4}),
+    0x355: ("Lip Upper Over Lower", {"mouthShrugUpper": 0.5, "mouthRollLower": 0.4}),
+    # ---- Group 24: Cheeks / Nose (0x32a-0x33a), facial-deformation subset ----
+    0x32A: ("Cheeks Puffed", {"cheekPuff": 0.8}),
+    0x32B: ("Cheeks Neutral", {}),
+    # ARKit-52 has a single cheekSquint target and can't localize the
+    # high/middle/low position, so these three share it (documented limit).
+    0x32D: ("Tense Cheeks High", {"cheekSquintLeft": 0.6, "cheekSquintRight": 0.6}),
+    0x32E: ("Tense Cheeks Middle", {"cheekSquintLeft": 0.6, "cheekSquintRight": 0.6}),
+    0x32F: ("Tense Cheeks Low", {"cheekSquintLeft": 0.6, "cheekSquintRight": 0.6}),
+    0x331: ("Nose Neutral", {}),
+    0x333: ("Nose Wrinkles", {"noseSneerLeft": 0.6, "noseSneerRight": 0.6}),
+}
+
+# base_hex -> reason it is NOT authored (kept for the _meta record so the
+# gaps are explicit, not silent). registry.py raises for these.
+DEFERRED: dict[int, str] = {
+    # Group 24
+    0x32C: "Cheeks Sucked -- no ARKit-52 target for hollowed cheeks",
+    0x330: "Ears -- ARKit-52 has no ear targets (not a facial deformation)",
+    0x332: "Nose Contact -- a contact/location annotation, not a deformation",
+    0x334: "Nose Wiggles -- a movement (needs animation), not a static pose",
+    0x335: "Air Blowing Out -- airflow annotation, not a facial deformation",
+    0x336: "Air Sucking In -- airflow annotation",
+    0x337: "Air Blow Small Rotations -- directional airflow annotation",
+    0x338: "Air Suck Small Rotations -- directional airflow annotation",
+    0x339: "Breath Exhale -- breath annotation",
+    0x33A: "Breath Inhale -- breath annotation",
+    # Group 25
+    0x356: "Mouth Corners -- annotation mark, not an expression",
+    0x357: "Mouth Wrinkles Single -- annotation mark, not an expression",
+    0x358: "Mouth Wrinkles Double -- annotation mark, not an expression",
+}
+
+
+def build() -> dict[str, object]:
+    out: dict[str, object] = {
+        "_meta": {
+            "standard": "ARKit 52 blendshapes",
+            "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose subset)",
+            "names_source": "signbank.org ISWA 2010 reference (<hex>_sg.html) -- authoritative ISWA names",
+            "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the "
+                             "symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to "
+                             "blend-shapes (unlike hand_joint_poses.json, which is MediaPipe-measured). "
+                             "Confidence is lower; treat as a first interpretive pass.",
+            "fills_source": "valid fills per base come from iswa_valid_combinations.json (the ISWA font cmap)",
+            "fill_nuance": "UNRESOLVED: the semantic difference between a base's fills is not yet confirmed "
+                           "from the SignWriting Alphabet Manual, so every valid fill carries the same "
+                           "expression. Keyed by (base_hex, fill) so this becomes a data-only change later.",
+            "deferred": {f"{b:x}": reason for b, reason in sorted(DEFERRED.items())},
+            "generated_by": "scripts/gen_face_poses.py",
+        }
+    }
+    for base_hex in sorted(AUTHORED):
+        name, blend = AUTHORED[base_hex]
+        symbol_id = symbol_id_of(base_hex)
+        fills = sorted(valid_combinations_for(base_hex).fills)
+        out[f"{base_hex:x}"] = {
+            "symbol_id": symbol_id,
+            "name": name,
+            "source": f"name from signbank {symbol_id}; blend-shapes authored (ARKit-52)",
+            "fills": {str(f): dict(blend) for f in fills},
+        }
+    return out
+
+
+def main() -> None:
+    target = Path(__file__).resolve().parent.parent / "src" / "fsw_r" / "data" / "face_expression_poses.json"
+    target.write_text(json.dumps(build(), indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {target} with {len(AUTHORED)} authored base symbols ({len(DEFERRED)} deferred)")
+
+
+if __name__ == "__main__":
+    main()

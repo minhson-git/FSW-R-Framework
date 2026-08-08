@@ -1,11 +1,154 @@
 {
   "_meta": {
     "standard": "ARKit 52 blendshapes",
-    "categories": "ISWA Category 4 (Head & Face), Group 25 (Mouth/Lips) only so far",
-    "names_source": "signbank.org ISWA 2010 reference (33b_sg.html) -- authoritative ISWA names",
+    "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose subset)",
+    "names_source": "signbank.org ISWA 2010 reference (<hex>_sg.html) -- authoritative ISWA names",
     "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to blend-shapes (unlike hand_joint_poses.json, which is MediaPipe-measured). Confidence is lower; treat as a first interpretive pass.",
-    "fill_nuance": "UNRESOLVED: ISWA mouth symbols have two fills (0,1); the semantic difference between them is not yet confirmed from the SignWriting Alphabet Manual, so both fills currently carry the same expression. Keyed by (base_hex, fill) so this becomes a data-only change once resolved.",
-    "deferred": "Group 25's last three bases (0x356-0x358: Mouth Corners / Wrinkles Single / Wrinkles Double) are annotation-like marks, not expressions, and are not authored yet."
+    "fills_source": "valid fills per base come from iswa_valid_combinations.json (the ISWA font cmap)",
+    "fill_nuance": "UNRESOLVED: the semantic difference between a base's fills is not yet confirmed from the SignWriting Alphabet Manual, so every valid fill carries the same expression. Keyed by (base_hex, fill) so this becomes a data-only change later.",
+    "deferred": {
+      "32c": "Cheeks Sucked -- no ARKit-52 target for hollowed cheeks",
+      "330": "Ears -- ARKit-52 has no ear targets (not a facial deformation)",
+      "332": "Nose Contact -- a contact/location annotation, not a deformation",
+      "334": "Nose Wiggles -- a movement (needs animation), not a static pose",
+      "335": "Air Blowing Out -- airflow annotation, not a facial deformation",
+      "336": "Air Sucking In -- airflow annotation",
+      "337": "Air Blow Small Rotations -- directional airflow annotation",
+      "338": "Air Suck Small Rotations -- directional airflow annotation",
+      "339": "Breath Exhale -- breath annotation",
+      "33a": "Breath Inhale -- breath annotation",
+      "356": "Mouth Corners -- annotation mark, not an expression",
+      "357": "Mouth Wrinkles Single -- annotation mark, not an expression",
+      "358": "Mouth Wrinkles Double -- annotation mark, not an expression"
+    },
+    "generated_by": "scripts/gen_face_poses.py"
+  },
+  "32a": {
+    "symbol_id": "04-24-001",
+    "name": "Cheeks Puffed",
+    "source": "name from signbank 04-24-001; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "cheekPuff": 0.8
+      },
+      "1": {
+        "cheekPuff": 0.8
+      },
+      "2": {
+        "cheekPuff": 0.8
+      },
+      "3": {
+        "cheekPuff": 0.8
+      },
+      "4": {
+        "cheekPuff": 0.8
+      }
+    }
+  },
+  "32b": {
+    "symbol_id": "04-24-002",
+    "name": "Cheeks Neutral",
+    "source": "name from signbank 04-24-002; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {},
+      "1": {},
+      "2": {},
+      "3": {},
+      "4": {}
+    }
+  },
+  "32d": {
+    "symbol_id": "04-24-004",
+    "name": "Tense Cheeks High",
+    "source": "name from signbank 04-24-004; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "1": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "2": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "3": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      }
+    }
+  },
+  "32e": {
+    "symbol_id": "04-24-005",
+    "name": "Tense Cheeks Middle",
+    "source": "name from signbank 04-24-005; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "1": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "2": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "3": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      }
+    }
+  },
+  "32f": {
+    "symbol_id": "04-24-006",
+    "name": "Tense Cheeks Low",
+    "source": "name from signbank 04-24-006; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "1": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "2": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      },
+      "3": {
+        "cheekSquintLeft": 0.6,
+        "cheekSquintRight": 0.6
+      }
+    }
+  },
+  "331": {
+    "symbol_id": "04-24-008",
+    "name": "Nose Neutral",
+    "source": "name from signbank 04-24-008; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {},
+      "1": {}
+    }
+  },
+  "333": {
+    "symbol_id": "04-24-010",
+    "name": "Nose Wrinkles",
+    "source": "name from signbank 04-24-010; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "noseSneerLeft": 0.6,
+        "noseSneerRight": 0.6
+      },
+      "1": {
+        "noseSneerLeft": 0.6,
+        "noseSneerRight": 0.6
+      }
+    }
   },
   "33b": {
     "symbol_id": "04-25-001",

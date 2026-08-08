@@ -8,22 +8,22 @@ from fsw_r.core.face_types import ARKIT_BLENDSHAPES
 from fsw_r.core.iswa_data import category_of, group_of, symbol_id_of
 from fsw_r.core.registry import symbol_from_fsw
 
-# Every authored Mouth base symbol, as (base_hex, fill=0) FSW keys.
-_MOUTH_BASES = sorted(FACE_POSE_TABLE.base_hexes())
+# Every authored facial base symbol, as (base_hex, fill=0) FSW keys.
+_FACE_BASES = sorted(FACE_POSE_TABLE.base_hexes())
 
 
 def test_table_has_expected_count() -> None:
-    assert len(_MOUTH_BASES) == EXPECTED_FACE_SYMBOL_COUNT
+    assert len(_FACE_BASES) == EXPECTED_FACE_SYMBOL_COUNT
 
 
-@pytest.mark.parametrize("base_hex", _MOUTH_BASES)
-def test_every_authored_base_is_group_25_face(base_hex: int) -> None:
-    # All authored so far are Category 4, Group 25 (Mouth/Lips).
+@pytest.mark.parametrize("base_hex", _FACE_BASES)
+def test_every_authored_base_is_category4_face(base_hex: int) -> None:
+    # All authored bases are Category 4, facial-expression groups (24-26 so far).
     assert category_of(base_hex) == 4
-    assert group_of(base_hex) == 25
+    assert group_of(base_hex) in {23, 24, 25, 26}
 
 
-@pytest.mark.parametrize("base_hex", _MOUTH_BASES)
+@pytest.mark.parametrize("base_hex", _FACE_BASES)
 def test_symbol_from_fsw_builds_face_symbol(base_hex: int) -> None:
     key = f"S{base_hex:03x}00"  # fill 0, rotation 0
     symbol = symbol_from_fsw(key)
@@ -33,7 +33,7 @@ def test_symbol_from_fsw_builds_face_symbol(base_hex: int) -> None:
     assert symbol.hand_side is None  # a face doesn't encode a performing hand
 
 
-@pytest.mark.parametrize("base_hex", _MOUTH_BASES)
+@pytest.mark.parametrize("base_hex", _FACE_BASES)
 def test_expression_uses_only_arkit_names(base_hex: int) -> None:
     symbol = symbol_from_fsw(f"S{base_hex:03x}00")
     assert isinstance(symbol, FaceSymbol)
@@ -61,8 +61,10 @@ def test_known_symbol_expression_is_meaningful() -> None:
 
 
 def test_deferred_and_head_movement_raise_clearly() -> None:
-    # 0x356 = Mouth Corners (deferred annotation mark), 0x301 = Head Movement
-    # Straight (needs Category 2 / Movement infra) -- both must fail honestly.
-    for key in ("S35600", "S30100"):
+    # Un-authored Category 4 bases must fail honestly, not build a wrong
+    # symbol: 0x356 Mouth Corners (annotation mark), 0x330 Ears / 0x335 Air
+    # Blowing Out (Group 24 non-deformation), 0x301 Head Movement Straight
+    # (needs Category 2 / Movement infra).
+    for key in ("S35600", "S33000", "S33500", "S30100"):
         with pytest.raises(ValueError):
             symbol_from_fsw(key)
