@@ -30,18 +30,37 @@ from __future__ import annotations
 
 from typing import Callable
 
+from fsw_r.core.face_pose_table import FACE_POSE_TABLE
+from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.iswa_data import symbol_id_of
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
 # A concrete symbol's constructor -- (base_hex, fill, rotation) ->
 # FSWRenderableSymbol, the shape HandSymbol itself uses.
 _Constructor = Callable[..., FSWRenderableSymbol]
 
-# category -> the one class that covers every base symbol in it. Adding
-# Category 2 (Movement) is "add {2: MovementSymbol} here", once that class
-# and its own PoseTable exist -- nothing else in core/ changes.
-_CATEGORY_SYMBOL: dict[int, _Constructor] = {1: HandSymbol}
+
+def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRenderableSymbol:
+    """Category 4 (Head & Face) dispatch. Unlike Category 1, this category
+    is only partially covered: the facial-expression groups are authored
+    symbol-by-symbol (see face_pose_table.py) and the Head group's movement
+    paths need Category 2 (Movement) infrastructure that doesn't exist yet.
+    So build only what's actually authored, and reject the rest honestly."""
+    if base_hex in FACE_POSE_TABLE:
+        return FaceSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    raise ValueError(
+        f"Category 4 symbol {symbol_id_of(base_hex)} (base 0x{base_hex:03x}) "
+        f"is not supported yet (Head movement paths and un-authored facial "
+        f"symbols -- see PHASE4_PLAN.md)"
+    )
+
+
+# category -> the one class (or factory) that covers base symbols in it.
+# Adding Category 2 (Movement) is "add {2: MovementSymbol} here", once that
+# class and its own PoseTable exist -- nothing else in core/ changes.
+_CATEGORY_SYMBOL: dict[int, _Constructor] = {1: HandSymbol, 4: _make_category4_symbol}
 
 # Escape hatch for a future INDIVIDUAL base symbol needing distinct
 # behavior, not just distinct numbers -- keyed by base_hex. Empty today:

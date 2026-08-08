@@ -1,0 +1,445 @@
+{
+  "_meta": {
+    "standard": "ARKit 52 blendshapes",
+    "categories": "ISWA Category 4 (Head & Face), Group 25 (Mouth/Lips) only so far",
+    "names_source": "signbank.org ISWA 2010 reference (33b_sg.html) -- authoritative ISWA names",
+    "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to blend-shapes (unlike hand_joint_poses.json, which is MediaPipe-measured). Confidence is lower; treat as a first interpretive pass.",
+    "fill_nuance": "UNRESOLVED: ISWA mouth symbols have two fills (0,1); the semantic difference between them is not yet confirmed from the SignWriting Alphabet Manual, so both fills currently carry the same expression. Keyed by (base_hex, fill) so this becomes a data-only change once resolved.",
+    "deferred": "Group 25's last three bases (0x356-0x358: Mouth Corners / Wrinkles Single / Wrinkles Double) are annotation-like marks, not expressions, and are not authored yet."
+  },
+  "33b": {
+    "symbol_id": "04-25-001",
+    "name": "Mouth Closed Neutral",
+    "source": "name from signbank 04-25-001; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {},
+      "1": {}
+    }
+  },
+  "33c": {
+    "symbol_id": "04-25-002",
+    "name": "Mouth Closed Forward",
+    "source": "name from signbank 04-25-002; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPucker": 0.4
+      },
+      "1": {
+        "mouthPucker": 0.4
+      }
+    }
+  },
+  "33d": {
+    "symbol_id": "04-25-003",
+    "name": "Mouth Closed Contact",
+    "source": "name from signbank 04-25-003; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPressLeft": 0.3,
+        "mouthPressRight": 0.3
+      },
+      "1": {
+        "mouthPressLeft": 0.3,
+        "mouthPressRight": 0.3
+      }
+    }
+  },
+  "33e": {
+    "symbol_id": "04-25-004",
+    "name": "Mouth Smile",
+    "source": "name from signbank 04-25-004; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthSmileLeft": 0.8,
+        "mouthSmileRight": 0.8
+      },
+      "1": {
+        "mouthSmileLeft": 0.8,
+        "mouthSmileRight": 0.8
+      }
+    }
+  },
+  "33f": {
+    "symbol_id": "04-25-005",
+    "name": "Mouth Smile Wrinkled",
+    "source": "name from signbank 04-25-005; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthSmileLeft": 0.8,
+        "mouthSmileRight": 0.8,
+        "cheekSquintLeft": 0.5,
+        "cheekSquintRight": 0.5
+      },
+      "1": {
+        "mouthSmileLeft": 0.8,
+        "mouthSmileRight": 0.8,
+        "cheekSquintLeft": 0.5,
+        "cheekSquintRight": 0.5
+      }
+    }
+  },
+  "340": {
+    "symbol_id": "04-25-006",
+    "name": "Mouth Smile Open",
+    "source": "name from signbank 04-25-006; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthSmileLeft": 0.7,
+        "mouthSmileRight": 0.7,
+        "jawOpen": 0.3
+      },
+      "1": {
+        "mouthSmileLeft": 0.7,
+        "mouthSmileRight": 0.7,
+        "jawOpen": 0.3
+      }
+    }
+  },
+  "341": {
+    "symbol_id": "04-25-007",
+    "name": "Mouth Frown",
+    "source": "name from signbank 04-25-007; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthFrownLeft": 0.8,
+        "mouthFrownRight": 0.8
+      },
+      "1": {
+        "mouthFrownLeft": 0.8,
+        "mouthFrownRight": 0.8
+      }
+    }
+  },
+  "342": {
+    "symbol_id": "04-25-008",
+    "name": "Mouth Frown Wrinkled",
+    "source": "name from signbank 04-25-008; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthFrownLeft": 0.8,
+        "mouthFrownRight": 0.8,
+        "cheekSquintLeft": 0.4,
+        "cheekSquintRight": 0.4
+      },
+      "1": {
+        "mouthFrownLeft": 0.8,
+        "mouthFrownRight": 0.8,
+        "cheekSquintLeft": 0.4,
+        "cheekSquintRight": 0.4
+      }
+    }
+  },
+  "343": {
+    "symbol_id": "04-25-009",
+    "name": "Mouth Frown Open",
+    "source": "name from signbank 04-25-009; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthFrownLeft": 0.7,
+        "mouthFrownRight": 0.7,
+        "jawOpen": 0.3
+      },
+      "1": {
+        "mouthFrownLeft": 0.7,
+        "mouthFrownRight": 0.7,
+        "jawOpen": 0.3
+      }
+    }
+  },
+  "344": {
+    "symbol_id": "04-25-010",
+    "name": "Mouth Open Circle",
+    "source": "name from signbank 04-25-010; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.4,
+        "mouthFunnel": 0.5
+      },
+      "1": {
+        "jawOpen": 0.4,
+        "mouthFunnel": 0.5
+      }
+    }
+  },
+  "345": {
+    "symbol_id": "04-25-011",
+    "name": "Mouth Open Forward",
+    "source": "name from signbank 04-25-011; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.3,
+        "mouthFunnel": 0.4,
+        "mouthPucker": 0.2
+      },
+      "1": {
+        "jawOpen": 0.3,
+        "mouthFunnel": 0.4,
+        "mouthPucker": 0.2
+      }
+    }
+  },
+  "346": {
+    "symbol_id": "04-25-012",
+    "name": "Mouth Open Wrinkled",
+    "source": "name from signbank 04-25-012; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.4,
+        "mouthFunnel": 0.4,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      },
+      "1": {
+        "jawOpen": 0.4,
+        "mouthFunnel": 0.4,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      }
+    }
+  },
+  "347": {
+    "symbol_id": "04-25-013",
+    "name": "Mouth Open Oval",
+    "source": "name from signbank 04-25-013; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.5,
+        "mouthFunnel": 0.3
+      },
+      "1": {
+        "jawOpen": 0.5,
+        "mouthFunnel": 0.3
+      }
+    }
+  },
+  "348": {
+    "symbol_id": "04-25-014",
+    "name": "Mouth Open Oval Wrinkled",
+    "source": "name from signbank 04-25-014; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.5,
+        "mouthFunnel": 0.3,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      },
+      "1": {
+        "jawOpen": 0.5,
+        "mouthFunnel": 0.3,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      }
+    }
+  },
+  "349": {
+    "symbol_id": "04-25-015",
+    "name": "Mouth Open Oval Yawn",
+    "source": "name from signbank 04-25-015; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.8,
+        "mouthFunnel": 0.2
+      },
+      "1": {
+        "jawOpen": 0.8,
+        "mouthFunnel": 0.2
+      }
+    }
+  },
+  "34a": {
+    "symbol_id": "04-25-016",
+    "name": "Mouth Open Rectangle",
+    "source": "name from signbank 04-25-016; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.5,
+        "mouthStretchLeft": 0.4,
+        "mouthStretchRight": 0.4
+      },
+      "1": {
+        "jawOpen": 0.5,
+        "mouthStretchLeft": 0.4,
+        "mouthStretchRight": 0.4
+      }
+    }
+  },
+  "34b": {
+    "symbol_id": "04-25-017",
+    "name": "Mouth Open Rectangle Wrinkled",
+    "source": "name from signbank 04-25-017; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.5,
+        "mouthStretchLeft": 0.4,
+        "mouthStretchRight": 0.4,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      },
+      "1": {
+        "jawOpen": 0.5,
+        "mouthStretchLeft": 0.4,
+        "mouthStretchRight": 0.4,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      }
+    }
+  },
+  "34c": {
+    "symbol_id": "04-25-018",
+    "name": "Mouth Open Rectangle Yawn",
+    "source": "name from signbank 04-25-018; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "jawOpen": 0.8,
+        "mouthStretchLeft": 0.4,
+        "mouthStretchRight": 0.4
+      },
+      "1": {
+        "jawOpen": 0.8,
+        "mouthStretchLeft": 0.4,
+        "mouthStretchRight": 0.4
+      }
+    }
+  },
+  "34d": {
+    "symbol_id": "04-25-019",
+    "name": "Mouth Kiss",
+    "source": "name from signbank 04-25-019; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPucker": 0.9
+      },
+      "1": {
+        "mouthPucker": 0.9
+      }
+    }
+  },
+  "34e": {
+    "symbol_id": "04-25-020",
+    "name": "Mouth Kiss Forward",
+    "source": "name from signbank 04-25-020; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPucker": 0.8,
+        "mouthFunnel": 0.3
+      },
+      "1": {
+        "mouthPucker": 0.8,
+        "mouthFunnel": 0.3
+      }
+    }
+  },
+  "34f": {
+    "symbol_id": "04-25-021",
+    "name": "Mouth Kiss Wrinkled",
+    "source": "name from signbank 04-25-021; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPucker": 0.9,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      },
+      "1": {
+        "mouthPucker": 0.9,
+        "cheekSquintLeft": 0.3,
+        "cheekSquintRight": 0.3
+      }
+    }
+  },
+  "350": {
+    "symbol_id": "04-25-022",
+    "name": "Mouth Tense",
+    "source": "name from signbank 04-25-022; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPressLeft": 0.5,
+        "mouthPressRight": 0.5,
+        "mouthClose": 0.2
+      },
+      "1": {
+        "mouthPressLeft": 0.5,
+        "mouthPressRight": 0.5,
+        "mouthClose": 0.2
+      }
+    }
+  },
+  "351": {
+    "symbol_id": "04-25-023",
+    "name": "Mouth Tense Forward",
+    "source": "name from signbank 04-25-023; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPressLeft": 0.4,
+        "mouthPressRight": 0.4,
+        "mouthPucker": 0.3
+      },
+      "1": {
+        "mouthPressLeft": 0.4,
+        "mouthPressRight": 0.4,
+        "mouthPucker": 0.3
+      }
+    }
+  },
+  "352": {
+    "symbol_id": "04-25-024",
+    "name": "Mouth Tense Sucked",
+    "source": "name from signbank 04-25-024; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthRollLower": 0.6,
+        "mouthRollUpper": 0.6
+      },
+      "1": {
+        "mouthRollLower": 0.6,
+        "mouthRollUpper": 0.6
+      }
+    }
+  },
+  "353": {
+    "symbol_id": "04-25-025",
+    "name": "Lips Pressed Together",
+    "source": "name from signbank 04-25-025; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthPressLeft": 0.6,
+        "mouthPressRight": 0.6,
+        "mouthClose": 0.3
+      },
+      "1": {
+        "mouthPressLeft": 0.6,
+        "mouthPressRight": 0.6,
+        "mouthClose": 0.3
+      }
+    }
+  },
+  "354": {
+    "symbol_id": "04-25-026",
+    "name": "Lip Lower Over Upper",
+    "source": "name from signbank 04-25-026; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthShrugLower": 0.5,
+        "mouthRollUpper": 0.4
+      },
+      "1": {
+        "mouthShrugLower": 0.5,
+        "mouthRollUpper": 0.4
+      }
+    }
+  },
+  "355": {
+    "symbol_id": "04-25-027",
+    "name": "Lip Upper Over Lower",
+    "source": "name from signbank 04-25-027; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "mouthShrugUpper": 0.5,
+        "mouthRollLower": 0.4
+      },
+      "1": {
+        "mouthShrugUpper": 0.5,
+        "mouthRollLower": 0.4
+      }
+    }
+  }
+}

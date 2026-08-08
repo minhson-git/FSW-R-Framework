@@ -136,11 +136,38 @@ FSWRenderableSymbol(FSWBaseSymbol, ABC)   ── marker rỗng: "symbol mà 1 re
 
 ---
 
-## Bước 1 — Group 22 (Head): beat "rigid transform", ít rủi ro nhất
+## ⚠️ CẬP NHẬT sau khi nghiên cứu 11 chart Group 22 (quan trọng)
 
-**Vì sao làm trước:** chỉ 11 symbol; bản chất là xoay cứng → tái dùng nhiều
-nhất từ Pha 1; chứng minh pipeline Category 4 chạy end-to-end (parse →
-registry dispatch → render) trước khi đụng blend-shape.
+Đối chiếu nguồn ISWA chính thức (`signbank.org/iswa/2ff_sg.html`), Group 22
+**KHÔNG đồng nhất "rigid orientation"** như giả định ban đầu — nó là **3 loại**:
+
+| id | Tên thật | Bản chất |
+|---|---|---|
+| 04-22-001 | Head | Vòng đầu tĩnh (anchor cho biểu cảm) |
+| 04-22-002 | Head Rims | Vòng đầu tĩnh (biến thể) |
+| 04-22-003 | Head Movement Straight Wall Plane | **Motion path** |
+| 04-22-004 | Head Movement Tilts Wall Plane | **Motion path** |
+| 04-22-005 | Head Movement Straight Floor Plane | **Motion path** |
+| 04-22-006 | Head Movement Curves Wall Plane | **Motion path** |
+| 04-22-007 | Head Movement Curves Floor Plane | **Motion path** |
+| 04-22-008 | Head Movement Circles | **Motion path** |
+| 04-22-009 | Face Direction, Nose Forward Tilting | **Orientation cứng** |
+| 04-22-010 | Face Direction, Nose Up/Down | **Orientation cứng** |
+| 04-22-011 | Face Direction, Nose Up/Down Tilting | **Orientation cứng** |
+
+**Hệ quả cho lộ trình:** 6/11 symbol là **Head Movement = motion path**, cần
+đúng hạ tầng Category 2 (Movement) — CHƯA tồn tại — + animation renderer
+(Pha 2). Chỉ 3/11 (Face Direction 009–011) là orientation cứng tái dùng
+công thức tay; 2/11 là vòng đầu tĩnh. → **Group 22 KHÔNG còn là "first win"
+dễ nhất.** Phần tĩnh, tự chứa, dễ nhất của Category 4 hoá ra là
+**blend-shape (Mouth, group 25)**. **Đề xuất đảo thứ tự: làm Bước 2 (blend-
+shape spine + Mouth) TRƯỚC; Head Movement gộp vào Pha 2; Face Direction
+(009–011) làm phần rigid nhỏ bất cứ lúc nào.**
+
+## Bước 1 (CŨ) — Group 22 (Head): xem cập nhật ở trên trước khi làm
+
+**Giả định ban đầu (đã điều chỉnh):** chỉ 11 symbol; bản chất là xoay cứng →
+tái dùng nhiều nhất từ Pha 1. Thực tế chỉ đúng cho 3/11 symbol (xem trên).
 
 ### Thiết kế
 - Kiểu pose: **`Rotation` (quaternion)** — không cần kiểu mới. Đầu nghiêng/

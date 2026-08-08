@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+import pytest
+
+from fsw_r.core.face_pose_table import EXPECTED_FACE_SYMBOL_COUNT, FACE_NAME_TABLE, FACE_POSE_TABLE
+from fsw_r.core.face_symbol import FaceSymbol
+from fsw_r.core.face_types import ARKIT_BLENDSHAPES
+from fsw_r.core.iswa_data import category_of, group_of, symbol_id_of
+from fsw_r.core.registry import symbol_from_fsw
+
+# Every authored Mouth base symbol, as (base_hex, fill=0) FSW keys.
+_MOUTH_BASES = sorted(FACE_POSE_TABLE.base_hexes())
+
+
+def test_table_has_expected_count() -> None:
+    assert len(_MOUTH_BASES) == EXPECTED_FACE_SYMBOL_COUNT
+
+
+@pytest.mark.parametrize("base_hex", _MOUTH_BASES)
+def test_every_authored_base_is_group_25_face(base_hex: int) -> None:
+    # All authored so far are Category 4, Group 25 (Mouth/Lips).
+    assert category_of(base_hex) == 4
+    assert group_of(base_hex) == 25
+
+
+@pytest.mark.parametrize("base_hex", _MOUTH_BASES)
+def test_symbol_from_fsw_builds_face_symbol(base_hex: int) -> None:
+    key = f"S{base_hex:03x}00"  # fill 0, rotation 0
+    symbol = symbol_from_fsw(key)
+    assert isinstance(symbol, FaceSymbol)
+    assert symbol.symbol_id == symbol_id_of(base_hex)
+    assert symbol.name == FACE_NAME_TABLE[base_hex]
+    assert symbol.hand_side is None  # a face doesn't encode a performing hand
+
+
+@pytest.mark.parametrize("base_hex", _MOUTH_BASES)
+def test_expression_uses_only_arkit_names(base_hex: int) -> None:
+    symbol = symbol_from_fsw(f"S{base_hex:03x}00")
+    assert isinstance(symbol, FaceSymbol)
+    assert set(symbol.get_expression().blendshapes) <= ARKIT_BLENDSHAPES
+
+
+def test_both_fills_are_authored_for_mouth() -> None:
+    # ISWA mouth symbols are valid at fill 0 and fill 1; both must build and
+    # return an expression (currently identical -- fill nuance unresolved,
+    # see the data file's _meta).
+    fill0 = symbol_from_fsw("S33e00")  # Mouth Smile, fill 0
+    fill1 = symbol_from_fsw("S33e10")  # Mouth Smile, fill 1
+    assert isinstance(fill0, FaceSymbol) and isinstance(fill1, FaceSymbol)
+    assert fill0.get_expression().blendshapes == fill1.get_expression().blendshapes
+
+
+def test_known_symbol_expression_is_meaningful() -> None:
+    # A concrete pin so a silent data corruption is caught: Mouth Smile must
+    # drive the two smile blend-shapes and nothing wildly off.
+    smile = symbol_from_fsw("S33e00")
+    assert isinstance(smile, FaceSymbol)
+    weights = smile.get_expression().blendshapes
+    assert weights["mouthSmileLeft"] > 0.5
+    assert weights["mouthSmileRight"] > 0.5
+
+
+def test_deferred_and_head_movement_raise_clearly() -> None:
+    # 0x356 = Mouth Corners (deferred annotation mark), 0x301 = Head Movement
+    # Straight (needs Category 2 / Movement infra) -- both must fail honestly.
+    for key in ("S35600", "S30100"):
+        with pytest.raises(ValueError):
+            symbol_from_fsw(key)
