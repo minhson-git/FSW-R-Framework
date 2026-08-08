@@ -149,24 +149,32 @@ category phía trên) — biến thiên nhiều hơn hẳn Category 1 (chỉ 2 m
 6×16, hoặc 1 trong 8 ngoại lệ). `iswa_data.py` đã tổng quát hoá đủ để đọc
 range Category 2 (`0x205–0x2f6`) mà không cần sửa gì thêm — chỉ cần dùng.
 
-**Cập nhật: phần hạ tầng "base_hex xuyên suốt + dispatch theo category" đã
-làm xong** (xem `PROGRESS.md` mục "base_hex làm khoá duy nhất") — cụ thể đã
-sẵn sàng cho Pha 2, không cần làm lại:
-- `core/fsw_symbol_key.py` giờ chấp nhận TOÀN BỘ range ISWA (`0x100–0x38b`),
-  không chặn riêng theo category nữa — `parse_fsw_symbol_key("S22b03")` (1
-  key Movement thật) đã parse thành công ngay bây giờ.
+**Cập nhật (đã sửa lại — bản trước nói "hạ tầng đã sẵn sàng cho Pha 2" là
+CHƯA đúng, phát hiện khi thật sự bắt tay làm Category 2):** phần hạ tầng
+"base_hex xuyên suốt + dispatch theo category" đã xong (xem `PROGRESS.md`
+mục "base_hex làm khoá duy nhất"), nhưng **contract trừu tượng ở
+`core/renderable_symbol.py` thì CHƯA generic** — `FSWRenderableSymbol` hồi
+đó khai `get_joint_pose() -> HandJointPose` làm abstract method cứng, tức
+mọi symbol (kể cả Category 2, vốn không có góc khớp mà có quỹ đạo chuyển
+động) đều bị ép implement đúng chữ ký đó. `MovementSymbol` không thể kế
+thừa `FSWRenderableSymbol` cho tới khi tách lại thành 1 marker chung +
+contract riêng theo category (`FSWHandRenderable`/`FSWMotionRenderable`) —
+đây là việc ĐẦU TIÊN của Pha 2, làm trước khi viết `MovementSymbol`. Sau
+khi tách xong mới đúng là:
+- `core/fsw_symbol_key.py` chấp nhận TOÀN BỘ range ISWA (`0x100–0x38b`),
+  không chặn riêng theo category — `parse_fsw_symbol_key("S22b03")` (1
+  key Movement thật) parse thành công.
 - `core/registry.py` dispatch theo category qua `_CATEGORY_SYMBOL: dict[int,
-  Constructor]` (hiện chỉ có `{1: HandSymbol}`) — thêm Category 2 chỉ cần
-  thêm `{2: MovementSymbol}` vào dict này, không sửa gì khác trong
-  `registry.py`.
+  Constructor]` — thêm Category 2 chỉ cần thêm `{2: MovementSymbol}` vào
+  dict này, không sửa gì khác trong `registry.py`.
 - `core/pose_table.py`'s `PoseTable` là class generic (`Generic[PoseT]`),
   thân class không biết gì về `HandJointPose` — Category 2 chỉ cần 1
   `PoseTable[MotionPath](...)` instance riêng + hàm parse riêng, không cần
   sửa class `PoseTable`.
-- `FSWBaseSymbol.hand_side` giờ là abstract, mỗi category tự quyết định
-  cách suy ra (hoặc trả `None` nếu category đó không mã hoá tay trong
-  symbol) — xem phát hiện quan trọng bên dưới, vì quy tắc của Category 1
-  (`rotation` quyết định tay) **không áp dụng được cho Category 2**.
+- `FSWBaseSymbol.hand_side` là abstract, mỗi category tự quyết định cách
+  suy ra (hoặc trả `None` nếu category đó không mã hoá tay trong symbol) —
+  xem phát hiện quan trọng bên dưới, vì quy tắc của Category 1 (`rotation`
+  quyết định tay) **không áp dụng được cho Category 2**.
 
 **Việc còn thật sự cần làm cho Pha 2:**
 - Cần kiểu dữ liệu MỚI hoàn toàn (không tái dùng `HandJointPose`): 1
