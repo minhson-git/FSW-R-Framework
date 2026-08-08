@@ -1,7 +1,8 @@
 {
   "_meta": {
     "standard": "ARKit 52 blendshapes",
-    "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose subset)",
+    "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose subset), Group 26 (Tongue subset)",
+    "rotation_note": "Face poses are keyed by (base_hex, fill) only -- rotation is not part of the expression here. For the tongue bases that use rotation as a *direction*, that direction is not representable in ARKit-52 (single non-directional tongueOut) and is collapsed. Eyegaze (Group 23) will need rotation->eyeLook* handling.",
     "names_source": "signbank.org ISWA 2010 reference (<hex>_sg.html) -- authoritative ISWA names",
     "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to blend-shapes (unlike hand_joint_poses.json, which is MediaPipe-measured). Confidence is lower; treat as a first interpretive pass.",
     "fills_source": "valid fills per base come from iswa_valid_combinations.json (the ISWA font cmap)",
@@ -19,7 +20,24 @@
       "33a": "Breath Inhale -- breath annotation",
       "356": "Mouth Corners -- annotation mark, not an expression",
       "357": "Mouth Wrinkles Single -- annotation mark, not an expression",
-      "358": "Mouth Wrinkles Double -- annotation mark, not an expression"
+      "358": "Mouth Wrinkles Double -- annotation mark, not an expression",
+      "35a": "Tongue Licks Lips -- a movement (needs animation)",
+      "35c": "Tongue Tip Touches Inside Mouth -- inside the mouth, no ARKit target",
+      "35d": "Tongue Inside Mouth Relaxed -- inside the mouth, not visible",
+      "35e": "Tongue Moves Against Cheek -- a movement (needs animation)",
+      "360": "Tongue Center Inside Mouth -- inside the mouth, not visible",
+      "361": "Teeth -- ARKit-52 has no teeth targets",
+      "362": "Teeth Movement -- no ARKit teeth target + movement",
+      "363": "Teeth on Tongue -- no ARKit teeth target",
+      "364": "Teeth on Tongue Movement -- no ARKit teeth target + movement",
+      "365": "Teeth on Lips -- no ARKit teeth target",
+      "366": "Teeth on Lips Movement -- no ARKit teeth target + movement",
+      "367": "Teeth Bite Lips -- no ARKit teeth target",
+      "368": "Jaw Movement Wall Plane -- a movement (needs animation)",
+      "369": "Jaw Movement Floor Plane -- a movement (needs animation)",
+      "36a": "Neck -- not a face deformation (neck; closer to Trunk/Head)",
+      "36b": "Hair -- not a facial feature",
+      "36c": "Excitement -- abstract annotation, not a specific deformation"
     },
     "generated_by": "scripts/gen_face_poses.py"
   },
@@ -582,6 +600,57 @@
       "1": {
         "mouthShrugUpper": 0.5,
         "mouthRollLower": 0.4
+      }
+    }
+  },
+  "359": {
+    "symbol_id": "04-26-001",
+    "name": "Tongue Sticks Out Far",
+    "source": "name from signbank 04-26-001; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "tongueOut": 1.0
+      },
+      "1": {
+        "tongueOut": 1.0
+      }
+    }
+  },
+  "35b": {
+    "symbol_id": "04-26-003",
+    "name": "Tongue Tip Between Lips",
+    "source": "name from signbank 04-26-003; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "tongueOut": 0.4
+      },
+      "1": {
+        "tongueOut": 0.4
+      }
+    }
+  },
+  "35f": {
+    "symbol_id": "04-26-007",
+    "name": "Tongue Center Sticks Out",
+    "source": "name from signbank 04-26-007; blend-shapes authored (ARKit-52)",
+    "fills": {
+      "0": {
+        "tongueOut": 0.9
+      },
+      "1": {
+        "tongueOut": 0.9
+      },
+      "2": {
+        "tongueOut": 0.9
+      },
+      "3": {
+        "tongueOut": 0.9
+      },
+      "4": {
+        "tongueOut": 0.9
+      },
+      "5": {
+        "tongueOut": 0.9
       }
     }
   }

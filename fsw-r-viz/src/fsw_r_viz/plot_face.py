@@ -33,8 +33,19 @@ def _plot_on(ax: Axes, symbol: FaceSymbol, title: str) -> None:
         ax.plot([eye_x - 0.15, eye_x + 0.15], [0.55, 0.55], color="0.6", linewidth=2)  # brow
     ax.plot([0.0, 0.0], [0.2, -0.1], color="0.7", linewidth=1.5)  # nose
 
+    blendshapes = symbol.get_expression().blendshapes
+
+    # A protruding tongue hangs below the mouth, length scaled by tongueOut
+    # (drawn first so the mouth outline sits on top of it).
+    tongue_out = blendshapes.get("tongueOut", 0.0)
+    if tongue_out > 0.0:
+        length = 0.15 + 0.35 * tongue_out
+        tx = [-0.12, 0.12, 0.10, 0.0, -0.10]
+        ty = [-0.45, -0.45, -0.45 - length, -0.45 - length * 1.15, -0.45 - length]
+        ax.fill(tx, ty, color="tab:pink", edgecolor="tab:red", linewidth=1.5)
+
     # Expression-driven mouth (centered around y = -0.45).
-    xs, ys = mouth_outline(symbol.get_expression().blendshapes)
+    xs, ys = mouth_outline(blendshapes)
     ax.fill(xs, ys - 0.45, color="tab:red", alpha=0.35)
     ax.plot(xs, ys - 0.45, color="tab:red", linewidth=2)
 

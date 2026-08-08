@@ -17,6 +17,16 @@ def test_render_face_to_file_writes_png(tmp_path: Path) -> None:
     assert output_path.stat().st_size > 0
 
 
+def test_render_tongue_symbol_writes_png(tmp_path: Path) -> None:
+    symbol = FaceSymbol(0x359, fill=0, rotation=0)  # Tongue Sticks Out Far
+    output_path = tmp_path / "tongue.png"
+
+    render_face_to_file(symbol, str(output_path))
+
+    assert output_path.exists()
+    assert output_path.stat().st_size > 0
+
+
 def test_render_faces_grid_writes_png(tmp_path: Path) -> None:
     symbols = [
         (FaceSymbol(0x33E, fill=0, rotation=0), "Smile"),

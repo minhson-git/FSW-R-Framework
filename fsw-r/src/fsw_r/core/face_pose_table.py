@@ -24,11 +24,11 @@ from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.core.pose_table import PoseTable, _load_name_table
 
 # Authored facial-expression base symbols so far: Group 25 (Mouth/Lips) 27
-# shape symbols (0x33b-0x355) + Group 24 (Cheeks/Nose) 7 deformation symbols.
-# Non-deformation symbols (Group 24 airflow/breath/ears, the Group 25/24
+# shape symbols + Group 24 (Cheeks/Nose) 7 + Group 26 (Tongue-out) 3. All
+# non-deformation symbols (airflow/breath/ears/teeth/neck/hair, movements,
 # annotation marks) are deferred -- see data/face_expression_poses.json's
 # _meta "deferred" list and scripts/gen_face_poses.py.
-EXPECTED_FACE_SYMBOL_COUNT = 34
+EXPECTED_FACE_SYMBOL_COUNT = 37
 
 
 def _parse_face_expression(key: str, entry: dict[str, object]) -> dict[int, FaceExpressionPose]:

@@ -72,6 +72,14 @@ AUTHORED: dict[int, tuple[str, dict[str, float]]] = {
     0x32F: ("Tense Cheeks Low", {"cheekSquintLeft": 0.6, "cheekSquintRight": 0.6}),
     0x331: ("Nose Neutral", {}),
     0x333: ("Nose Wrinkles", {"noseSneerLeft": 0.6, "noseSneerRight": 0.6}),
+    # ---- Group 26: Tongue (0x359-0x36c), tongue-protrusion subset ----
+    # ARKit-52's only tongue target is a single non-directional `tongueOut`,
+    # so only "tongue is protruding" is representable (as an amount); the
+    # tongue's *direction* (these bases' rotation) and inside-mouth detail
+    # are not. Intensity gradient reflects how far the tongue is out.
+    0x359: ("Tongue Sticks Out Far", {"tongueOut": 1.0}),
+    0x35B: ("Tongue Tip Between Lips", {"tongueOut": 0.4}),
+    0x35F: ("Tongue Center Sticks Out", {"tongueOut": 0.9}),
 }
 
 # base_hex -> reason it is NOT authored (kept for the _meta record so the
@@ -92,6 +100,24 @@ DEFERRED: dict[int, str] = {
     0x356: "Mouth Corners -- annotation mark, not an expression",
     0x357: "Mouth Wrinkles Single -- annotation mark, not an expression",
     0x358: "Mouth Wrinkles Double -- annotation mark, not an expression",
+    # Group 26 (Tongue/Teeth/Chin/Neck)
+    0x35A: "Tongue Licks Lips -- a movement (needs animation)",
+    0x35C: "Tongue Tip Touches Inside Mouth -- inside the mouth, no ARKit target",
+    0x35D: "Tongue Inside Mouth Relaxed -- inside the mouth, not visible",
+    0x35E: "Tongue Moves Against Cheek -- a movement (needs animation)",
+    0x360: "Tongue Center Inside Mouth -- inside the mouth, not visible",
+    0x361: "Teeth -- ARKit-52 has no teeth targets",
+    0x362: "Teeth Movement -- no ARKit teeth target + movement",
+    0x363: "Teeth on Tongue -- no ARKit teeth target",
+    0x364: "Teeth on Tongue Movement -- no ARKit teeth target + movement",
+    0x365: "Teeth on Lips -- no ARKit teeth target",
+    0x366: "Teeth on Lips Movement -- no ARKit teeth target + movement",
+    0x367: "Teeth Bite Lips -- no ARKit teeth target",
+    0x368: "Jaw Movement Wall Plane -- a movement (needs animation)",
+    0x369: "Jaw Movement Floor Plane -- a movement (needs animation)",
+    0x36A: "Neck -- not a face deformation (neck; closer to Trunk/Head)",
+    0x36B: "Hair -- not a facial feature",
+    0x36C: "Excitement -- abstract annotation, not a specific deformation",
 }
 
 
@@ -99,7 +125,12 @@ def build() -> dict[str, object]:
     out: dict[str, object] = {
         "_meta": {
             "standard": "ARKit 52 blendshapes",
-            "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose subset)",
+            "categories": "ISWA Category 4 (Head & Face): Group 25 (Mouth/Lips), Group 24 (Cheeks/Nose "
+                          "subset), Group 26 (Tongue subset)",
+            "rotation_note": "Face poses are keyed by (base_hex, fill) only -- rotation is not part of the "
+                             "expression here. For the tongue bases that use rotation as a *direction*, that "
+                             "direction is not representable in ARKit-52 (single non-directional tongueOut) "
+                             "and is collapsed. Eyegaze (Group 23) will need rotation->eyeLook* handling.",
             "names_source": "signbank.org ISWA 2010 reference (<hex>_sg.html) -- authoritative ISWA names",
             "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the "
                              "symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to "

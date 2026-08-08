@@ -65,6 +65,7 @@ def _render_mouth_expressions(output_dir: Path) -> None:
         (FaceSymbol(0x341, fill=0, rotation=0), "04-25-007 Mouth Frown"),
         (FaceSymbol(0x344, fill=0, rotation=0), "04-25-010 Mouth Open Circle"),
         (FaceSymbol(0x34D, fill=0, rotation=0), "04-25-019 Mouth Kiss"),
+        (FaceSymbol(0x359, fill=0, rotation=0), "04-26-001 Tongue Sticks Out Far"),
     ]
     output_path = output_dir / "mouth_expressions.png"
     render_faces_grid(symbols, str(output_path))
