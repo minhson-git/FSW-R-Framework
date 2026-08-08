@@ -52,16 +52,23 @@ def build_timeline(positioned_symbols: tuple[PositionedSymbol, ...]) -> SignTime
     postures = []
     transitions = []
     for positioned in positioned_symbols:
+        # Gate on the literal ISWA category, not SymbolRole -- Category 4
+        # (Head & Face) also classifies as POSTURE (see classify.py's
+        # _ROLE_BY_CATEGORY, shared with Category 1), but MVP-1's scope is
+        # "Category 1 and Category 2 only," which is narrower than "any
+        # POSTURE/TRANSITION symbol." role_of() is still called so its own
+        # validation runs and its label can be used in the error message.
+        category = positioned.symbol.category
         role = role_of(positioned)
-        if role == SymbolRole.POSTURE:
+        if category == 1 and role == SymbolRole.POSTURE:
             postures.append(positioned)
-        elif role == SymbolRole.TRANSITION:
+        elif category == 2 and role == SymbolRole.TRANSITION:
             transitions.append(positioned)
         else:
             raise UnsupportedSignError(
                 f"MVP-1 only supports Category 1 (hand posture) and Category 2 "
-                f"(movement) symbols; found a {role.value} symbol "
-                f"({positioned.symbol.symbol_id}, category {positioned.symbol.category})"
+                f"(movement) symbols; found a category {category} ({role.value}) "
+                f"symbol ({positioned.symbol.symbol_id})"
             )
 
     if len(postures) != 1:
