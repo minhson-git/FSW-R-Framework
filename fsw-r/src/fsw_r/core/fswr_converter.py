@@ -1,7 +1,11 @@
 """Converts a parsed FSW AST (``FSWSignAST``) into fsw-r's own object model:
-one ``FSWRenderableSymbol`` per hand symbol in the sign, paired with that
-symbol's 2D page position from the AST (useful for placing multiple hands
-in a scene -- e.g. a two-handed sign).
+one ``FSWRenderableSymbol`` per symbol in the sign, paired with that
+symbol's 2D page position from the AST (useful for placing multiple symbols
+in a scene -- e.g. a two-handed sign, or a sign mixing Category 1 hand
+shapes with Category 2 movement paths). ``PositionedSymbol.symbol`` is
+typed as the generic ``FSWRenderableSymbol`` marker on purpose -- this
+module doesn't care which category a symbol belongs to, so a sign's symbol
+list can freely mix categories without any type or runtime branching here.
 
 This is the "AST -> FSWR" half of the pipeline:
 

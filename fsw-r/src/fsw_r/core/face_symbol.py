@@ -13,11 +13,11 @@ from __future__ import annotations
 
 from fsw_r.core.face_pose_table import FACE_NAME_TABLE, FACE_POSE_TABLE
 from fsw_r.core.face_types import FaceExpressionPose
-from fsw_r.core.renderable_symbol import FSWRenderableSymbol
+from fsw_r.core.renderable_symbol import FSWFaceRenderable
 from fsw_r.core.types import HandSide
 
 
-class FaceSymbol(FSWRenderableSymbol):
+class FaceSymbol(FSWFaceRenderable):
     def __init__(self, base_hex: int, fill: int, rotation: int) -> None:
         super().__init__(base_hex=base_hex, fill=fill, rotation=rotation)
 

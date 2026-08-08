@@ -44,3 +44,38 @@ class HandJointPose:
     middle: FingerPose
     ring: FingerPose
     pinky: FingerPose
+
+
+class PathType(Enum):
+    """The 5 movement primitives Category 2 (Movement)'s 242 base symbols
+    reduce to -- see core/movement_paths.py / PROGRESS.md's Phase 2 entry
+    for the (path_type x plane) table this was derived from."""
+
+    CONTACT = "contact"  # degenerate trajectory: a single point
+    FINGER = "finger"  # local oscillation, no translation
+    STRAIGHT = "straight"
+    CURVED = "curved"
+    CIRCLE = "circle"
+
+
+class MovementPlane(Enum):
+    WALL = "wall"  # parallel to the front wall: the XY plane
+    FLOOR = "floor"  # parallel to the floor: the XZ plane
+    DIAGONAL = "diagonal"
+
+
+@dataclass(frozen=True)
+class MotionPath:
+    """A Category 2 (Movement) symbol's trajectory description -- NOT a
+    static pose like HandJointPose. See core/movement_symbol.py and
+    PROGRESS.md's Phase 2 entry for the derivation and, importantly, which
+    parts of this are still unverified assumptions (``plane`` for groups
+    11/12/20, ``is_hit``'s exact semantics, and the default
+    curvature/amplitude/repeat values)."""
+
+    path_type: PathType
+    plane: MovementPlane | None  # None = derive from rotation (see sample_trajectory())
+    curvature: float  # 0 for STRAIGHT
+    amplitude: float
+    repeat: int  # 1 / 2 / 3
+    is_hit: bool
