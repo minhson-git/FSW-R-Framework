@@ -736,6 +736,147 @@ contract) coi như đã đạt đúng mục tiêu, chỉ là "1 dòng registry.p
 `ROADMAP.md` cũ nói chưa đủ chính xác, đã sửa lại thành mô tả đúng thực tế
 trên.
 
+## Pha 3 — `SignTimeline` (MVP-1): trục thời gian FSW không có sẵn
+
+### Vấn đề
+
+Tới hết Pha 2, framework trả lời được *"ký hiệu này là tư thế/quỹ đạo gì?"*
+nhưng CHƯA trả lời được *"các ký hiệu đó xảy ra khi nào, ở đâu, do tay nào?"*
+FSW mô tả 1 sign bằng **bố cục không gian 2D** (danh sách ký hiệu + toạ độ
+`(x, y)`); dựng video cần **chuỗi trạng thái theo thời gian**. `SignTimeline`
+(package mới `fsw_r/timeline/`) là tầng dịch giữa 2 thứ đó — **chỉ tiêu thụ
+đầu ra của `core/fswr_converter.py`, không sửa file nào trong `core/`** (đã
+xác nhận bằng `git diff --stat` sau mỗi commit của pha này — luôn rỗng).
+
+```
+tuple[PositionedSymbol, ...]  --[build_timeline]-->  SignTimeline  --[sample]-->  chuỗi pose theo fps
+   (core/fswr_converter.py)        (timeline/build.py)                (timeline/sample.py)
+```
+
+### Phạm vi MVP-1 — và lý do chọn đúng phạm vi này
+
+Sign có **đúng 1 ký hiệu tay** (Category 1), **tối đa 1 ký hiệu chuyển động**
+(Category 2), **không có ký hiệu category nào khác**. Đo trên SignBank+
+(257.800 sign): phạm vi này chiếm **6,2%** (~16.000 sign thật).
+
+Đây là quyết định thiết kế, không phải cắt giảm cho tiện: MVP-1 bỏ qua được
+TOÀN BỘ bước cần suy đoán — 1 track duy nhất nên không có bài toán gán
+chuyển động cho tay nào; 1 ký hiệu tay nên không nhập nhằng "hai tay đồng
+thời" vs "một tay hai thời điểm"; thứ tự thời gian do hướng mũi tên quyết
+định nên không cần dùng `y` làm proxy thời gian. Kết quả: **mọi bước trong
+MVP-1 đều tất định**. Sign ngoài phạm vi raise `UnsupportedSignError` nêu rõ
+lý do (bao nhiêu ký hiệu tay/chuyển động, có category nào khác) — không đoán
+bừa rồi trả timeline sai.
+
+### Kiến trúc 5 giai đoạn
+
+| Giai đoạn | File | Việc làm |
+|---|---|---|
+| D1. Phân loại vai trò | `classify.py` | `category_of()` → `SymbolRole` (tra bảng) |
+| D2. Gán track | `classify.py`/`build.py` | `hand_side` (Cat 1) → track; ký hiệu chuyển động gán vào track duy nhất đang có |
+| D3. Phân đoạn thời gian | `build.py` | không chuyển động → 1 keyframe; có chuyển động → N keyframe từ `sample_trajectory()` |
+| D4. Neo không gian | `anchor.py` | `(x, y)` signbox → toạ độ body-space 3D |
+| D5. Lấy mẫu/nội suy | `sample.py` | SLERP (hướng cổ tay) + tuyến tính (góc khớp, vị trí) → chuỗi `PoseFrame` theo fps |
+
+**Bảng độ tin cậy** (nội dung có giá trị cho báo cáo/luận văn):
+
+| Giai đoạn | Cơ sở | Độ tin cậy ở MVP-1 |
+|---|---|---|
+| Phân loại vai trò | `category_of()` | Tất định |
+| Gán track | `hand_side` Cat 1 | Tất định |
+| Phân đoạn thời gian | 1 ký hiệu tay → không nhập nhằng | Tất định |
+| Neo không gian | Chuẩn hoá + `plane` | Có cơ sở, **chưa hiệu chỉnh tỉ lệ** |
+| Nội suy | SLERP + tuyến tính | Tất định |
+
+### Phát hiện & quyết định kỹ thuật đáng chú ý
+
+1. **Dấu trục y.** Đo trên 60.000 sign SignBank+: y trung vị ký hiệu đầu/mặt
+   (Cat 4) = 483, y trung vị ký hiệu tay (Cat 1) = 496. Đầu ở TRÊN tay trên cơ
+   thể nhưng có y NHỎ HƠN → `y` tăng XUỐNG DƯỚI (toạ độ màn hình). `anchor()`
+   đảo dấu `v = (500 - y) / 250`. Đây là dòng code rủi ro nhất trong cả
+   package — sai dấu thì mọi động tác lộn ngược mà **không test nào khác bắt
+   được** (không có gì "rõ ràng sai" như trái/phải bị đổi chỗ). Khoá lại bằng
+   `test_smaller_y_gives_a_higher_position` (E1).
+
+2. **`sample_trajectory()` tái dùng trực tiếp, không viết lại.** Trục z không
+   có trong signbox — suy từ `MotionPath.plane` (đã xử lý ở Pha 2). `build.py`
+   gọi thẳng `core/movement_paths.py`'s `sample_trajectory()`.
+
+3. **Số lượng keyframe cho ký hiệu chuyển động — lệch có chủ đích so với chữ
+   nghĩa gốc của brief.** Brief tả "2 keyframe (đầu quỹ đạo, cuối quỹ đạo)",
+   nhưng nếu chỉ 2 keyframe thì `PathType.CURVED`/`CIRCLE` sẽ bị D5 nội suy
+   tuyến tính thành ĐƯỜNG THẲNG — đúng thứ mà quy tắc "đừng nội suy đè lên
+   quỹ đạo mũi tên đã định nghĩa" (D5) muốn tránh. Đã tổng quát hoá: dùng
+   **1 keyframe cho mỗi điểm** `sample_trajectory()` trả về (không chỉ 2) —
+   với `PathType.STRAIGHT` các điểm giữa thẳng hàng nên hành vi giống hệt
+   trường hợp 2 keyframe; chỉ khác biệt thật sự với CURVED/CIRCLE. Ghi rõ
+   trong code (`build.py`) đây là diễn giải có chủ đích, không phải bỏ qua
+   yêu cầu.
+
+4. **Quaternion double-cover — đã KIỂM CHỨNG TRỰC TIẾP, không giả định.**
+   Brief yêu cầu kiểm tra xem `scipy.spatial.transform.Slerp` đã tự xử lý
+   double-cover (`q` và `-q` biểu diễn cùng 1 phép quay) chưa. Test trực
+   tiếp: dựng 2 rotation cách nhau 10°, cố tình đảo dấu quaternion của 1 bên
+   (ép `dot < 0` — điều kiện gây lỗi "đi đường dài") rồi feed vào `Slerp`
+   (scipy 1.15.3) — kết quả vẫn đi đúng đường ngắn (10°, không phải 350°).
+   **Kết luận: scipy đã tự xử lý đúng, KHÔNG cần thêm code lật dấu thủ
+   công** (thêm vào sẽ là code thừa, gây hiểu nhầm). Khoá lại bằng 2 test
+   (`test_slerp_takes_the_short_path`, `test_scipy_slerp_itself_already_handles_double_cover`)
+   để bắt hồi quy nếu 1 version scipy tương lai đổi hành vi này.
+
+5. **Bug phát hiện qua test, không phải qua đọc code.** Viết test "Category 4
+   → `UnsupportedSignError`" thì phát hiện: `build_timeline()` ban đầu chỉ
+   gate theo `SymbolRole`, nhưng Category 4 dùng CHUNG `SymbolRole.POSTURE`
+   với Category 1 (theo đúng bảng `SymbolRole` ở brief) — nên 1 ký hiệu
+   Category 4 sẽ bị đếm nhầm thành "ký hiệu tay thứ 2" thay vì bị từ chối
+   đúng lý do "category không hỗ trợ". Đã sửa: gate theo SỐ CATEGORY thật
+   (1 và 2), không chỉ theo role. (Test dùng object giả lập, không phải FSW
+   key thật — Category 4 chưa đăng ký trong `core/registry.py`, nên 1 key
+   Category 4 thật đã bị `fsw_to_fswr()` chặn từ trước khi tới `timeline`.)
+
+### Danh sách giả định CHƯA kiểm chứng (tách riêng, không chôn trong docstring)
+
+1. `DEFAULT_SIGN_DURATION = 0.8s` (`build.py`) — chưa có nguồn dữ liệu thời
+   lượng thật nào; Category 3 (Dynamics) dự kiến mới cung cấp được.
+2. `SIGNBOX_TO_BODY_SCALE = 0.1` (`anchor.py`) — chưa hiệu chỉnh với cơ thể
+   3D thật, chỉ là hằng số hợp lý tạm thời.
+3. Ánh xạ TUYẾN TÍNH signbox → không gian cơ thể (`anchor()`) — thực tế
+   chuyển động cơ thể người có thể phi tuyến (vd góc vai), chưa kiểm chứng.
+4. Chưa có ràng buộc giải phẫu (khớp gập vượt quá góc thật) — xem phát hiện
+   MediaPipe bên dưới, ghi nhận nhưng CHƯA sửa trong pha này.
+5. `hand_side` của Category 2 — kế thừa quyết định `None` từ Pha 2 (chưa
+   chốt quy tắc thật), D2 chỉ "né" được vấn đề này nhờ MVP-1 luôn có đúng 1
+   track — MVP-2 sẽ phải giải quyết thật.
+6. Neo `is_hit` (Category 2's `MotionPath`) — vẫn chưa có ngữ nghĩa hình học
+   nào áp dụng ở tầng timeline (kế thừa từ Pha 2).
+
+### Vấn đề đã biết, CHƯA xử lý trong pha này: góc khớp vượt giới hạn giải phẫu
+
+Kiểm tra trực tiếp trên `data/hand_joint_poses.json` (không phải suy đoán):
+lọc góc gập khớp PIP (Proximal Interphalangeal) của 4 ngón (trỏ, giữa, áp
+út, út) vượt ngưỡng gập tối đa hợp lý của người thật (~110°):
+
+- **119/261 symbol (45,6%)** có ít nhất 1 khớp PIP vượt 110°. Giá trị PIP
+  cao nhất tìm thấy: **167°** (`01-06-020` ring, `01-10-001` pinky,
+  `01-10-014` ring).
+- Phân bố theo ngón (số symbol vi phạm/ngón, có thể trùng nhau nếu 1 symbol
+  vi phạm nhiều ngón): **ring 95, pinky 93, middle 55, index 32**.
+- Thứ tự này khớp với mức độ bị CHE KHUẤT khi nắm tay (ring/pinky khuất
+  nhất, index lộ nhất) — gợi ý đây là **sai lệch có hệ thống của MediaPipe ở
+  ngón bị che**, không phải nhiễu ngẫu nhiên.
+
+⚠️ **Lưu ý khác biệt với brief:** brief nêu số liệu "136/261 (52,1%)" — kiểm
+tra độc lập với đúng ngưỡng/joint brief mô tả (PIP > 110°) cho ra **119/261
+(45,6%)**, không phải 136/261. Phân bố theo ngón (ring 95, pinky 93, middle
+55, index 32) và giá trị lớn nhất (167°) khớp CHÍNH XÁC với số liệu brief
+nêu, xác nhận đúng phương pháp (PIP, ngưỡng 110°) — chỉ riêng tổng/tỉ lệ
+brief nêu không tái lập được, nhiều khả năng là sai số tính toán ở nguồn đưa
+ra brief. Dùng số đã tự kiểm chứng (119/261, 45,6%) trong tài liệu, ghi rõ
+chênh lệch này thay vì lặng lẽ chọn 1 trong 2 số.
+
+**Không sửa trong pha này** — đây là việc riêng, đã ghi vào `ROADMAP.md`
+làm ưu tiên tiếp theo.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -761,16 +902,16 @@ trên.
   không đo) — nhưng `hand_side` trả `None` (chưa chốt quy tắc thật) và
   nhiều tham số hình học vẫn là giả định chưa kiểm chứng, xem mục "Pha 2 —
   Category 2" ở trên.
-- `fsw-r`: `mypy --strict` sạch (31 file), `pytest` **893/893 pass**
-  (615 test Category 1 không đổi + 278 test Category 2 mới:
-  `test_movement_paths.py`, `test_movement_path_table.py`,
-  `test_movement_symbol.py`, cộng các file Category 1 cũ:
-  `test_iswa_structure.py`, `test_pose_table.py`, `test_hand_symbol.py`,
-  `test_wrist_orientation.py`, `test_hand_side.py`, `test_iswa_data.py`,
-  `test_fsw_symbol_key.py`, `test_fsw_ast.py`, `test_registry.py`,
-  `test_fswr_converter.py`).
-- `fsw-r-viz`: `mypy --strict` sạch (6 file), `pytest` 5/5 pass
-  (`test_hand_geometry.py`, `test_plot_hand.py`).
+- **`SignTimeline` (Pha 3, MVP-1) đã xong** — package mới `fsw_r/timeline/`,
+  chỉ tiêu thụ đầu ra `core/fswr_converter.py`, **0 file `core/` bị sửa**
+  (`git diff --stat` xác nhận). Phủ 6,2% sign thật (SignBank+). Chi tiết ở
+  mục "Pha 3 — `SignTimeline`" phía trên.
+- `fsw-r`: `mypy --strict` sạch (41 file), `pytest` **917/917 pass** (893
+  không đổi từ trước Pha 3 + 24 test mới:
+  `test_anchor.py`, `test_build.py`, `test_sample.py`).
+- `fsw-r-viz`: `mypy --strict` sạch (7 file), `pytest` 5/5 pass
+  (`test_hand_geometry.py`, `test_plot_hand.py`) — cộng
+  `render_timeline.py` (không có test riêng, xác nhận bằng mắt qua ảnh demo).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
   fill: joint pose giống hệt nhau ở mọi rotation/fill/hand_side, chỉ hướng
   ngón (rotation) hoặc mặt bàn tay/mặt phẳng cánh tay (fill) thay đổi.
@@ -813,3 +954,30 @@ trên.
   hay `MotionPath`/`MovementSymbol`.
 - Môi trường dùng Python 3.10 (máy hiện có) thay vì 3.11+ như brief ban đầu
   yêu cầu — không ảnh hưởng vì không dùng feature riêng của 3.11.
+- **`SignTimeline` (Pha 3) đã xong ở phạm vi MVP-1** (1 symbol tay + tối đa
+  1 symbol chuyển động, 6,2% sign thật đo trên SignBank+) — gói mới
+  `fsw_r/timeline/`, không sửa file nào trong `core/` (đã xác nhận bằng
+  `git diff --stat`). Chi tiết đầy đủ ở mục "Pha 3 — `SignTimeline`
+  (MVP-1)" phía trên. Việc còn để ngỏ riêng cho phần này:
+  - **Tầng validate giải phẫu** (giới hạn góc khớp thật) — chưa có. Phát
+    hiện độc lập kiểm chứng được: PIP flexion > 110° ở **119/261 (45,6%)**
+    symbol Category 1 (`max=167°`, phân bố theo ngón `ring=95, pinky=93,
+    middle=55, index=32` — khớp đúng số brief trích theo từng ngón và giá
+    trị max, nhưng brief nêu tổng "136/261, 52,1%" — con số này KHÔNG tái
+    lập được, nhiều khả năng là lỗi tính toán ở nguồn brief; đã chọn ghi số
+    tự kiểm chứng được (119/261) thay vì chép lại số brief mà không kiểm
+    chứng).
+  - **MVP-2** (sign có nhiều symbol tay/chuyển động hơn, ~20,9% sign) — cần
+    logic phân biệt/gán track cho nhiều tay/nhiều chuyển động, MVP-1 chưa
+    viết (né có chủ đích, xem lý do chọn phạm vi ở mục "Pha 3" phía trên).
+  - `DEFAULT_SIGN_DURATION` (0,8s) là hằng số giữ chỗ — chưa có nguồn dữ
+    liệu thời gian thật; Category 3 (Dynamics) dự kiến bù việc này (xem
+    `ROADMAP.md`).
+  - `SIGNBOX_TO_BODY_SCALE` và phép ánh xạ toạ độ signbox → không gian cơ
+    thể hiện là tuyến tính đơn giản, chưa hiệu chỉnh theo dữ liệu thật.
+  - Renderer PNG-sequence (`fsw-r-viz/render_timeline.py`) vẫn là công cụ
+    debug stick-figure, không phải renderer trình bày cuối cùng — cùng tình
+    trạng với renderer Category 1/2 đã ghi ở trên.
+  - Thứ tự đề xuất làm tiếp theo (đã cập nhật trong `ROADMAP.md`): (a) tầng
+    validate giải phẫu, (b) Category 3 Dynamics (category DUY NHẤT mã hoá
+    thời gian mà `SignTimeline` đang thiếu), (c) MVP-2, (d) Category 5 Body.
