@@ -32,6 +32,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from fsw_r.core.body_types import BodyPart, BodyPose
+from fsw_r.core.dynamics_types import DynamicsModifier
 from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, MotionPath, MovementPlane, PathType, ThumbPose
 
 PoseT = TypeVar("PoseT")
@@ -221,4 +222,30 @@ def _parse_body_pose(key: str, entry: dict[str, object]) -> BodyPose:
 
 BODY_POSE_TABLE: PoseTable[BodyPose] = PoseTable(
     "body_poses.json", _parse_body_pose, expected_count=EXPECTED_BODY_COUNT
+)
+
+
+EXPECTED_DYNAMICS_COUNT = 8
+
+_DYNAMICS_FIELDS = ("speed", "repeat", "tension", "alternating")
+
+
+def _parse_dynamics_modifier(key: str, entry: dict[str, object]) -> DynamicsModifier:
+    """See ``scripts/gen_dynamics_modifiers.py``/``core/dynamics_types.py``
+    for where these values come from -- every field is AUTHORED, read from
+    the symbol's real ISWA name (signbank.org), not measured."""
+    label = _entry_label(key, entry)
+    for field in _DYNAMICS_FIELDS:
+        if field not in entry:
+            raise ValueError(f"{label}: missing '{field}' in dynamics_modifiers.json")
+    return DynamicsModifier(
+        speed=entry["speed"],  # type: ignore[arg-type]
+        repeat=entry["repeat"],  # type: ignore[arg-type]
+        tension=entry["tension"],  # type: ignore[arg-type]
+        alternating=entry["alternating"],  # type: ignore[arg-type]
+    )
+
+
+DYNAMICS_MODIFIER_TABLE: PoseTable[DynamicsModifier] = PoseTable(
+    "dynamics_modifiers.json", _parse_dynamics_modifier, expected_count=EXPECTED_DYNAMICS_COUNT
 )

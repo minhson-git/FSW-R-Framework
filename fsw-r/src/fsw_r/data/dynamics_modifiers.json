@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "names_source": "signbank.org ISWA 2010 reference -- iswa/2f7_sg.html (Group 21, Dynamics & Timing), listing all 8 base symbols on one page -- authoritative ISWA names",
+    "values_source": "AUTHORED, not measured -- speed/repeat/tension/alternating are a human reading of each symbol's real name mapped onto DynamicsModifier's fields. No dataset keys ISWA Dynamics symbols to numeric timing coefficients.",
+    "unverified_assumptions": [
+      "intra-base fill/rotation variation (Fast/Tense/Relaxed vary by fill 1-4; Slow/Same-Time-family/Gradual vary by rotation 1-8) is NOT decoded -- every valid (fill, rotation) of a base gets the same DynamicsModifier, see core/dynamics_types.py",
+      "'Gradual' (0x2fe) doesn't fit speed/repeat/tension/alternating precisely (its real meaning is a tempo that changes DURING the sign) -- stored at the neutral default rather than guessed",
+      "speed's exact numeric values (Fast=0.7, Slow=1.4) are illustrative authored placeholders, not calibrated against any real sign timing"
+    ],
+    "count": 8,
+    "generated_by": "scripts/gen_dynamics_modifiers.py"
+  },
+  "2f7": {
+    "symbol_id": "03-21-001",
+    "name": "Fast",
+    "speed": 0.7,
+    "repeat": null,
+    "tension": false,
+    "alternating": false
+  },
+  "2f8": {
+    "symbol_id": "03-21-002",
+    "name": "Slow",
+    "speed": 1.4,
+    "repeat": null,
+    "tension": false,
+    "alternating": false
+  },
+  "2f9": {
+    "symbol_id": "03-21-003",
+    "name": "Tense",
+    "speed": 1.0,
+    "repeat": null,
+    "tension": true,
+    "alternating": false
+  },
+  "2fa": {
+    "symbol_id": "03-21-004",
+    "name": "Relaxed",
+    "speed": 1.0,
+    "repeat": null,
+    "tension": false,
+    "alternating": false
+  },
+  "2fb": {
+    "symbol_id": "03-21-005",
+    "name": "Same Time",
+    "speed": 1.0,
+    "repeat": null,
+    "tension": false,
+    "alternating": false
+  },
+  "2fc": {
+    "symbol_id": "03-21-006",
+    "name": "Same Time Alternating",
+    "speed": 1.0,
+    "repeat": null,
+    "tension": false,
+    "alternating": true
+  },
+  "2fd": {
+    "symbol_id": "03-21-007",
+    "name": "Every Other Time",
+    "speed": 1.0,
+    "repeat": 2,
+    "tension": false,
+    "alternating": true
+  },
+  "2fe": {
+    "symbol_id": "03-21-008",
+    "name": "Gradual",
+    "speed": 1.0,
+    "repeat": null,
+    "tension": false,
+    "alternating": false
+  }
+}

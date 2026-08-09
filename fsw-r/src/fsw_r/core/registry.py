@@ -4,7 +4,16 @@ becomes a real ``HandSymbol`` instance, not a bag of raw ints.
 
 Dispatch is by **category**, not by per-symbol registration: ``_CATEGORY_SYMBOL``
 maps a category number to the one class (or factory) that handles every base
-symbol in it (``{1: HandSymbol, 2: MovementSymbol, 4: <face factory>, 5: BodySymbol}``).
+symbol in it (``{1: HandSymbol, 2: MovementSymbol, 4: <face factory>, 5: BodySymbol,
+3: DynamicsSymbol}``). ``build_symbol()`` returns the ``FSWBaseSymbol`` marker, not
+``FSWRenderableSymbol`` -- Category 3 (Dynamics) symbols are deliberately NOT
+``FSWRenderableSymbol`` (a Dynamics symbol renders nothing of its own, see
+``core/modifier_symbol.py``), so a single return type covering every dispatched
+category has to be the common ancestor of both trees. Every existing caller
+already narrows to the concrete class it needs via ``isinstance`` before calling
+anything renderable-specific, so this is a widening, not a behavior change --
+verified by reading every call site (``fswr_converter.py``, ``timeline/``,
+``fsw-r-viz``) before making it, see PROGRESS.md's Category 3/5 entry.
 Adding a new category (once its own ``PoseTable`` + symbol class exist, see
 ``core/pose_table.py``) is exactly one more entry here -- nothing else in
 ``core/`` needs to change. This is the whole point of keying everything by
@@ -33,9 +42,11 @@ from typing import Callable
 
 from fsw_r.core.annotation_symbol import AnnotationSymbol
 from fsw_r.core.body_symbol import BodySymbol
+from fsw_r.core.dynamics_symbol import DynamicsSymbol
 from fsw_r.core.face_movement import FACE_MOVEMENT_BASES, FaceMovementSymbol
 from fsw_r.core.face_pose_table import FACE_POSE_TABLE
 from fsw_r.core.face_symbol import FaceSymbol
+from fsw_r.core.fsw_base_symbol import FSWBaseSymbol
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.head_movement import HEAD_MOVEMENT_BASES, HeadMovementSymbol
@@ -44,8 +55,10 @@ from fsw_r.core.movement_symbol import MovementSymbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
 # A concrete symbol's constructor -- (base_hex, fill, rotation) ->
-# FSWRenderableSymbol, the shape HandSymbol/MovementSymbol both use.
-_Constructor = Callable[..., FSWRenderableSymbol]
+# FSWBaseSymbol. Every category built through _CATEGORY_SYMBOL today
+# actually returns a narrower FSWRenderableSymbol subtype EXCEPT Category 3
+# (DynamicsSymbol, an FSWModifierSymbol) -- see build_symbol()'s docstring.
+_Constructor = Callable[..., FSWBaseSymbol]
 
 
 def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRenderableSymbol:
@@ -71,11 +84,13 @@ def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRender
 # category -> the one class (or factory) that covers every base symbol in it.
 # Adding a category is one more entry here -- see PROGRESS.md's Phase 2 entry
 # for the "extensibility check" that adding {2: MovementSymbol} needed no
-# other change in core/; {4: ...} followed the same pattern for Head & Face,
-# and {5: BodySymbol} follows it again for Trunk & Limb.
+# other change in core/; {4: ...}/{5: ...} followed the same pattern, and
+# {3: DynamicsSymbol} needed exactly one change beyond this dict -- widening
+# build_symbol()'s return type (see its own docstring).
 _CATEGORY_SYMBOL: dict[int, _Constructor] = {
     1: HandSymbol,
     2: MovementSymbol,
+    3: DynamicsSymbol,
     4: _make_category4_symbol,
     5: BodySymbol,
 }
@@ -86,15 +101,24 @@ _CATEGORY_SYMBOL: dict[int, _Constructor] = {
 _OVERRIDES: dict[int, _Constructor] = {}
 
 
-def build_symbol(parsed: ParsedFSWSymbol) -> FSWRenderableSymbol:
+def build_symbol(parsed: ParsedFSWSymbol) -> FSWBaseSymbol:
     """Instantiate the symbol matching ``parsed.base_hex`` with the decoded
     fill/rotation.
 
+    Returns the ``FSWBaseSymbol`` marker, not ``FSWRenderableSymbol`` --
+    Category 3 (Dynamics) builds a ``DynamicsSymbol``, which is deliberately
+    NOT an ``FSWRenderableSymbol`` (see ``core/modifier_symbol.py``), so
+    that can't be this function's declared return type any more. Every
+    caller that needs the narrower, renderable-specific type already
+    ``isinstance``-narrows before calling anything on it (e.g.
+    ``timeline/build.py``, ``fsw-r-viz``'s demos) -- confirmed by reading
+    every call site before this widening, not assumed; see PROGRESS.md's
+    Category 3/5 entry.
+
     Raises ``ValueError`` if ``parsed``'s category has no entry in
-    ``_CATEGORY_SYMBOL`` yet -- e.g. a real, well-formed Category 3
-    (Dynamics) key parses fine (``parse_fsw_symbol_key`` doesn't block it)
-    but building an object for it fails here, honestly, as "category not
-    supported" rather than a parse error.
+    ``_CATEGORY_SYMBOL`` yet (Category 6/7, not implemented as of this
+    task) -- honestly, as "category not supported" rather than a parse
+    error.
     """
     cls = _OVERRIDES.get(parsed.base_hex)
     if cls is None:
@@ -107,7 +131,7 @@ def build_symbol(parsed: ParsedFSWSymbol) -> FSWRenderableSymbol:
     return cls(base_hex=parsed.base_hex, fill=parsed.fill, rotation=parsed.rotation)
 
 
-def symbol_from_fsw(key: str) -> FSWRenderableSymbol:
+def symbol_from_fsw(key: str) -> FSWBaseSymbol:
     """Decode a single, bare real FSW symbol key (e.g. ``"S10011"``) and
     instantiate the matching base symbol.
 

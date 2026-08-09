@@ -37,9 +37,12 @@ def test_symbol_from_fsw_matches_direct_construction() -> None:
 
 
 def test_build_symbol_raises_for_unsupported_category() -> None:
-    # 0x2f7 is a real ISWA base (Category 3, Dynamics) -- parses fine, but
-    # _CATEGORY_SYMBOL has no entry for category 3 (only 1, 2, 4, 5 exist).
-    parsed = ParsedFSWSymbol(base_hex=0x2F7, fill=0, rotation=0)
+    # 0x37f is a real ISWA base (Category 6, Location) -- parses fine, but
+    # _CATEGORY_SYMBOL has no entry for category 6 yet (1, 2, 3, 4, 5 do --
+    # this test's target base has moved as coverage grew: it used to point
+    # at Category 2, then Category 3, both since gained real support; see
+    # PROGRESS.md's Category 3/5 entry).
+    parsed = ParsedFSWSymbol(base_hex=0x37F, fill=0, rotation=0)
     with pytest.raises(ValueError):
         build_symbol(parsed)
 
