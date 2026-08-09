@@ -22,8 +22,10 @@ from pathlib import Path
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.movement_symbol import MovementSymbol
+from fsw_r.core.face_movement import FaceMovementSymbol
 from fsw_r.core.head_symbol import HeadSymbol
 from fsw_r.core.registry import symbol_from_fsw
+from fsw_r_viz.animate_face import render_face_movement_filmstrip
 from fsw_r_viz.animate_movement import animate_movement_to_gif, render_movement_filmstrip
 from fsw_r_viz.plot_face import render_faces_grid
 from fsw_r_viz.plot_glyph import render_glyphs_grid
@@ -134,6 +136,15 @@ def _render_movement_animation(output_dir: Path) -> None:
     print(f"Saved: {gif}")
 
 
+def _render_face_movements(output_dir: Path) -> None:
+    # Category 4 facial movements over time (filmstrip: t = 0..1).
+    for base, name in [(0x317, "blink"), (0x368, "jaw"), (0x35A, "tongue_lick")]:
+        symbol = FaceMovementSymbol(base, fill=0, rotation=0)
+        output_path = output_dir / f"face_movement_{name}.png"
+        render_face_movement_filmstrip(symbol, str(output_path))
+        print(f"Saved: {output_path}")
+
+
 def _render_annotation_glyphs(output_dir: Path) -> None:
     # The universal fallback: symbols we don't model in 3D (teeth/ears/hair/
     # neck/airflow/head) still render faithfully as their real ISWA glyph.
@@ -175,6 +186,7 @@ def main() -> None:
     _render_movement_trajectories(output_dir)
     _render_movement_animation(output_dir)
     _render_head_orientations(output_dir)
+    _render_face_movements(output_dir)
     _render_annotation_glyphs(output_dir)
 
 

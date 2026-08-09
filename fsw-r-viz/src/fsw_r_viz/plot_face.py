@@ -70,9 +70,10 @@ def _draw_eye_and_brow(ax: Axes, bs: Mapping[str, float], cx: float, suffix: str
     ax.plot([inner_x, outer_x], [brow_y + inner_lift, brow_y], color="0.6", linewidth=2)
 
 
-def _plot_on(ax: Axes, symbol: FaceSymbol, title: str) -> None:
-    blendshapes = symbol.get_expression().blendshapes
-
+def draw_face_expression(ax: Axes, blendshapes: Mapping[str, float], title: str) -> None:
+    """Draw the schematic face for one ARKit-52 blend-shape vector. Split out
+    from ``_plot_on`` so an animation can draw a pose per frame (see
+    ``animate_face.py``)."""
     head = Circle((0.0, 0.0), 1.0, fill=False, color="0.6", linewidth=1.5)
     ax.add_patch(head)
     for _side, cx, suffix in _EYES:
@@ -98,6 +99,10 @@ def _plot_on(ax: Axes, symbol: FaceSymbol, title: str) -> None:
     ax.set_ylim(-1.2, 1.2)
     ax.set_aspect("equal")
     ax.axis("off")
+
+
+def _plot_on(ax: Axes, symbol: FaceSymbol, title: str) -> None:
+    draw_face_expression(ax, symbol.get_expression().blendshapes, title)
 
 
 def render_face_to_file(symbol: FaceSymbol, output_path: str, title: str | None = None) -> None:

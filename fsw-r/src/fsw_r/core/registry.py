@@ -32,6 +32,7 @@ from __future__ import annotations
 from typing import Callable
 
 from fsw_r.core.annotation_symbol import AnnotationSymbol
+from fsw_r.core.face_movement import FACE_MOVEMENT_BASES, FaceMovementSymbol
 from fsw_r.core.face_pose_table import FACE_POSE_TABLE
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
@@ -56,6 +57,8 @@ def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRender
     once its convention is verified -- eyegaze and head already did."""
     if base_hex in FACE_POSE_TABLE:
         return FaceSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    if base_hex in FACE_MOVEMENT_BASES:
+        return FaceMovementSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
     if base_hex in HEAD_ORIENTATION_BASES:
         return HeadSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
     return AnnotationSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
