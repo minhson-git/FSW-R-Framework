@@ -75,3 +75,12 @@ class FSWFaceRenderable(FSWRenderableSymbol, ABC):
         facial-expression symbol -- a face is deformed by morph targets, not
         a rigid skeleton of joint angles."""
         raise NotImplementedError
+
+
+class FSWHeadRenderable(FSWRenderableSymbol, ABC):
+    @abstractmethod
+    def get_head_orientation(self) -> Rotation:
+        """Rigid 3D orientation of the head (pitch/yaw/roll) for a Category 4
+        Group 22 head symbol -- a head is oriented as a whole, not deformed
+        (that's ``get_expression``) -- see ``head_symbol.py``."""
+        raise NotImplementedError

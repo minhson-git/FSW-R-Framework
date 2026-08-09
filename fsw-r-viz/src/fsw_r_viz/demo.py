@@ -22,11 +22,13 @@ from pathlib import Path
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.movement_symbol import MovementSymbol
+from fsw_r.core.head_symbol import HeadSymbol
 from fsw_r.core.registry import symbol_from_fsw
 from fsw_r_viz.animate_movement import animate_movement_to_gif, render_movement_filmstrip
 from fsw_r_viz.plot_face import render_faces_grid
 from fsw_r_viz.plot_glyph import render_glyphs_grid
 from fsw_r_viz.plot_hand import render_symbols_grid
+from fsw_r_viz.plot_head import render_heads_grid
 from fsw_r_viz.plot_movement import render_movements_grid
 
 
@@ -148,6 +150,20 @@ def _render_annotation_glyphs(output_dir: Path) -> None:
     print(f"Saved: {output_path}")
 
 
+def _render_head_orientations(output_dir: Path) -> None:
+    # Category 4 head "Nose Up or Down" (0x308): rotation points the nose,
+    # mapped to pitch/yaw per Lessons in SignWriting Lesson 10.
+    symbols = [
+        (HeadSymbol(0x308, fill=0, rotation=0), "Nose up (look up)"),
+        (HeadSymbol(0x308, fill=0, rotation=4), "Nose down (look down)"),
+        (HeadSymbol(0x308, fill=0, rotation=2), "Nose viewer-left (turn)"),
+        (HeadSymbol(0x309, fill=0, rotation=2), "Tilting (roll)"),
+    ]
+    output_path = output_dir / "head_orientations.png"
+    render_heads_grid(symbols, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -158,6 +174,7 @@ def main() -> None:
     _render_eyegaze(output_dir)
     _render_movement_trajectories(output_dir)
     _render_movement_animation(output_dir)
+    _render_head_orientations(output_dir)
     _render_annotation_glyphs(output_dir)
 
 
