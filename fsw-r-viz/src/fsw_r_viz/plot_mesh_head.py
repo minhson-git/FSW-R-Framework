@@ -43,6 +43,15 @@ def _gaze_shift(bs: Mapping[str, float]) -> tuple[float, float]:
     return pl - pr, up - dn
 
 
+def _lip_line(cy: float, curve: float, z: float) -> pv.PolyData:
+    """A closed mouth: a single curved lip line (corners raised for a smile /
+    lowered for a frown), solid so there's no gap through the middle."""
+    xs = np.linspace(-0.2, 0.2, 24)
+    ys = cy + curve * (xs / 0.2) ** 2
+    pts = np.column_stack([xs, ys, np.full_like(xs, z)])
+    return pv.Spline(pts, 40).tube(radius=0.026)
+
+
 def _lip_ring(cy: float, rx: float, ry: float, curve: float, z: float) -> pv.PolyData:
     """The lips as a closed elliptical outline around the mouth opening, so
     they frame the opening (open mouth) or meet in a thin line (closed).
@@ -97,11 +106,13 @@ def _add_mouth(pl: pv.Plotter, bs: Mapping[str, float], show_teeth: bool) -> Non
     curve = 0.16 * smile - 0.16 * frown
     open_h = 0.26 * jaw + (0.14 if show_teeth else 0.0)
     cy = -0.36
-    ry = max(0.03, open_h / 2)
-    if open_h > 0.06:  # open: an oval dark cavity + a white teeth strip inside the lip ring
+    if open_h > 0.06:  # open: lip ring framing an oval dark cavity + teeth strip
+        ry = open_h / 2
         pl.add_mesh(_ellipsoid(0.14, ry, 0.045, (0, cy, 0.77)), color=_DARK)
         pl.add_mesh(_ellipsoid(0.12, 0.025, 0.04, (0, cy + ry - 0.02, 0.8)), color="white")
-    pl.add_mesh(_lip_ring(cy, 0.16, ry + 0.02, curve, 0.81), color=_LIP)
+        pl.add_mesh(_lip_ring(cy, 0.16, ry + 0.02, curve, 0.81), color=_LIP)
+    else:  # closed: a single solid lip line (no hole through the middle)
+        pl.add_mesh(_lip_line(cy, curve, 0.81), color=_LIP)
 
 
 def render_mesh_head_to_file(
