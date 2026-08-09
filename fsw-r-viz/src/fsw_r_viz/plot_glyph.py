@@ -2,11 +2,17 @@
 ``signwriting`` renderer (the same font/engine the notation is defined by).
 
 This is the universal, no-guess coverage: whatever a symbol is -- a hand, a
-movement, a facial expression, or an ``AnnotationSymbol`` we haven't modelled
-in 3D (teeth, ears, hair, neck, airflow...) -- its authoritative appearance
-is its ISWA glyph, and that we can always draw. So every one of the 110
-Category-4 bases (and every other category) is at minimum displayable
-faithfully here, with nothing invented.
+movement, a facial expression, an ``AnnotationSymbol`` we haven't modelled
+in 3D (teeth, ears, hair, neck, airflow...), or a Category 3 (Dynamics)
+symbol that renders nothing of its own at all -- its authoritative
+appearance is its ISWA glyph, and that we can always draw. So every one of
+the 110 Category-4 bases (and every other category, rendering contract or
+not) is at minimum displayable faithfully here, with nothing invented.
+Takes the ``FSWBaseSymbol`` marker, not ``FSWRenderableSymbol`` -- this is
+the one place in ``fsw-r-viz`` that deliberately wants the widest type,
+matching its own "ANY symbol" claim (contrast ``plot_hand.py``, which wants
+``FSWHandRenderable`` specifically, the narrowest type, for the opposite
+reason).
 
 The 3D renderers (plot_hand / plot_face / plot_movement) are the richer,
 modelled views; this glyph view is the honest fallback and cross-check.
@@ -26,7 +32,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from signwriting.visualizer.visualize import visualize_sign
 
-from fsw_r.core.renderable_symbol import FSWRenderableSymbol
+from fsw_r.core.fsw_base_symbol import FSWBaseSymbol
 
 
 def _label_font(size: int = 18) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -40,11 +46,11 @@ def _label_font(size: int = 18) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def _fsw_key(symbol: FSWRenderableSymbol) -> str:
+def _fsw_key(symbol: FSWBaseSymbol) -> str:
     return f"S{symbol.base_hex:03x}{symbol.fill:x}{symbol.rotation:x}"
 
 
-def render_glyph(symbol: FSWRenderableSymbol, height: int = 220) -> Image.Image:
+def render_glyph(symbol: FSWBaseSymbol, height: int = 220) -> Image.Image:
     """The symbol's real ISWA glyph as a cropped, smoothly-upscaled RGBA
     image (antialiased render + LANCZOS resize, so it reads cleanly rather
     than as blocky pixels)."""
@@ -59,11 +65,11 @@ def render_glyph(symbol: FSWRenderableSymbol, height: int = 220) -> Image.Image:
     return out
 
 
-def render_glyph_to_file(symbol: FSWRenderableSymbol, output_path: str, title: str | None = None) -> None:
+def render_glyph_to_file(symbol: FSWBaseSymbol, output_path: str, title: str | None = None) -> None:
     render_glyphs_grid([(symbol, title or f"{symbol.symbol_id}")], output_path)
 
 
-def render_glyphs_grid(symbols: Sequence[tuple[FSWRenderableSymbol, str]], output_path: str, height: int = 200) -> None:
+def render_glyphs_grid(symbols: Sequence[tuple[FSWBaseSymbol, str]], output_path: str, height: int = 200) -> None:
     font = _label_font()
     glyphs = [(render_glyph(s, height), title) for s, title in symbols]
     pad, label_h = 16, 30

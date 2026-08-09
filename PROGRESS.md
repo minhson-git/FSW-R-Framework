@@ -877,6 +877,188 @@ chênh lệch này thay vì lặng lẽ chọn 1 trong 2 số.
 **Không sửa trong pha này** — đây là việc riêng, đã ghi vào `ROADMAP.md`
 làm ưu tiên tiếp theo.
 
+## Pha 4 — Category 3 (Dynamics) & Category 5 (Trunk & Limb / Body): tầng ký hiệu
+
+Task riêng, phạm vi cố ý hẹp: **chỉ dựng tầng ký hiệu** (symbol object + bảng
+dữ liệu) cho 2 category còn thiếu ngoài Cat 1/2/4 — **không đụng
+`fsw_r/timeline/`**, việc nối Cat 3 (thời gian) và Cat 5 (khung tham chiếu
+không gian) vào timeline là pha sau (xem "Việc còn để ngỏ" cuối mục này và
+`ROADMAP.md`). Đã làm Category 5 trước (rủi ro thấp, đúng pattern có sẵn),
+Category 3 sau (buộc phải đổi kiểu trả về của `build_symbol()`).
+
+### A1 — tên symbol `0x36d` (bắt buộc tra trước khi thiết kế)
+
+Tra trực tiếp `signbank.org/iswa/36d_sg.html` (ISWA 2010 HTML Reference thật,
+không đoán): **`0x36d` = "Shoulder Hip Spine"** (`05-01-001-01`), Category 5:
+Body, thuộc `SymbolGroup_27` (Trunk). Trang này thực chất là trang **của cả
+group 27** (9 base symbol `0x36d`-`0x375` cùng liệt kê trên 1 trang, đánh số
+theo base đầu group — không phải 1 trang/1 base symbol như đoán ban đầu);
+tương tự `376_sg.html` liệt kê cả group 28 (Limb).
+
+Xác nhận đúng giả thuyết brief đặt ra: `0x36d` là **ký hiệu mốc/tham chiếu
+tổng hợp** ("Shoulder Hip Spine" = vai-hông-cột sống gộp chung), không phải 1
+tư thế cụ thể — khớp với việc nó chiếm 43,2% token Category 5 và có phạm vi
+fill/rotation rất hẹp (3 fill, 4 rotation) so với các base khác trong group.
+
+Tên đầy đủ 18 base symbol (tra được, không đoán):
+
+| Group | base_hex | Tên thật (signbank.org) |
+|---|---|---|
+| 27 Trunk | `0x36d` | Shoulder Hip Spine |
+| 27 Trunk | `0x36e` | Shoulder Hip Positions |
+| 27 Trunk | `0x36f` | Shoulder Hip Move Wall Plane |
+| 27 Trunk | `0x370` | Shoulder Hip Move Floor Plane |
+| 27 Trunk | `0x371` | Shoulder Tilts (from Waist) |
+| 27 Trunk | `0x372` | Torso Straight Stretch Wall |
+| 27 Trunk | `0x373` | Torso Curved Bend Wall |
+| 27 Trunk | `0x374` | Torso Twist Floor Plane |
+| 27 Trunk | `0x375` | Upper Body Tilts (from Hip Joints) |
+| 28 Limb | `0x376` | Limb Combinations |
+| 28 Limb | `0x377`-`0x37d` | Limb Length 1..7 |
+| 28 Limb | `0x37e` | Fingers |
+
+Group 28 (Limb) hoá ra KHÔNG phải 9 khớp giải phẫu riêng biệt (vai/khuỷu/hông/
+gối...) như có thể đoán từ tên category — mà là các khối dựng hình cho 1
+"chi" (tay hoặc chân) sơ đồ hoá với **độ dài thay đổi** ("Limb Length 1"..7"),
+dùng để vẽ sơ đồ người que với tỉ lệ khác nhau, cộng 1 base "Combinations" và
+1 base "Fingers". `BodyPose` phản ánh đúng cấu trúc thật này (xem A4 dưới),
+không ép vào khuôn "18 khớp xương" không có thật.
+
+### A2 — dữ liệu đo Category 5 (đã có sẵn từ brief, đối chiếu khớp)
+
+Corpus SignBank+ (257.800 sign): 155.420 token Category 5, xuất hiện trong
+23,3% sign. `0x36d` một mình chiếm 43,2% token; 3 base phủ 73,2%, 9 base phủ
+94,2%. Valid fills/rotations lấy thẳng từ `iswa_valid_combinations.json`
+(nguồn thật, font cmap ISWA) — đối chiếu khớp CHÍNH XÁC với số liệu tra được
+trên signbank.org (`0x36d`: 3 fill/4 rotation cả 2 nguồn; `0x376`: 1 fill cả
+2 nguồn) — không phải số tự bịa, xác nhận nguồn đáng tin.
+
+`fill`/`rotation` của Category 5 **lệch rất mạnh**: 92,5% token là fill=0,
+88,7% ở nửa rotation 0-7 — lệch hơn cả Category 1 (chia đều 6 fill) và
+Category 2 (fill/rotation dù nhiễu vẫn có tín hiệu, ~60/40). Không đủ cơ sở
+để đoán công thức — `BodyPose` KHÔNG biến thiên theo fill/rotation (khoá theo
+`base_hex` thôi, giống `HandJointPose`), xử lý đúng như đã làm với
+`hand_side` của Category 2 (để mặc định, ghi rõ chưa xác minh, không đoán).
+
+### A4 — thiết kế `BodyPose` (sau khi có kết quả A1)
+
+`BodyPose` (`core/body_types.py`) KHÔNG phải rig khớp-góc như `HandJointPose`
+— phản ánh đúng cấu trúc "sơ đồ thân/chi" đã xác minh ở A1:
+- `part: BodyPart` (`TRUNK`/`LIMB`) + `motion_type: str` — lấy **trực tiếp,
+  có thể truy vết** từ tên thật đã tra (REFERENCE/POSITIONS/MOVE_WALL/
+  MOVE_FLOOR/TILT_WAIST/STRETCH_WALL/BEND_WALL/TWIST_FLOOR/TILT_HIP cho
+  Trunk; LENGTH/COMBINATIONS/FINGERS cho Limb).
+- `limb_length_units: int | None` — lấy trực tiếp từ tên "Limb Length N"
+  (N=0 cho Combinations/Fingers, không có độ dài cố định) — Limb only.
+- `trunk_rotation: Rotation | None` / `shoulder_offset: NDArray | None` —
+  **hằng số AUTHORED (identity/zero)** cho cả 9 base Trunk, KHÔNG có số nào
+  được bịa riêng cho từng base (vd không có cơ sở nào để nói "Torso Curved
+  Bend Wall" nghiêng bao nhiêu độ khác "Upper Body Tilts") — Trunk only.
+
+`FSWBodyRenderable(get_body_pose())` — nhánh contract mới, thuần tuý thêm
+vào `renderable_symbol.py`, không sửa 4 nhánh cũ (`FSWHandRenderable`/
+`FSWMotionRenderable`/`FSWFaceRenderable`/`FSWHeadRenderable`).
+`data/body_poses.json` sinh bằng `scripts/gen_body_poses.py`, `_meta` ghi rõ
+`values_source: AUTHORED, not measured`.
+
+### B1 — dữ liệu đo Category 3 (đã có sẵn từ brief, tên tra thêm để xác nhận)
+
+Tra `signbank.org/iswa/2f7_sg.html` (Group 21 "Dynamics & Timing", cả 8 base
+trên 1 trang): **Fast, Slow, Tense, Relaxed, Same Time, Same Time
+Alternating, Every Other Time, Gradual** — khớp đúng brief.
+
+Xác nhận đúng cấu trúc "2 mẫu" brief nêu, tra được TRỰC TIẾP từ valid
+fills/rotations thật của từng base (không suy đoán):
+
+| base | tên | biến thiên theo | %token corpus |
+|---|---|---|---|
+| `0x2f7` | Fast | `fill` (1-4) | 13,4% |
+| `0x2f8` | Slow | `rotation` (1-8) | 4,0% |
+| `0x2f9` | Tense | `fill` (1-4) | 32,3% |
+| `0x2fa` | Relaxed | `fill` (1-4) | 1,3% |
+| `0x2fb` | Same Time | `rotation` (1-8) | 34,6% |
+| `0x2fc` | Same Time Alternating | `rotation` (1-8) | 9,5% |
+| `0x2fd` | Every Other Time | `rotation` (1-8) | 4,9% |
+| `0x2fe` | Gradual | `rotation` (1-8) | 0,1% |
+
+**4 base biến thiên theo `fill` (rotation cố định 0), 4 base biến thiên theo
+`rotation` (fill cố định 0) — không base nào dùng cả hai.** Ý nghĩa của biến
+thiên nội-base (vd "Fast" fill 1 khác fill 4 thế nào) KHÔNG được giải mã —
+`DynamicsModifier` khoá theo `base_hex` thôi, mọi (fill, rotation) hợp lệ của
+1 base trả về cùng 1 `DynamicsModifier`, ghi rõ trong `_meta`.
+
+`DynamicsModifier` (`speed`/`repeat`/`tension`/`alternating`) gán theo tên
+thật: Fast/Slow → `speed` (0,7/1,4, minh hoạ, không hiệu chỉnh theo thời gian
+sign thật nào); Tense/Relaxed → `tension`; Same Time / Same Time Alternating
+/ Every Other Time → `alternating` (+ `repeat=2` cho "Every Other Time",
+base duy nhất có ý nghĩa lặp rõ ràng từ tên); "Gradual" không khớp trọn vẹn
+field nào (ý nghĩa thật là nhịp độ thay đổi DẦN TRONG lúc thực hiện sign) —
+để mặc định, ghi rõ trong `_meta.unverified_assumptions`, không ép vào 1
+field không đúng nghĩa.
+
+### B3 — rủi ro kiến trúc thật: kiểu trả về của `build_symbol()`
+
+Đúng như brief cảnh báo: `DynamicsSymbol` phải KHÔNG phải `FSWRenderableSymbol`
+(brief cấm thêm `FSWDynamicsRenderable` vào cây render — 1 ký hiệu Dynamics
+không render ra gì) → `build_symbol()`/`symbol_from_fsw()` không thể tiếp
+tục khai kiểu trả về `FSWRenderableSymbol` khi `_CATEGORY_SYMBOL` chứa cả
+`DynamicsSymbol`.
+
+**Đã rà toàn bộ nơi gọi trước khi đổi** (`fswr_converter.py`, `timeline/
+build.py`, `timeline/classify.py`, `fsw-r-viz`'s `demo.py`/`plot_hand.py`/
+`plot_glyph.py`) — mọi nơi cần kiểu cụ thể hơn đều đã tự `isinstance`-narrow
+trước khi gọi bất kỳ method nào chỉ có ở `FSWRenderableSymbol` trở xuống (mà
+`FSWRenderableSymbol` tự nó cũng không thêm method nào so với
+`FSWBaseSymbol` — nó là marker rỗng). Kết luận: nới kiểu trả về của
+`build_symbol()` và `PositionedSymbol.symbol` từ `FSWRenderableSymbol` sang
+`FSWBaseSymbol` là **an toàn tuyệt đối, xác minh được, không phải giả định**
+— đúng hướng "ít xâm lấn" brief gợi ý, **không cần sửa `timeline/`** (xác
+nhận bằng `git diff --stat` rỗng cho cả 2 commit Category 3 và Category 5).
+
+### Giả định CHƯA kiểm chứng (Category 3 & 5)
+
+- **Category 3**: toàn bộ giá trị `speed`/`repeat`/`tension`/`alternating`
+  là AUTHORED (đọc tên, không đo) — không có dataset nào ánh xạ ký hiệu
+  Dynamics sang hệ số thời gian số.
+- **Category 3**: biến thiên nội-base theo fill (Fast/Tense/Relaxed, 1-4) và
+  theo rotation (Slow/Same Time family/Gradual, 1-8) hoàn toàn chưa giải mã.
+- **Category 3**: "Gradual" (`0x2fe`) không khớp field nào của
+  `DynamicsModifier` — giữ mặc định, không đoán.
+- **Category 5**: toàn bộ giá trị `BodyPose` (`trunk_rotation`,
+  `shoulder_offset`, kể cả các hằng số identity/zero) là AUTHORED, không đo
+  — không có dataset nào ánh xạ ký hiệu Body sang tư thế 3D.
+- **Category 5**: ngữ nghĩa `fill`/`rotation` chưa xác định (92,5% fill=0,
+  88,7% rotation 0-7 trong corpus — quá lệch để đoán công thức).
+
+### Lưu ý khác biệt với acceptance criterion 2 của brief
+
+Brief yêu cầu "1.264 test cũ pass nguyên, không sửa cái nào" — điều này
+**không khả thi tuyệt đối 100%**: `tests/test_registry.py`'s
+`test_build_symbol_raises_for_unsupported_category` vốn khẳng định base
+`0x2f7` (Category 3) raise `ValueError` vì "category 3 chưa hỗ trợ" — 1 khi
+Category 3 THẬT SỰ được hỗ trợ (đúng mục tiêu của chính task này), khẳng
+định đó không còn đúng nữa theo định nghĩa, không phải do sơ suất. Test này
+vốn đã đổi target 1 lần trước đó (khi Category 2 được hỗ trợ) theo đúng
+comment cũ của nó — đây là lần đổi thứ 2, cùng lý do. Đã sửa để trỏ sang
+`0x37f` (Category 6, Location — vẫn chưa hỗ trợ sau task này), giữ nguyên ý
+nghĩa test (category chưa đăng ký → raise). **1.327/1.328 test cũ khác giữ
+nguyên không sửa** — chỉ 1 test này buộc phải đổi target vì hệ quả tất yếu
+của việc thêm Category 3, đã ghi rõ ở đây thay vì lặng lẽ sửa.
+
+### Việc còn để ngỏ (Category 3 & 5, ngoài phạm vi task này theo Phần 0)
+
+- Nối `SymbolRole.TIMING` (Category 3) vào `timeline/build.py`'s
+  `DEFAULT_SIGN_DURATION` — Category 3 là category DUY NHẤT mã hoá thông
+  tin thời gian mà `SignTimeline` hiện thiếu (xem `ROADMAP.md`).
+- Nối `SymbolRole.ANCHOR` (Category 5) vào `timeline/anchor.py` — dùng
+  `BodyPose` làm khung tham chiếu không gian thật cho vị trí tay, thay vì
+  toạ độ signbox tuyến tính đơn giản hiện tại.
+- `BodyPose.trunk_rotation`/`shoulder_offset` chưa có cách tính thành 1
+  anchor/skeleton 3D thật trong scene — hiện chỉ là mô tả cấu trúc, giống
+  `MotionPath` trước khi có `sample_trajectory()`.
+- Renderer riêng cho Category 3/5 (`fsw-r-viz`) chưa làm — Category 3 không
+  cần (không render gì), Category 5 cần nhưng ngoài phạm vi task này.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -906,9 +1088,19 @@ làm ưu tiên tiếp theo.
   chỉ tiêu thụ đầu ra `core/fswr_converter.py`, **0 file `core/` bị sửa**
   (`git diff --stat` xác nhận). Phủ 6,2% sign thật (SignBank+). Chi tiết ở
   mục "Pha 3 — `SignTimeline`" phía trên.
-- `fsw-r`: `mypy --strict` sạch (41 file), `pytest` **917/917 pass** (893
-  không đổi từ trước Pha 3 + 24 test mới:
-  `test_anchor.py`, `test_build.py`, `test_sample.py`).
+- **Category 3 (Dynamics) và Category 5 (Trunk & Limb / Body) đã xong ở
+  tầng ký hiệu: đủ 8/8 + 18/18 base symbol** — `DynamicsSymbol`/`BodySymbol`
+  + `data/dynamics_modifiers.json`/`data/body_poses.json` (AUTHORED, tên
+  tra thật từ signbank.org). **0 file `timeline/` bị sửa** (`git diff
+  --stat` xác nhận) — cố ý, việc nối 2 category này vào `SignTimeline` là
+  pha sau. Chi tiết ở mục "Pha 4 — Category 3 & 5" phía trên.
+- `fsw-r`: `mypy --strict` sạch (37 file `src/`; `src/`+`tests/` còn 1 lỗi
+  cũ không liên quan ở `test_head_symbol.py`, xác nhận có từ trước task này
+  qua `git stash`), `pytest` **1.331/1.331 pass** (1.264 baseline + 67 test
+  mới của mục "Pha 4": `test_body_symbol.py`, `test_dynamics_symbol.py`,
+  cộng vài test mới trong `test_registry.py`/`test_build.py` — đúng 1 test
+  cũ, `test_build_symbol_raises_for_unsupported_category`, buộc phải đổi
+  target thay vì giữ nguyên, xem mục "Pha 4" để biết vì sao).
 - `fsw-r-viz`: `mypy --strict` sạch (7 file), `pytest` 5/5 pass
   (`test_hand_geometry.py`, `test_plot_hand.py`) — cộng
   `render_timeline.py` (không có test riêng, xác nhận bằng mắt qua ảnh demo).
@@ -921,12 +1113,18 @@ làm ưu tiên tiếp theo.
 
 ## Việc còn để ngỏ / chưa làm
 
-- **Category 1 (Hands) và Category 2 (Movement) đã xong: 261/261 + 242/242
-  base symbol** — mục còn lại dưới đây cộng 5 category khác của ISWA
+- **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)
+  đã xong ở tầng ký hiệu: 261/261 + 242/242 + 8/8 + 18/18 base symbol.**
+  Category 4 (Head & Face) cũng đã xong (~110 base, nhóm khác trong dự án
+  phụ trách, không phải mục này). **Chỉ còn Category 6 (Location, 8 base)
+  và Category 7 (Punctuation, 5 base) chưa làm** — tổng 7 category ISWA
   (Trunk và Limb là 1 category chung, không phải 2 — xem `ROADMAP.md` mục
-  "Các category ISWA" — nên tổng 7 category, 5 category còn lại ngoài
-  Hands/Movement: Dynamics, Head & Face, Trunk & Limb, Location,
-  Punctuation; xem `ROADMAP.md` Pha 3 trở đi).
+  "Các category ISWA").
+- **Category 3/5 mới chỉ xong tầng ký hiệu, CHƯA nối vào `SignTimeline`**
+  (cố ý, ngoài phạm vi task đó — xem mục "Pha 4 — Category 3 & 5" phía trên
+  và `ROADMAP.md`'s "Việc còn lại"). Cụ thể: `DEFAULT_SIGN_DURATION` vẫn là
+  hằng số giữ chỗ (chưa dùng `DynamicsModifier.speed`), và toạ độ signbox
+  vẫn ánh xạ tuyến tính đơn giản (chưa dùng `BodyPose` làm khung tham chiếu).
 - **Category 2's `hand_side` trả `None`** (chưa chốt được quy tắc thật —
   `rotation` của Cat 1 không áp dụng được, `fill` có tín hiệu nhưng còn
   nhiễu ~27%) — cần đối chiếu Lessons in SignWriting chương 6 trước khi
@@ -944,11 +1142,10 @@ làm ưu tiên tiếp theo.
   chạy) — vẫn CHƯA có API export JSON công khai cho 1 symbol cụ thể (pose +
   wrist quaternion đã tính) nếu render cuối cùng là web three.js thay vì
   Blender/Open3D.
-- 5 category khác của ISWA (Dynamics, Head & Face, Trunk & Limb, Location,
-  Punctuation — tổng ~149 base symbol còn lại trong số 652 base symbol
-  toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 3 trở đi. Hạ tầng chung
-  (`base_hex` xuyên suốt, dispatch theo category, `PoseTable` generic,
-  contract render tách theo category kể từ Pha 2) đã sẵn sàng; mỗi category
+- 2 category cuối của ISWA (Location, Punctuation — tổng 13 base symbol
+  trong số 652 base symbol toàn ISWA) chưa bắt đầu — xem `ROADMAP.md` Pha 6.
+  Hạ tầng chung (`base_hex` xuyên suốt, dispatch theo category, `PoseTable`
+  generic, contract render tách theo category kể từ Pha 2) đã sẵn sàng; mỗi category
   vẫn cần kiểu dữ liệu pose riêng của nó (vd Head&Face cần blend-shape) và
   class symbol riêng, không tái dùng được `HandJointPose`/`HandSymbol`
   hay `MotionPath`/`MovementSymbol`.

@@ -254,15 +254,22 @@ suy, không phải ở logic phân biệt còn chưa viết.
 - `SIGNBOX_TO_BODY_SCALE` và phép ánh xạ toạ độ signbox → không gian cơ thể
   hiện là tuyến tính đơn giản, chưa hiệu chỉnh theo dữ liệu thật.
 
-### Pha 3 — Dynamics (Category 3)
+### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
-Nhỏ (8 base symbol), đi kèm chặt với Movement (tốc độ/nhịp) — làm cùng lúc
-hoặc ngay sau Pha 2, tái dùng phần lớn hạ tầng "motion path" của Pha 2.
+**Trạng thái:** xong ở tầng ký hiệu — `DynamicsSymbol` + `FSWModifierSymbol`
+(contract riêng, KHÔNG nằm trong cây `FSWRenderableSymbol` vì Dynamics không
+render gì) + `data/dynamics_modifiers.json` (8 entry, AUTHORED từ tên thật
+tra trên signbank.org). Chi tiết đầy đủ (bảng tên/biến thiên fill-hay-
+rotation, giả định chưa kiểm chứng) ở `PROGRESS.md` mục "Pha 4 — Category 3
+& 5". **CHƯA nối vào `SignTimeline`** — đó vẫn là việc còn lại, cố ý ngoài
+phạm vi task làm tầng ký hiệu.
+
 **Đáng chú ý sau khi có `SignTimeline`:** đây là category DUY NHẤT mã hoá
 thông tin thời gian (tốc độ/nhịp/độ nhấn) mà `SignTimeline` hiện đang thiếu
-(`DEFAULT_SIGN_DURATION` chỉ là hằng số giữ chỗ) — làm Category 3 sẽ trực
-tiếp thay được giả định đó bằng dữ liệu thật, không chỉ là "+8 base symbol,
-+14,2 điểm độ phủ" về số lượng.
+(`DEFAULT_SIGN_DURATION` chỉ là hằng số giữ chỗ) — nối `DynamicsModifier`
+vào đó sẽ trực tiếp thay được giả định đó bằng dữ liệu thật (dù vẫn là
+AUTHORED, không đo), không chỉ là "+8 base symbol, +14,2 điểm độ phủ" về
+số lượng.
 
 ### Pha 4 — Head & Face (Category 4)
 
@@ -276,42 +283,43 @@ hoàn toàn mới (`FaceExpressionPose` hay tương tự), không tái dùng đ�
 `HandJointPose`/`FingerPose`. Renderer cũng cần thêm khả năng áp blend-shape
 lên mesh mặt (không phải rig xương).
 
-### Pha 5 — Trunk & Limb / "Body" (Category 5)
+### Pha 5 — Trunk & Limb / "Body" (Category 5) — ĐÃ XONG tầng ký hiệu (18/18 base symbol)
 
-**Thứ tự đề xuất tiếp theo (cập nhật sau khi `SignTimeline` MVP-1 xong —
-xem mục "SignTimeline (MVP-1)" ở trên), không còn coi Pha 5 là việc kế tiếp
-duy nhất:**
+**Trạng thái:** xong ở tầng ký hiệu — `BodySymbol` + `FSWBodyRenderable`
+(contract mới, thêm vào cây `FSWRenderableSymbol`, không sửa 4 nhánh cũ) +
+`data/body_poses.json` (18 entry, AUTHORED từ tên thật tra trên
+signbank.org — bao gồm việc xác nhận `0x36d` = "Shoulder Hip Spine", ký
+hiệu mốc/tham chiếu tổng hợp của Trunk, đúng giả thuyết đặt ra trước khi
+thiết kế `BodyPose`). Group 28 (Limb) hoá ra là các khối dựng hình một chi
+sơ đồ hoá ("Limb Length 1".."7" + Combinations + Fingers), KHÔNG phải 9
+khớp giải phẫu riêng biệt như tên category gợi ý — `BodyPose` phản ánh đúng
+cấu trúc thật này. Chi tiết đầy đủ ở `PROGRESS.md` mục "Pha 4 — Category 3
+& 5". **CHƯA nối vào `SignTimeline`** (`timeline/anchor.py` vẫn dùng toạ độ
+signbox tuyến tính đơn giản, chưa dùng `BodyPose` làm khung tham chiếu) —
+cố ý ngoài phạm vi task làm tầng ký hiệu.
+
+**Thứ tự đề xuất tiếp theo** (cập nhật sau khi cả `SignTimeline` MVP-1 VÀ
+Category 3/5's tầng ký hiệu đã xong):
 1. **Tầng validate giải phẫu** (giới hạn góc khớp thật, vd PIP flexion) —
    làm trước vì rẻ (không cần category mới), và mọi pose đã sinh ra từ Pha
    1-3 đều có thể sai theo hướng này mà chưa có cách tự phát hiện.
-2. **Category 3 (Dynamics, 8 base symbol)** — nhỏ, +14,2 điểm độ phủ số
-   lượng, nhưng quan trọng hơn: là category DUY NHẤT mã hoá thông tin thời
-   gian mà `SignTimeline` hiện đang thiếu (`DEFAULT_SIGN_DURATION` mới là
-   hằng số giữ chỗ) — làm ngay sau khi có tầng validate giải phẫu để dữ
-   liệu thời gian sinh ra cũng được validate cùng lúc.
+2. **Nối Category 3/5 vào `SignTimeline`** — `DynamicsModifier.speed` thay
+   `DEFAULT_SIGN_DURATION`'s hằng số giữ chỗ; `BodyPose` làm khung tham
+   chiếu không gian thật cho `timeline/anchor.py` thay vì toạ độ signbox
+   tuyến tính đơn giản hiện tại. Làm ngay sau tầng validate giải phẫu để dữ
+   liệu thời gian/không gian mới cũng được validate cùng lúc.
 3. **MVP-2** (nới phạm vi `SignTimeline` lên sign có nhiều symbol tay/
    chuyển động hơn, ~20,9% sign đo trên SignBank+) — cần logic phân biệt/
    gán track chưa viết ở MVP-1, nên làm sau khi nền tảng (giải phẫu +
-   Dynamics) đã vững.
-4. **Category 5 (Trunk & Limb / Body)** — dời xuống cuối danh sách này (từ
-   "PHA TIẾP THEO" trước đây); vẫn còn giá trị (mở khung xương ra ngoài bàn
-   tay) nhưng không chặn `SignTimeline` tiến lên MVP-2, nên xếp sau.
-
-Nhỏ (9+9 = 18 base symbol, group 27-28 theo `GROUP_START` — Trunk
-`0x36d–0x375` (group 27) + Limb `0x376–0x37e` (group 28), 1 category chung
-theo `fsw-structure.js` thật, xem bảng category ở đầu file), mở rộng khung
-xương ra ngoài bàn tay (vai, thân, chân/tay không phải bàn tay). Có thể tái
-dùng phần lớn kiểu tư duy "joint-angle" của Pha 1 (vì đây cũng là khớp
-xương), chỉ khác bộ khớp — nhưng vẫn cần kiểu dữ liệu (`BodyPose`) và
-contract render (`FSWBodyRenderable`) riêng, không tái dùng thẳng
-`HandJointPose`/`FSWHandRenderable` (tên gọi lẫn ý nghĩa đều khác). Bài
-kiểm tra khả năng mở rộng dự kiến cho category này đã viết sẵn ở
-`PROGRESS.md` mục "Pha 2 — Category 2" (phần cuối) — làm theo đúng mẫu đã
-áp dụng cho Category 2.
+   Dynamics/Body) đã vững.
+4. **Category 6-7 (Location, Punctuation)** — xem Pha 6 dưới đây; category
+   ISWA cuối cùng còn lại sau Pha 1-5.
 
 ### Pha 6 — Location & Punctuation (Category 6-7)
 
-Nhỏ nhất (8+5 base symbol), mang tính bổ trợ:
+Category ISWA cuối cùng chưa làm (Pha 1, 2, 3, 5 đều đã xong tầng ký hiệu;
+Pha 4 do thành viên khác phụ trách, cũng đã xong). Nhỏ nhất (8+5 base
+symbol), mang tính bổ trợ:
 - Location: điểm chạm/vị trí trong không gian ký hiệu (ảnh hưởng vị trí đặt
   tay trong scene, không phải pose của tay).
 - Punctuation: dấu câu trong văn bản SignWriting, không ảnh hưởng animation
