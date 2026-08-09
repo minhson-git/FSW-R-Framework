@@ -53,6 +53,6 @@ def test_eyegaze_symbol_merges_gaze_into_expression() -> None:
 
 
 def test_eyegaze_direction_changes_with_rotation() -> None:
-    up = symbol_from_fsw("S32100").get_expression().blendshapes
-    down = symbol_from_fsw("S32104").get_expression().blendshapes
-    assert up != down
+    up, down = symbol_from_fsw("S32100"), symbol_from_fsw("S32104")
+    assert isinstance(up, FaceSymbol) and isinstance(down, FaceSymbol)
+    assert up.get_expression().blendshapes != down.get_expression().blendshapes

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from fsw_r.core.annotation_symbol import AnnotationSymbol
 from fsw_r.core.face_pose_table import EXPECTED_FACE_SYMBOL_COUNT, FACE_NAME_TABLE, FACE_POSE_TABLE
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.face_types import ARKIT_BLENDSHAPES
@@ -60,12 +61,12 @@ def test_known_symbol_expression_is_meaningful() -> None:
     assert weights["mouthSmileRight"] > 0.5
 
 
-def test_deferred_and_head_movement_raise_clearly() -> None:
-    # Un-authored Category 4 bases must fail honestly, not build a wrong
-    # symbol: 0x327 Eyegaze Curved (a gaze *movement*, unlike the straight
-    # eyegaze bases which are now authored), 0x356 Mouth Corners (annotation
-    # mark), 0x330 Ears / 0x335 Air Blowing Out (Group 24), 0x361 Teeth /
-    # 0x36a Neck (Group 26), 0x301 Head Movement Straight (Movement infra).
-    for key in ("S32700", "S35600", "S33000", "S33500", "S36100", "S36a00", "S30100"):
-        with pytest.raises(ValueError):
-            symbol_from_fsw(key)
+def test_unmodelled_category4_bases_build_as_annotation() -> None:
+    # Non-facial-deformation Category 4 bases build as AnnotationSymbol
+    # (marker), NOT FaceSymbol: 0x327 Eyegaze Curved (gaze movement), 0x356
+    # Mouth Corners (annotation mark), 0x330 Ears / 0x335 Air Blowing Out,
+    # 0x361 Teeth / 0x36a Neck, 0x301 Head Movement, 0x30d Dreamy brow.
+    for key in ("S32700", "S35600", "S33000", "S33500", "S36100", "S36a00", "S30100", "S30d00"):
+        symbol = symbol_from_fsw(key)
+        assert isinstance(symbol, AnnotationSymbol)
+        assert not isinstance(symbol, FaceSymbol)

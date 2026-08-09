@@ -31,11 +31,11 @@ from __future__ import annotations
 
 from typing import Callable
 
+from fsw_r.core.annotation_symbol import AnnotationSymbol
 from fsw_r.core.face_pose_table import FACE_POSE_TABLE
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
-from fsw_r.core.iswa_data import symbol_id_of
 from fsw_r.core.movement_symbol import MovementSymbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
@@ -45,19 +45,17 @@ _Constructor = Callable[..., FSWRenderableSymbol]
 
 
 def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRenderableSymbol:
-    """Category 4 (Head & Face) dispatch. Unlike Categories 1 and 2, this
-    category is only partially covered: the facial-expression groups are
-    authored symbol-by-symbol (see face_pose_table.py) and the Head group's
-    movement paths / non-facial marks (teeth, ears, ...) aren't blend-shapes.
-    So build a FaceSymbol only for what's actually authored, and reject the
-    rest honestly rather than pretend an un-authored base exists."""
+    """Category 4 (Head & Face) dispatch. Every base builds: a real
+    ``FaceSymbol`` (ARKit-52 blend-shapes) for the authored facial
+    expressions and eyegaze, and an ``AnnotationSymbol`` (a labelled marker,
+    no modelled pose) for the rest -- the non-facial marks (teeth/ears/hair/
+    neck/airflow), the facial *movements* that need an expression-over-time
+    model, the head symbols (glyph->3D-orientation not confirmable), and the
+    angled "dreamy" brows. A family graduates from AnnotationSymbol to its
+    own class once its convention is verified -- eyegaze already did."""
     if base_hex in FACE_POSE_TABLE:
         return FaceSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
-    raise ValueError(
-        f"Category 4 symbol {symbol_id_of(base_hex)} (base 0x{base_hex:03x}) "
-        f"is not supported yet (Head movement paths, non-facial marks, and "
-        f"un-authored facial symbols -- see PHASE4_PLAN.md)"
-    )
+    return AnnotationSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
 
 
 # category -> the one class (or factory) that covers every base symbol in it.
