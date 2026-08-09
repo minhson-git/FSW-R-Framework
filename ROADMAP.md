@@ -219,10 +219,50 @@ chiếu thêm Lessons in SignWriting chương 6 trước khi chốt. Đây là l
 `HandSide` cần thêm `BOTH` (giá trị ISWA fill code 2 ám chỉ) thay vì chỉ
 RIGHT/LEFT nhị phân.
 
+### SignTimeline (MVP-1) — ĐÃ XONG
+
+**Lưu ý đánh số:** đây KHÔNG phải "Pha 3" theo đánh số category ở file này
+(mục dưới, "Dynamics", vẫn giữ số Pha 3 như cũ) — trong `PROGRESS.md`, việc
+này được gọi là "Pha 3" theo nghĩa thứ tự thời gian làm việc (Pha 1 = Hands,
+Pha 2 = Movement, Pha 3 = SignTimeline), khác trục đánh số với category. Ghi
+chú ở đây để tránh nhầm giữa 2 cách đánh số Pha khác nhau trong 2 file.
+
+**Việc đã làm:** gói mới `fsw_r/timeline/` (KHÔNG sửa file nào trong
+`core/` — xác nhận bằng `git diff --stat`), dịch layout 2D tĩnh của FSW
+(toạ độ signbox `x`/`y`) sang chuỗi pose theo thời gian (`SignTimeline` →
+`PoseFrame`). Phạm vi cố ý giới hạn ở **MVP-1**: sign có đúng 1 symbol tay
+(Category 1), tối đa 1 symbol chuyển động (Category 2), không có category
+nào khác — đo trên SignBank+ (257.800 sign) thì phạm vi này cover 6,2% sign
+thật (~16.000 sign). Chi tiết đầy đủ (kiến trúc 5 tầng D1-D5, bảng độ tin
+cậy theo tầng, các phát hiện kỹ thuật, danh sách giả định chưa kiểm chứng,
+phát hiện về giới hạn giải phẫu khớp PIP) xem `PROGRESS.md` mục "Pha 3 —
+`SignTimeline` (MVP-1)".
+
+**Vì sao giới hạn đúng phạm vi này:** MVP-1 né mọi bước phải "đoán" (gán
+chuyển động cho tay nào khi có 2 tay, phân biệt 2 tay đồng thời hay 1 tay 2
+thời điểm, dùng `y` làm proxy thời gian...) — mọi tầng xử lý đều xác định
+(deterministic), nên nếu output sai thì chắc chắn lỗi nằm ở toán anchor/nội
+suy, không phải ở logic phân biệt còn chưa viết.
+
+**Việc còn lại (không phải làm sai, mà là ngoài phạm vi MVP-1 có chủ đích):**
+- Tầng validate giải phẫu (giới hạn góc khớp thật) — chưa có, xem phát hiện
+  PIP flexion > 110° ở 119/261 (45,6%) symbol trong `PROGRESS.md`.
+- MVP-2 (sign có nhiều symbol tay/chuyển động hơn, ~20,9% sign) — cần logic
+  phân biệt/gán track chưa viết ở MVP-1.
+- `DEFAULT_SIGN_DURATION` (0,8s) là hằng số giữ chỗ, chưa có nguồn dữ liệu
+  thời gian thật (Category 3 Dynamics dự kiến bù việc này).
+- `SIGNBOX_TO_BODY_SCALE` và phép ánh xạ toạ độ signbox → không gian cơ thể
+  hiện là tuyến tính đơn giản, chưa hiệu chỉnh theo dữ liệu thật.
+
 ### Pha 3 — Dynamics (Category 3)
 
 Nhỏ (8 base symbol), đi kèm chặt với Movement (tốc độ/nhịp) — làm cùng lúc
 hoặc ngay sau Pha 2, tái dùng phần lớn hạ tầng "motion path" của Pha 2.
+**Đáng chú ý sau khi có `SignTimeline`:** đây là category DUY NHẤT mã hoá
+thông tin thời gian (tốc độ/nhịp/độ nhấn) mà `SignTimeline` hiện đang thiếu
+(`DEFAULT_SIGN_DURATION` chỉ là hằng số giữ chỗ) — làm Category 3 sẽ trực
+tiếp thay được giả định đó bằng dữ liệu thật, không chỉ là "+8 base symbol,
++14,2 điểm độ phủ" về số lượng.
 
 ### Pha 4 — Head & Face (Category 4)
 
@@ -236,10 +276,26 @@ hoàn toàn mới (`FaceExpressionPose` hay tương tự), không tái dùng đ�
 `HandJointPose`/`FingerPose`. Renderer cũng cần thêm khả năng áp blend-shape
 lên mesh mặt (không phải rig xương).
 
-### Pha 5 — Trunk & Limb / "Body" (Category 5) — PHA TIẾP THEO
+### Pha 5 — Trunk & Limb / "Body" (Category 5)
 
-**Đây là pha kế tiếp cần làm** (sau khi Pha 1-2 đã xong; Pha 3 nhỏ và có
-thể gộp làm cùng, Pha 4 do thành viên khác phụ trách — xem ghi chú ở trên).
+**Thứ tự đề xuất tiếp theo (cập nhật sau khi `SignTimeline` MVP-1 xong —
+xem mục "SignTimeline (MVP-1)" ở trên), không còn coi Pha 5 là việc kế tiếp
+duy nhất:**
+1. **Tầng validate giải phẫu** (giới hạn góc khớp thật, vd PIP flexion) —
+   làm trước vì rẻ (không cần category mới), và mọi pose đã sinh ra từ Pha
+   1-3 đều có thể sai theo hướng này mà chưa có cách tự phát hiện.
+2. **Category 3 (Dynamics, 8 base symbol)** — nhỏ, +14,2 điểm độ phủ số
+   lượng, nhưng quan trọng hơn: là category DUY NHẤT mã hoá thông tin thời
+   gian mà `SignTimeline` hiện đang thiếu (`DEFAULT_SIGN_DURATION` mới là
+   hằng số giữ chỗ) — làm ngay sau khi có tầng validate giải phẫu để dữ
+   liệu thời gian sinh ra cũng được validate cùng lúc.
+3. **MVP-2** (nới phạm vi `SignTimeline` lên sign có nhiều symbol tay/
+   chuyển động hơn, ~20,9% sign đo trên SignBank+) — cần logic phân biệt/
+   gán track chưa viết ở MVP-1, nên làm sau khi nền tảng (giải phẫu +
+   Dynamics) đã vững.
+4. **Category 5 (Trunk & Limb / Body)** — dời xuống cuối danh sách này (từ
+   "PHA TIẾP THEO" trước đây); vẫn còn giá trị (mở khung xương ra ngoài bàn
+   tay) nhưng không chặn `SignTimeline` tiến lên MVP-2, nên xếp sau.
 
 Nhỏ (9+9 = 18 base symbol, group 27-28 theo `GROUP_START` — Trunk
 `0x36d–0x375` (group 27) + Limb `0x376–0x37e` (group 28), 1 category chung
