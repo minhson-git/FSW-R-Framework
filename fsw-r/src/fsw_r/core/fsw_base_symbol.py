@@ -181,12 +181,13 @@ class FSWBaseSymbol(ABC):
         compass = Rotation.from_euler("z", self._rotation_angle_degrees(), degrees=True)
         return compass * plane * facing
 
-    @abstractmethod
-    def get_wrist_orientation(self) -> Rotation:
-        """Assumed to already exist (more fully) in the real system: wrist/
-        hand orientation derived from fill/rotation (ISWA). Mocked here
-        using ``_rotation_angle_degrees()``."""
-        raise NotImplementedError
+    # NOTE: ``get_wrist_orientation()`` is intentionally NOT declared here.
+    # Not every category has a rigid orientation -- a Category 4 (Head &
+    # Face) facial-expression symbol is a blend-shape with no wrist at all.
+    # It's declared on the per-category renderables that DO have one
+    # (``FSWHandRenderable`` / ``FSWMotionRenderable``), the same way the
+    # pose accessor is. The ``_default_wrist_orientation()`` helper above
+    # stays here since both of those categories reuse the same formula.
 
     @property
     def symbol_id(self) -> str:

@@ -37,7 +37,7 @@ strict = true
 # scripts/export_joint_poses.py is excluded: it's a frozen historical
 # record of a one-time migration (see its own docstring) whose imports
 # (the since-deleted groups/ package) no longer resolve.
-files = ["src", "tests", "scripts/gen_valid_combinations.py"]
+files = ["src", "tests", "scripts/gen_valid_combinations.py", "scripts/gen_face_poses.py"]
 
 [[tool.mypy.overrides]]
 module = "scipy.*"

@@ -3,14 +3,15 @@ already-decoded FSW symbol -- e.g. a decoded "Index, fill=1, rotation=1"
 becomes a real ``HandSymbol`` instance, not a bag of raw ints.
 
 Dispatch is by **category**, not by per-symbol registration: ``_CATEGORY_SYMBOL``
-maps a category number to the one class that handles every base symbol in
-it (``{1: HandSymbol}`` today). Adding a new category (once its own
-``PoseTable`` + symbol class exist, see ``core/pose_table.py``) is exactly
-one more entry here -- nothing else in ``core/`` needs to change. This is
-the whole point of keying everything by ``base_hex`` through the pipeline
-(``fsw_symbol_key.py``, ``fsw_base_symbol.py``): a category dispatch this
-simple wouldn't be possible if base_hex had already been decomposed into
-category/group/base_symbol_number and thrown away, the way it used to be.
+maps a category number to the one class (or factory) that handles every base
+symbol in it (``{1: HandSymbol, 2: MovementSymbol, 4: <face factory>}``).
+Adding a new category (once its own ``PoseTable`` + symbol class exist, see
+``core/pose_table.py``) is exactly one more entry here -- nothing else in
+``core/`` needs to change. This is the whole point of keying everything by
+``base_hex`` through the pipeline (``fsw_symbol_key.py``,
+``fsw_base_symbol.py``): a category dispatch this simple wouldn't be possible
+if base_hex had already been decomposed into category/group/
+base_symbol_number and thrown away, the way it used to be.
 
 ``_OVERRIDES`` is an explicit, currently-empty escape hatch for a future
 *individual* base symbol that needs genuinely distinct behavior (e.g. a
@@ -30,8 +31,14 @@ from __future__ import annotations
 
 from typing import Callable
 
+from fsw_r.core.annotation_symbol import AnnotationSymbol
+from fsw_r.core.face_movement import FACE_MOVEMENT_BASES, FaceMovementSymbol
+from fsw_r.core.face_pose_table import FACE_POSE_TABLE
+from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.head_movement import HEAD_MOVEMENT_BASES, HeadMovementSymbol
+from fsw_r.core.head_symbol import HEAD_ORIENTATION_BASES, HeadSymbol
 from fsw_r.core.movement_symbol import MovementSymbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 
@@ -39,11 +46,36 @@ from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 # FSWRenderableSymbol, the shape HandSymbol/MovementSymbol both use.
 _Constructor = Callable[..., FSWRenderableSymbol]
 
-# category -> the one class that covers every base symbol in it. This is
-# the entire integration point for a new category -- see PROGRESS.md's
-# Phase 2 entry for the "extensibility check" confirming nothing else in
-# core/ needed to change to add {2: MovementSymbol} here.
-_CATEGORY_SYMBOL: dict[int, _Constructor] = {1: HandSymbol, 2: MovementSymbol}
+
+def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRenderableSymbol:
+    """Category 4 (Head & Face) dispatch. Every base builds: a ``FaceSymbol``
+    (ARKit-52 blend-shapes) for the authored facial expressions and eyegaze,
+    a ``HeadSymbol`` (rigid 3D orientation) for the head-orientation bases,
+    and an ``AnnotationSymbol`` (a labelled marker, no modelled pose) for the
+    rest -- the non-facial marks (teeth/ears/hair/neck/airflow), the facial
+    *movements* that need an expression-over-time model, and the angled
+    "dreamy" brows. A family graduates from AnnotationSymbol to its own class
+    once its convention is verified -- eyegaze and head already did."""
+    if base_hex in FACE_POSE_TABLE:
+        return FaceSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    if base_hex in FACE_MOVEMENT_BASES:
+        return FaceMovementSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    if base_hex in HEAD_ORIENTATION_BASES:
+        return HeadSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    if base_hex in HEAD_MOVEMENT_BASES:
+        return HeadMovementSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    return AnnotationSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+
+
+# category -> the one class (or factory) that covers every base symbol in it.
+# Adding a category is one more entry here -- see PROGRESS.md's Phase 2 entry
+# for the "extensibility check" that adding {2: MovementSymbol} needed no
+# other change in core/; {4: ...} followed the same pattern for Head & Face.
+_CATEGORY_SYMBOL: dict[int, _Constructor] = {
+    1: HandSymbol,
+    2: MovementSymbol,
+    4: _make_category4_symbol,
+}
 
 # Escape hatch for a future INDIVIDUAL base symbol needing distinct
 # behavior, not just distinct numbers -- keyed by base_hex. Empty today:
@@ -56,8 +88,8 @@ def build_symbol(parsed: ParsedFSWSymbol) -> FSWRenderableSymbol:
     fill/rotation.
 
     Raises ``ValueError`` if ``parsed``'s category has no entry in
-    ``_CATEGORY_SYMBOL`` yet -- e.g. a real, well-formed Category 2
-    (Movement) key parses fine (``parse_fsw_symbol_key`` doesn't block it)
+    ``_CATEGORY_SYMBOL`` yet -- e.g. a real, well-formed Category 3
+    (Dynamics) key parses fine (``parse_fsw_symbol_key`` doesn't block it)
     but building an object for it fails here, honestly, as "category not
     supported" rather than a parse error.
     """
