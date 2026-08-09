@@ -22,8 +22,10 @@ from pathlib import Path
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.movement_symbol import MovementSymbol
+from fsw_r.core.registry import symbol_from_fsw
 from fsw_r_viz.animate_movement import animate_movement_to_gif, render_movement_filmstrip
 from fsw_r_viz.plot_face import render_faces_grid
+from fsw_r_viz.plot_glyph import render_glyphs_grid
 from fsw_r_viz.plot_hand import render_symbols_grid
 from fsw_r_viz.plot_movement import render_movements_grid
 
@@ -130,6 +132,22 @@ def _render_movement_animation(output_dir: Path) -> None:
     print(f"Saved: {gif}")
 
 
+def _render_annotation_glyphs(output_dir: Path) -> None:
+    # The universal fallback: symbols we don't model in 3D (teeth/ears/hair/
+    # neck/airflow/head) still render faithfully as their real ISWA glyph.
+    symbols = [
+        (symbol_from_fsw("S2ff00"), "04-22-001 Head"),
+        (symbol_from_fsw("S36100"), "04-26-009 Teeth"),
+        (symbol_from_fsw("S33000"), "04-24-007 Ears"),
+        (symbol_from_fsw("S36b00"), "04-26-019 Hair"),
+        (symbol_from_fsw("S36a00"), "04-26-018 Neck"),
+        (symbol_from_fsw("S33500"), "04-24-012 Air Blowing Out"),
+    ]
+    output_path = output_dir / "annotation_glyphs.png"
+    render_glyphs_grid(symbols, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -140,6 +158,7 @@ def main() -> None:
     _render_eyegaze(output_dir)
     _render_movement_trajectories(output_dir)
     _render_movement_animation(output_dir)
+    _render_annotation_glyphs(output_dir)
 
 
 if __name__ == "__main__":

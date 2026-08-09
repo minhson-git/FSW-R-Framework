@@ -13,6 +13,7 @@ dependencies = [
     #   pip install -e ../fsw-r
     "scipy>=1.11",
     "matplotlib>=3.8",
+    "signwriting>=0.1.12",  # reference ISWA glyph renderer (plot_glyph.py)
 ]
 
 [project.optional-dependencies]
@@ -38,6 +39,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "mpl_toolkits.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "signwriting.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
