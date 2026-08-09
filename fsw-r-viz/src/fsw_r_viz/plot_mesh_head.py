@@ -21,12 +21,12 @@ import pyvista as pv
 
 pv.OFF_SCREEN = True
 
-_SKIN = (0.91, 0.72, 0.56)
-_HAIR = (0.24, 0.16, 0.10)
-_LIP = (0.72, 0.16, 0.16)
-_HL = (0.80, 0.12, 0.12)  # highlight
-_DARK = (0.20, 0.05, 0.05)
-_PUPIL = (0.12, 0.08, 0.05)
+_SKIN = (0.95, 0.80, 0.68)
+_HAIR = (0.28, 0.20, 0.13)
+_LIP = (0.80, 0.42, 0.42)
+_HL = (0.82, 0.20, 0.20)  # highlight
+_DARK = (0.30, 0.12, 0.12)
+_PUPIL = (0.15, 0.10, 0.07)
 
 
 def _ellipsoid(rx: float, ry: float, rz: float, center: tuple[float, float, float]) -> pv.PolyData:
@@ -44,62 +44,63 @@ def _gaze_shift(bs: Mapping[str, float]) -> tuple[float, float]:
 
 
 def _lip_curve(cy: float, curve: float, z: float) -> pv.PolyData:
-    xs = np.linspace(-0.3, 0.3, 20)
-    ys = cy + curve * (xs / 0.3) ** 2  # corners raised (smile) / lowered (frown)
+    xs = np.linspace(-0.24, 0.24, 20)
+    ys = cy + curve * (xs / 0.24) ** 2  # corners raised (smile) / lowered (frown)
     pts = np.column_stack([xs, ys, np.full_like(xs, z)])
-    return pv.Spline(pts, 40).tube(radius=0.028)
+    return pv.Spline(pts, 40).tube(radius=0.024)
 
 
 def add_head(pl: pv.Plotter, bs: Mapping[str, float], highlight: str | None = None) -> None:
     """Add the head meshes for one ARKit-52 blend-shape vector to ``pl``."""
-    pl.add_mesh(_ellipsoid(0.75, 0.95, 0.82, (0, 0, 0)), color=_SKIN, smooth_shading=True)
+    pl.add_mesh(_ellipsoid(0.7, 0.86, 0.78, (0, 0, 0)), color=_SKIN, smooth_shading=True)
     pl.add_mesh(
-        pv.Cylinder(center=(0, -1.05, -0.05), direction=(0, 1, 0), radius=0.3, height=0.5),
+        pv.Cylinder(center=(0, -0.98, -0.05), direction=(0, 1, 0), radius=0.27, height=0.4),
         color=_HL if highlight == "neck" else _SKIN, smooth_shading=True,
     )
     # Hair: a slightly larger skull clipped to a cap above the brow line, so
     # it sits on top/back and never covers the face.
-    hair = _ellipsoid(0.8, 1.0, 0.86, (0, 0.06, -0.05)).clip("y", origin=(0, 0.42, 0), invert=False)
+    hair = _ellipsoid(0.74, 0.92, 0.82, (0, 0.05, -0.04)).clip("y", origin=(0, 0.42, 0), invert=False)
     pl.add_mesh(hair, color=_HL if highlight == "hair" else _HAIR, smooth_shading=True)
-    for ex in (-0.76, 0.76):  # ears
-        pl.add_mesh(_ellipsoid(0.12, 0.2, 0.15, (ex, -0.05, -0.05)),
+    for ex in (-0.68, 0.68):  # ears
+        pl.add_mesh(_ellipsoid(0.1, 0.17, 0.13, (ex, 0.04, -0.02)),
                     color=_HL if highlight == "ears" else _SKIN, smooth_shading=True)
 
     gx, gy = _gaze_shift(bs)
-    for side, cx in (("Left", -0.28), ("Right", 0.28)):
+    for side, cx in (("Left", -0.24), ("Right", 0.24)):
         blink = bs.get(f"eyeBlink{side}", 0.0)
         wide = bs.get(f"eyeWide{side}", 0.0)
-        ry = 0.12 * (1.0 - blink) + 0.05 * wide
-        pl.add_mesh(_ellipsoid(0.15, max(0.02, ry), 0.08, (cx, 0.2, 0.78)), color="white", smooth_shading=True)
+        ry = 0.1 * (1.0 - blink) + 0.04 * wide
+        pl.add_mesh(_ellipsoid(0.13, max(0.015, ry), 0.07, (cx, 0.16, 0.72)), color="white", smooth_shading=True)
         if blink < 0.5:
-            pl.add_mesh(pv.Sphere(0.05, center=(cx + gx * 0.06, 0.2 + gy * 0.05, 0.9)), color=_PUPIL)
+            pl.add_mesh(pv.Sphere(0.045, center=(cx + gx * 0.05, 0.16 + gy * 0.05, 0.82)), color=_PUPIL)
         # brow
         up = bs.get(f"browOuterUp{side}", 0.0) + 0.6 * bs.get("browInnerUp", 0.0) - bs.get(f"browDown{side}", 0.0)
-        pl.add_mesh(pv.Cylinder(center=(cx, 0.42 + 0.08 * up, 0.82), direction=(1, 0, 0), radius=0.02, height=0.28),
+        pl.add_mesh(pv.Cylinder(center=(cx, 0.33 + 0.07 * up, 0.76), direction=(1, 0, 0), radius=0.018, height=0.26),
                     color=_HAIR)
 
-    pl.add_mesh(_ellipsoid(0.08, 0.14, 0.12, (0, 0.0, 0.88)), color=_SKIN, smooth_shading=True)  # nose
+    pl.add_mesh(_ellipsoid(0.07, 0.16, 0.11, (0, -0.03, 0.8)), color=_SKIN, smooth_shading=True)  # nose
 
     _add_mouth(pl, bs, highlight == "teeth")
     if bs.get("tongueOut", 0.0) > 0.0:
         length = bs["tongueOut"]
-        pl.add_mesh(_ellipsoid(0.1, 0.06, 0.14 * length, (0, -0.62, 0.85)), color=(0.85, 0.4, 0.45))
+        pl.add_mesh(_ellipsoid(0.09, 0.05, 0.12 * length, (0, -0.42, 0.8)), color=(0.86, 0.45, 0.5))
 
 
 def _add_mouth(pl: pv.Plotter, bs: Mapping[str, float], show_teeth: bool) -> None:
     jaw = bs.get("jawOpen", 0.0)
     smile = (bs.get("mouthSmileLeft", 0.0) + bs.get("mouthSmileRight", 0.0)) / 2
     frown = (bs.get("mouthFrownLeft", 0.0) + bs.get("mouthFrownRight", 0.0)) / 2
-    curve = 0.22 * smile - 0.22 * frown
-    open_h = 0.3 * jaw + (0.14 if show_teeth else 0.0)
-    cy = -0.5
-    if open_h > 0.06:  # open: dark cavity + white teeth, framed by the lips
-        pl.add_mesh(_ellipsoid(0.26, open_h / 2 + 0.02, 0.06, (0, cy, 0.8)), color=_DARK)
-        pl.add_mesh(_ellipsoid(0.24, 0.03, 0.05, (0, cy + open_h / 2 - 0.02, 0.83)), color="white")
-        pl.add_mesh(_lip_curve(cy + open_h / 2, curve, 0.84), color=_LIP)
-        pl.add_mesh(_lip_curve(cy - open_h / 2, curve, 0.84), color=_LIP)
-    else:
-        pl.add_mesh(_lip_curve(cy, curve, 0.84), color=_LIP)
+    curve = 0.18 * smile - 0.18 * frown
+    open_h = 0.28 * jaw + (0.16 if show_teeth else 0.0)
+    cy = -0.36
+    if open_h > 0.06:  # open: an oval dark cavity + a white teeth strip, framed by the lips
+        pl.add_mesh(_ellipsoid(0.17, open_h / 2 + 0.04, 0.05, (0, cy, 0.78)), color=_DARK)
+        pl.add_mesh(_ellipsoid(0.15, 0.028, 0.045, (0, cy + open_h / 2 - 0.01, 0.81)), color="white")
+        pl.add_mesh(_lip_curve(cy + open_h / 2 + 0.01, curve, 0.82), color=_LIP)
+        pl.add_mesh(_lip_curve(cy - open_h / 2 - 0.01, curve, 0.82), color=_LIP)
+    else:  # closed: an upper and lower lip that meet
+        pl.add_mesh(_lip_curve(cy + 0.02, curve, 0.82), color=_LIP)
+        pl.add_mesh(_lip_curve(cy - 0.02, curve, 0.82), color=_LIP)
 
 
 def render_mesh_head_to_file(
