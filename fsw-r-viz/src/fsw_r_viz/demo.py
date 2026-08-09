@@ -29,6 +29,7 @@ from fsw_r.core.registry import symbol_from_fsw
 from fsw_r_viz.animate_face import render_face_movement_filmstrip
 from fsw_r_viz.animate_head import render_head_movement_filmstrip
 from fsw_r_viz.animate_movement import animate_movement_to_gif, render_movement_filmstrip
+from fsw_r_viz.plot_mesh_head import render_mesh_head_to_file
 from fsw_r_viz.plot_face import render_faces_grid
 from fsw_r_viz.plot_glyph import render_glyphs_grid
 from fsw_r_viz.plot_hand import render_symbols_grid
@@ -156,6 +157,23 @@ def _render_head_movements(output_dir: Path) -> None:
         print(f"Saved: {output_path}")
 
 
+def _render_mesh_heads(output_dir: Path) -> None:
+    # Procedural 3D head (Level 3 stand-in): expressions rendered on a real
+    # head, and the feature-reference annotation symbols made recognisable.
+    smile = FaceSymbol(0x33E, fill=0, rotation=0).get_expression().blendshapes
+    items = [
+        (smile, "Mouth Smile", None),
+        ({"jawOpen": 0.6}, "Jaw open (teeth)", "teeth"),
+        ({}, "04-26-009 Teeth", "teeth"),
+        ({}, "04-24-007 Ears", "ears"),
+        ({}, "04-26-019 Hair", "hair"),
+        ({}, "04-26-018 Neck", "neck"),
+    ]
+    output_path = output_dir / "mesh_heads.png"
+    render_mesh_head_to_file(items, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def _render_annotation_glyphs(output_dir: Path) -> None:
     # The universal fallback: symbols we don't model in 3D (teeth/ears/hair/
     # neck/airflow/head) still render faithfully as their real ISWA glyph.
@@ -199,6 +217,7 @@ def main() -> None:
     _render_head_orientations(output_dir)
     _render_face_movements(output_dir)
     _render_head_movements(output_dir)
+    _render_mesh_heads(output_dir)
     _render_annotation_glyphs(output_dir)
 
 
