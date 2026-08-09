@@ -4,7 +4,7 @@ becomes a real ``HandSymbol`` instance, not a bag of raw ints.
 
 Dispatch is by **category**, not by per-symbol registration: ``_CATEGORY_SYMBOL``
 maps a category number to the one class (or factory) that handles every base
-symbol in it (``{1: HandSymbol, 2: MovementSymbol, 4: <face factory>}``).
+symbol in it (``{1: HandSymbol, 2: MovementSymbol, 4: <face factory>, 5: BodySymbol}``).
 Adding a new category (once its own ``PoseTable`` + symbol class exist, see
 ``core/pose_table.py``) is exactly one more entry here -- nothing else in
 ``core/`` needs to change. This is the whole point of keying everything by
@@ -32,6 +32,7 @@ from __future__ import annotations
 from typing import Callable
 
 from fsw_r.core.annotation_symbol import AnnotationSymbol
+from fsw_r.core.body_symbol import BodySymbol
 from fsw_r.core.face_movement import FACE_MOVEMENT_BASES, FaceMovementSymbol
 from fsw_r.core.face_pose_table import FACE_POSE_TABLE
 from fsw_r.core.face_symbol import FaceSymbol
@@ -70,11 +71,13 @@ def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRender
 # category -> the one class (or factory) that covers every base symbol in it.
 # Adding a category is one more entry here -- see PROGRESS.md's Phase 2 entry
 # for the "extensibility check" that adding {2: MovementSymbol} needed no
-# other change in core/; {4: ...} followed the same pattern for Head & Face.
+# other change in core/; {4: ...} followed the same pattern for Head & Face,
+# and {5: BodySymbol} follows it again for Trunk & Limb.
 _CATEGORY_SYMBOL: dict[int, _Constructor] = {
     1: HandSymbol,
     2: MovementSymbol,
     4: _make_category4_symbol,
+    5: BodySymbol,
 }
 
 # Escape hatch for a future INDIVIDUAL base symbol needing distinct

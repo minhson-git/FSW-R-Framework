@@ -28,6 +28,10 @@ import json
 from importlib import resources
 from typing import Callable, Generic, TypeVar
 
+import numpy as np
+from scipy.spatial.transform import Rotation
+
+from fsw_r.core.body_types import BodyPart, BodyPose
 from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, MotionPath, MovementPlane, PathType, ThumbPose
 
 PoseT = TypeVar("PoseT")
@@ -167,4 +171,54 @@ def _parse_motion_path(key: str, entry: dict[str, object]) -> MotionPath:
 
 MOVEMENT_PATH_TABLE: PoseTable[MotionPath] = PoseTable(
     "movement_paths.json", _parse_motion_path, expected_count=EXPECTED_MOVEMENT_COUNT
+)
+
+
+EXPECTED_BODY_COUNT = 18
+
+_BODY_PART_BY_VALUE = {part.value: part for part in BodyPart}
+
+
+def _parse_body_pose(key: str, entry: dict[str, object]) -> BodyPose:
+    """See ``scripts/gen_body_poses.py``/``core/body_types.py`` for where
+    these values come from -- ``part``/``motion_type``/``limb_length_units``
+    are traceable to the symbol's real ISWA name (signbank.org);
+    ``trunk_rotation``/``shoulder_offset`` are constant AUTHORED
+    placeholders, not per-symbol data (see ``BodyPose``'s docstring)."""
+    label = _entry_label(key, entry)
+    part_raw = entry.get("part")
+    if not isinstance(part_raw, str) or part_raw not in _BODY_PART_BY_VALUE:
+        raise ValueError(f"{label}: missing or unrecognized 'part' in body_poses.json")
+    motion_type = entry.get("motion_type")
+    if not isinstance(motion_type, str) or not motion_type:
+        raise ValueError(f"{label}: missing or malformed 'motion_type' in body_poses.json")
+
+    trunk_rotation_raw = entry.get("trunk_rotation_deg")
+    trunk_rotation: Rotation | None = None
+    if trunk_rotation_raw is not None:
+        if not (isinstance(trunk_rotation_raw, list) and len(trunk_rotation_raw) == 3):
+            raise ValueError(f"{label}: malformed 'trunk_rotation_deg' in body_poses.json")
+        trunk_rotation = Rotation.from_euler("xyz", trunk_rotation_raw, degrees=True)
+
+    shoulder_offset_raw = entry.get("shoulder_offset")
+    shoulder_offset: object = None
+    if shoulder_offset_raw is not None:
+        if not (isinstance(shoulder_offset_raw, list) and len(shoulder_offset_raw) == 3):
+            raise ValueError(f"{label}: malformed 'shoulder_offset' in body_poses.json")
+        shoulder_offset = np.array(shoulder_offset_raw, dtype=np.float64)
+
+    if "limb_length_units" not in entry:
+        raise ValueError(f"{label}: missing 'limb_length_units' in body_poses.json")
+
+    return BodyPose(
+        part=_BODY_PART_BY_VALUE[part_raw],
+        motion_type=motion_type,
+        trunk_rotation=trunk_rotation,
+        shoulder_offset=shoulder_offset,  # type: ignore[arg-type]
+        limb_length_units=entry["limb_length_units"],  # type: ignore[arg-type]
+    )
+
+
+BODY_POSE_TABLE: PoseTable[BodyPose] = PoseTable(
+    "body_poses.json", _parse_body_pose, expected_count=EXPECTED_BODY_COUNT
 )

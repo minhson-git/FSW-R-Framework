@@ -4,14 +4,22 @@ one-size-fits-all.
 ``FSWRenderableSymbol`` is a marker only: "this symbol renders to
 *something* in 3D." It does NOT say what -- Category 1 (Hands) renders to
 a ``HandJointPose``, Category 2 (Movement) to a ``MotionPath`` (a
-trajectory description, not a set of joint angles), and Category 4
-(Head & Face) to a ``FaceExpressionPose`` (ARKit-52 blend-shapes). Each
-category's own abstract subclass below (``FSWHandRenderable``,
-``FSWMotionRenderable``, ``FSWFaceRenderable``) declares the one
-``get_*()`` contract that actually makes sense for it -- so a renderer built
-for hands (``HandMeshRenderer3D``) can require ``FSWHandRenderable``
-specifically and never has to branch on category or guess whether
-``get_joint_pose()`` exists on whatever object it was handed.
+trajectory description, not a set of joint angles), Category 4
+(Head & Face) to a ``FaceExpressionPose`` (ARKit-52 blend-shapes), and
+Category 5 (Trunk & Limb / Body) to a ``BodyPose`` (a schematic
+body-diagram descriptor). Each category's own abstract subclass below
+(``FSWHandRenderable``, ``FSWMotionRenderable``, ``FSWFaceRenderable``,
+``FSWBodyRenderable``) declares the one ``get_*()`` contract that actually
+makes sense for it -- so a renderer built for hands (``HandMeshRenderer3D``)
+can require ``FSWHandRenderable`` specifically and never has to branch on
+category or guess whether ``get_joint_pose()`` exists on whatever object it
+was handed.
+
+Category 3 (Dynamics) is deliberately NOT part of this tree at all --
+``FSWModifierSymbol`` (``core/modifier_symbol.py``) is a sibling hierarchy
+directly under ``FSWBaseSymbol``, because a Dynamics symbol (tempo/emphasis
+for OTHER symbols in the same sign) renders to nothing of its own. See that
+module's docstring.
 
 This used to be a single class with ``get_joint_pose() -> HandJointPose``
 as its one abstract method -- which meant a Category 2 symbol (no joint
@@ -26,6 +34,7 @@ from abc import ABC, abstractmethod
 
 from scipy.spatial.transform import Rotation
 
+from fsw_r.core.body_types import BodyPose
 from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.core.fsw_base_symbol import FSWBaseSymbol
 from fsw_r.core.types import HandJointPose, MotionPath
@@ -83,4 +92,16 @@ class FSWHeadRenderable(FSWRenderableSymbol, ABC):
         """Rigid 3D orientation of the head (pitch/yaw/roll) for a Category 4
         Group 22 head symbol -- a head is oriented as a whole, not deformed
         (that's ``get_expression``) -- see ``head_symbol.py``."""
+        raise NotImplementedError
+
+
+class FSWBodyRenderable(FSWRenderableSymbol, ABC):
+    @abstractmethod
+    def get_body_pose(self) -> BodyPose:
+        """Schematic body-diagram descriptor for a Category 5 (Trunk &
+        Limb) symbol -- not joint angles (``FSWHandRenderable``), not a
+        trajectory (``FSWMotionRenderable``), and not a rigid single-part
+        orientation (``FSWHeadRenderable``) -- see ``BodyPose``'s own
+        docstring for why this category's real structure doesn't fit any
+        of those."""
         raise NotImplementedError

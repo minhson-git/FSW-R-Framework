@@ -1,0 +1,244 @@
+{
+  "_meta": {
+    "names_source": "signbank.org ISWA 2010 reference -- iswa/36d_sg.html (Group 27, Trunk) and iswa/376_sg.html (Group 28, Limb), each listing its group's 9 base symbols on one page -- authoritative ISWA names",
+    "structure_source": "part/motion_type/limb_length_units are derived directly from those verified names (traceable, not invented) -- see PROGRESS.md's Category 5 entry",
+    "values_source": "AUTHORED placeholders, not measured -- trunk_rotation_deg is identity ([0,0,0]) and shoulder_offset is zero for every one of the 9 Trunk symbols; no dataset or verified formula distinguishes them numerically yet. See core/body_types.py's module docstring.",
+    "fill_rotation_note": "fill/rotation semantics for Category 5 are UNVERIFIED (measured on SignBank+: 92.5% fill=0, 88.7% rotation 0-7 -- too skewed/noisy to guess a formula from) -- BodyPose does not vary by fill/rotation, keyed by base_hex only. See core/body_symbol.py's hand_side docstring.",
+    "count": 18,
+    "generated_by": "scripts/gen_body_poses.py"
+  },
+  "36d": {
+    "symbol_id": "05-27-001",
+    "name": "Shoulder Hip Spine",
+    "part": "trunk",
+    "motion_type": "REFERENCE",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "36e": {
+    "symbol_id": "05-27-002",
+    "name": "Shoulder Hip Positions",
+    "part": "trunk",
+    "motion_type": "POSITIONS",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "36f": {
+    "symbol_id": "05-27-003",
+    "name": "Shoulder Hip Move Wall Plane",
+    "part": "trunk",
+    "motion_type": "MOVE_WALL",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "370": {
+    "symbol_id": "05-27-004",
+    "name": "Shoulder Hip Move Floor Plane",
+    "part": "trunk",
+    "motion_type": "MOVE_FLOOR",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "371": {
+    "symbol_id": "05-27-005",
+    "name": "Shoulder Tilts (from Waist)",
+    "part": "trunk",
+    "motion_type": "TILT_WAIST",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "372": {
+    "symbol_id": "05-27-006",
+    "name": "Torso Straight Stretch Wall",
+    "part": "trunk",
+    "motion_type": "STRETCH_WALL",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "373": {
+    "symbol_id": "05-27-007",
+    "name": "Torso Curved Bend Wall",
+    "part": "trunk",
+    "motion_type": "BEND_WALL",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "374": {
+    "symbol_id": "05-27-008",
+    "name": "Torso Twist Floor Plane",
+    "part": "trunk",
+    "motion_type": "TWIST_FLOOR",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "375": {
+    "symbol_id": "05-27-009",
+    "name": "Upper Body Tilts (from Hip Joints)",
+    "part": "trunk",
+    "motion_type": "TILT_HIP",
+    "trunk_rotation_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "shoulder_offset": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "limb_length_units": null
+  },
+  "376": {
+    "symbol_id": "05-28-001",
+    "name": "Limb Combinations",
+    "part": "limb",
+    "motion_type": "LIMB_COMBINATIONS",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 0
+  },
+  "377": {
+    "symbol_id": "05-28-002",
+    "name": "Limb Length 1",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 1
+  },
+  "378": {
+    "symbol_id": "05-28-003",
+    "name": "Limb Length 2",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 2
+  },
+  "379": {
+    "symbol_id": "05-28-004",
+    "name": "Limb Length 3",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 3
+  },
+  "37a": {
+    "symbol_id": "05-28-005",
+    "name": "Limb Length 4",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 4
+  },
+  "37b": {
+    "symbol_id": "05-28-006",
+    "name": "Limb Length 5",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 5
+  },
+  "37c": {
+    "symbol_id": "05-28-007",
+    "name": "Limb Length 6",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 6
+  },
+  "37d": {
+    "symbol_id": "05-28-008",
+    "name": "Limb Length 7",
+    "part": "limb",
+    "motion_type": "LENGTH",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 7
+  },
+  "37e": {
+    "symbol_id": "05-28-009",
+    "name": "Fingers",
+    "part": "limb",
+    "motion_type": "FINGERS",
+    "trunk_rotation_deg": null,
+    "shoulder_offset": null,
+    "limb_length_units": 0
+  }
+}
