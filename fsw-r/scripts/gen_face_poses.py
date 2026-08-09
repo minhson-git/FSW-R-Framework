@@ -43,6 +43,16 @@ AUTHORED: dict[int, tuple[str, dict[str, float]]] = {
     0x31B: ("Eyes Half Closed", {"eyeBlinkLeft": 0.5, "eyeBlinkRight": 0.5}),
     # A wink is one eye; which eye is a drawing convention, taken as the right here.
     0x31D: ("Eye Wink (Squeezed Eye Blink)", {"eyeBlinkRight": 1.0, "eyeSquintRight": 0.5}),
+    # Eyegaze "straight" bases (0x321-0x326): the stored pose is neutral; the
+    # gaze direction comes from `rotation` at runtime via core/eyegaze.py
+    # (convention verified against the real ISWA glyph). Curved/circle
+    # eyegaze (0x327-0x329) are gaze *movements* and stay deferred.
+    0x321: ("Eyegaze Straight Wall Plane", {}),
+    0x322: ("Eyegaze Straight Wall Double", {}),
+    0x323: ("Eyegaze Straight Wall Alternate", {}),
+    0x324: ("Eyegaze Straight Floor Plane", {}),
+    0x325: ("Eyegaze Straight Floor Double", {}),
+    0x326: ("Eyegaze Straight Floor Alternate", {}),
     # ---- Group 25: Mouth / Lips (0x33b-0x355), 27 shape symbols ----
     0x33B: ("Mouth Closed Neutral", {}),
     0x33C: ("Mouth Closed Forward", {"mouthPucker": 0.4}),
@@ -112,12 +122,6 @@ DEFERRED: dict[int, str] = {
     0x31E: "Eyelashes Up -- ARKit-52 has no eyelash target",
     0x31F: "Eyelashes Down -- ARKit-52 has no eyelash target",
     0x320: "Eyelashes Fluttering -- no ARKit target + movement",
-    0x321: "Eyegaze Straight Wall Plane -- gaze direction (rotation) needs rotation->eyeLook* handling",
-    0x322: "Eyegaze Straight Wall Double -- gaze direction needs rotation->eyeLook* handling",
-    0x323: "Eyegaze Straight Wall Alternate -- gaze direction needs rotation->eyeLook* handling",
-    0x324: "Eyegaze Straight Floor Plane -- gaze direction needs rotation->eyeLook* handling",
-    0x325: "Eyegaze Straight Floor Double -- gaze direction needs rotation->eyeLook* handling",
-    0x326: "Eyegaze Straight Floor Alternate -- gaze direction needs rotation->eyeLook* handling",
     0x327: "Eyegaze Curved Wall Plane -- gaze direction + curve/movement",
     0x328: "Eyegaze Curved Floor Plane -- gaze direction + curve/movement",
     0x329: "Eyegaze Circles Wall Plane -- gaze direction + movement",
@@ -163,10 +167,12 @@ def build() -> dict[str, object]:
             "standard": "ARKit 52 blendshapes",
             "categories": "ISWA Category 4 (Head & Face): Group 23 (Brow/Eyes subset), Group 24 "
                           "(Cheeks/Nose subset), Group 25 (Mouth/Lips), Group 26 (Tongue subset)",
-            "rotation_note": "Face poses are keyed by (base_hex, fill) only -- rotation is not part of the "
-                             "expression here. For the tongue bases that use rotation as a *direction*, that "
-                             "direction is not representable in ARKit-52 (single non-directional tongueOut) "
-                             "and is collapsed. Eyegaze (Group 23) will need rotation->eyeLook* handling.",
+            "rotation_note": "Face poses are keyed by (base_hex, fill) -- rotation is decoration for most "
+                             "bases. EXCEPTION: the eyegaze 'straight' bases (0x321-0x326) store a neutral "
+                             "pose and get their gaze direction from rotation at runtime (core/eyegaze.py; "
+                             "convention verified against the real ISWA glyph). For the tongue bases that "
+                             "use rotation as direction, that direction is not representable in ARKit-52 "
+                             "(single non-directional tongueOut) and is collapsed.",
             "names_source": "signbank.org ISWA 2010 reference (<hex>_sg.html) -- authoritative ISWA names",
             "values_source": "AUTHORED, not measured -- each blend-shape vector is a human reading of the "
                              "symbol's ISWA name mapped to ARKit-52. No dataset keys ISWA face symbols to "

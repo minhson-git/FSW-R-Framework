@@ -29,6 +29,19 @@ from fsw_r_viz.face_geometry import mouth_outline
 _EYES = (("left", -0.35, "Left"), ("right", 0.35, "Right"))
 
 
+def _gaze_offset(bs: Mapping[str, float]) -> tuple[float, float]:
+    """Screen-space pupil offset (right+, up+) from ARKit eyeLook* targets.
+    ARKit is in the person's frame; the viz is viewer-facing, so the
+    horizontal component is flipped: the person looking to THEIR right
+    (eyeLookInLeft / eyeLookOutRight) shows as pupils shifted to the
+    viewer's left."""
+    up = (bs.get("eyeLookUpLeft", 0.0) + bs.get("eyeLookUpRight", 0.0)) / 2.0
+    down = (bs.get("eyeLookDownLeft", 0.0) + bs.get("eyeLookDownRight", 0.0)) / 2.0
+    person_right = (bs.get("eyeLookInLeft", 0.0) + bs.get("eyeLookOutRight", 0.0)) / 2.0
+    person_left = (bs.get("eyeLookOutLeft", 0.0) + bs.get("eyeLookInRight", 0.0)) / 2.0
+    return person_left - person_right, up - down
+
+
 def _draw_eye_and_brow(ax: Axes, bs: Mapping[str, float], cx: float, suffix: str) -> None:
     blink = bs.get(f"eyeBlink{suffix}", 0.0)
     wide = bs.get(f"eyeWide{suffix}", 0.0)
@@ -40,7 +53,13 @@ def _draw_eye_and_brow(ax: Axes, bs: Mapping[str, float], cx: float, suffix: str
     if eye_ry < 0.02:  # effectively closed -> a lid line
         ax.plot([cx - eye_rx, cx + eye_rx], [0.35, 0.35], color="0.4", linewidth=2)
     else:
-        ax.add_patch(Ellipse((cx, 0.35), 2 * eye_rx, 2 * eye_ry, color="0.4"))
+        # Eyeball (light) + pupil (dark), the pupil offset by the gaze so
+        # eyegaze symbols read as "looking" in a direction.
+        ax.add_patch(Ellipse((cx, 0.35), 2 * eye_rx, 2 * eye_ry, facecolor="0.9", edgecolor="0.4"))
+        gaze_x, gaze_y = _gaze_offset(bs)
+        px = cx + gaze_x * eye_rx * 0.55
+        py = 0.35 + gaze_y * eye_ry * 0.55
+        ax.add_patch(Circle((px, py), min(eye_rx, eye_ry) * 0.5, color="0.2"))
 
     # Brow: raised by outer/inner-up, lowered by brow-down.
     brow_up = bs.get(f"browOuterUp{suffix}", 0.0) + 0.6 * bs.get("browInnerUp", 0.0)

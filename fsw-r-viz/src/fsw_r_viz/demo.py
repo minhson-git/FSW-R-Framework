@@ -89,6 +89,20 @@ def _render_brow_eye_expressions(output_dir: Path) -> None:
     print(f"Saved: {output_path}")
 
 
+def _render_eyegaze(output_dir: Path) -> None:
+    # Category 4 eyegaze (0x321): rotation is gaze direction (glyph-verified)
+    # -- rot 0 up, 2 viewer-left, 4 down, 6 viewer-right. Watch the pupils.
+    symbols = [
+        (FaceSymbol(0x321, fill=0, rotation=0), "Eyegaze rot=0 (up)"),
+        (FaceSymbol(0x321, fill=0, rotation=2), "Eyegaze rot=2 (viewer-left)"),
+        (FaceSymbol(0x321, fill=0, rotation=4), "Eyegaze rot=4 (down)"),
+        (FaceSymbol(0x321, fill=0, rotation=6), "Eyegaze rot=6 (viewer-right)"),
+    ]
+    output_path = output_dir / "eyegaze_directions.png"
+    render_faces_grid(symbols, str(output_path))
+    print(f"Saved: {output_path}")
+
+
 def _render_movement_trajectories(output_dir: Path) -> None:
     # Category 2 (Movement): one symbol per PathType, so the 5 movement
     # primitives (contact/finger/straight/curved/circle) are visibly distinct.
@@ -123,6 +137,7 @@ def main() -> None:
     _render_fill_sweep(output_dir)
     _render_mouth_expressions(output_dir)
     _render_brow_eye_expressions(output_dir)
+    _render_eyegaze(output_dir)
     _render_movement_trajectories(output_dir)
     _render_movement_animation(output_dir)
 

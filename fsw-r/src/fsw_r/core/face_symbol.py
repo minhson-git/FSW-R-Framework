@@ -11,6 +11,7 @@ returns ``None``). Its pose accessor is ``get_expression()``, looked up by
 
 from __future__ import annotations
 
+from fsw_r.core.eyegaze import EYEGAZE_BASES, gaze_blendshapes
 from fsw_r.core.face_pose_table import FACE_NAME_TABLE, FACE_POSE_TABLE
 from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.core.renderable_symbol import FSWFaceRenderable
@@ -36,12 +37,22 @@ class FaceSymbol(FSWFaceRenderable):
         """ARKit-52 blend-shape weights for this symbol at its current
         ``fill``. Raises ``KeyError`` with a clear message if this
         particular fill wasn't authored (the constructor already accepted
-        it as ISWA-valid, so a gap here means missing data, not bad input)."""
+        it as ISWA-valid, so a gap here means missing data, not bad input).
+
+        For the eyegaze bases (see ``core/eyegaze.py``) the stored pose is
+        merged with rotation-driven ``eyeLook*`` targets -- eyegaze is the
+        one facial family where ``rotation`` means gaze direction, not
+        decoration."""
         by_fill = FACE_POSE_TABLE[self.base_hex]
         try:
-            return by_fill[self.fill]
+            base = by_fill[self.fill]
         except KeyError:
             raise KeyError(
                 f"{self.symbol_id} (base 0x{self.base_hex:03x}) has no authored expression "
                 f"for fill={self.fill}; authored fills are {sorted(by_fill)}"
             ) from None
+        if self.base_hex in EYEGAZE_BASES:
+            merged = dict(base.blendshapes)
+            merged.update(gaze_blendshapes(self.rotation))
+            return FaceExpressionPose(blendshapes=merged)
+        return base
