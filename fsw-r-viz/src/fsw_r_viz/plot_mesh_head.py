@@ -43,11 +43,15 @@ def _gaze_shift(bs: Mapping[str, float]) -> tuple[float, float]:
     return pl - pr, up - dn
 
 
-def _lip_curve(cy: float, curve: float, z: float) -> pv.PolyData:
-    xs = np.linspace(-0.24, 0.24, 20)
-    ys = cy + curve * (xs / 0.24) ** 2  # corners raised (smile) / lowered (frown)
-    pts = np.column_stack([xs, ys, np.full_like(xs, z)])
-    return pv.Spline(pts, 40).tube(radius=0.024)
+def _lip_ring(cy: float, rx: float, ry: float, curve: float, z: float) -> pv.PolyData:
+    """The lips as a closed elliptical outline around the mouth opening, so
+    they frame the opening (open mouth) or meet in a thin line (closed).
+    ``curve`` raises the corners for a smile / lowers them for a frown."""
+    t = np.linspace(0, 2 * np.pi, 60)
+    x = rx * np.cos(t)
+    y = cy + ry * np.sin(t) + curve * np.cos(t) ** 2  # corners (cos=+-1) raised by curve
+    pts = np.column_stack([x, y, np.full_like(x, z)])
+    return pv.Spline(pts, 90).tube(radius=0.022)
 
 
 def add_head(pl: pv.Plotter, bs: Mapping[str, float], highlight: str | None = None) -> None:
@@ -90,17 +94,14 @@ def _add_mouth(pl: pv.Plotter, bs: Mapping[str, float], show_teeth: bool) -> Non
     jaw = bs.get("jawOpen", 0.0)
     smile = (bs.get("mouthSmileLeft", 0.0) + bs.get("mouthSmileRight", 0.0)) / 2
     frown = (bs.get("mouthFrownLeft", 0.0) + bs.get("mouthFrownRight", 0.0)) / 2
-    curve = 0.18 * smile - 0.18 * frown
-    open_h = 0.28 * jaw + (0.16 if show_teeth else 0.0)
+    curve = 0.16 * smile - 0.16 * frown
+    open_h = 0.26 * jaw + (0.14 if show_teeth else 0.0)
     cy = -0.36
-    if open_h > 0.06:  # open: an oval dark cavity + a white teeth strip, framed by the lips
-        pl.add_mesh(_ellipsoid(0.17, open_h / 2 + 0.04, 0.05, (0, cy, 0.78)), color=_DARK)
-        pl.add_mesh(_ellipsoid(0.15, 0.028, 0.045, (0, cy + open_h / 2 - 0.01, 0.81)), color="white")
-        pl.add_mesh(_lip_curve(cy + open_h / 2 + 0.01, curve, 0.82), color=_LIP)
-        pl.add_mesh(_lip_curve(cy - open_h / 2 - 0.01, curve, 0.82), color=_LIP)
-    else:  # closed: an upper and lower lip that meet
-        pl.add_mesh(_lip_curve(cy + 0.02, curve, 0.82), color=_LIP)
-        pl.add_mesh(_lip_curve(cy - 0.02, curve, 0.82), color=_LIP)
+    ry = max(0.03, open_h / 2)
+    if open_h > 0.06:  # open: an oval dark cavity + a white teeth strip inside the lip ring
+        pl.add_mesh(_ellipsoid(0.14, ry, 0.045, (0, cy, 0.77)), color=_DARK)
+        pl.add_mesh(_ellipsoid(0.12, 0.025, 0.04, (0, cy + ry - 0.02, 0.8)), color="white")
+    pl.add_mesh(_lip_ring(cy, 0.16, ry + 0.02, curve, 0.81), color=_LIP)
 
 
 def render_mesh_head_to_file(
