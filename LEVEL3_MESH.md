@@ -8,18 +8,20 @@ blend-shapes can't express them. To make them recognisable (and to give the
 77 modelled face symbols a fuller render than the 2D schematic), they need a
 real **3D head mesh**.
 
-## What's built now (no external assets)
+## What's built now (no face asset)
 
-`fsw-r-viz/plot_mesh_head.py`: a **procedural** 3D head (matplotlib
-surfaces), driven by ARKit-52 blend-shapes, carrying head + ears + hair +
-neck + teeth. So:
-- every `FaceSymbol` / `FaceMovementSymbol` renders on a real head, and
+`fsw-r-viz/plot_mesh_head.py`: a **procedural** 3D head rendered **offscreen
+with pyvista/VTK** (proper depth-sorting, so the head is solid and the
+features occlude correctly), driven by ARKit-52 blend-shapes, carrying head
++ ears + hair (a cap that doesn't cover the face) + neck + teeth in an open
+mouth. So:
+- every `FaceSymbol` / `FaceMovementSymbol` renders on a solid head (smile
+  curves the lips, jaw opens showing teeth, eyes blink, brows/gaze move), and
 - the feature-reference annotation symbols (teeth/ears/hair/neck) are shown
-  and can be highlighted.
+  and highlighted.
 
-**Honest limitation:** matplotlib 3D does not depth-sort separate surfaces,
-so the head is drawn semi-transparent to let the front features show. This
-is a stand-in, not a research face model.
+It's still a hand-built approximation, not a research face model -- but it is
+now on a real 3D renderer, not a flat schematic.
 
 ## Production path (the pipeline is already ready)
 

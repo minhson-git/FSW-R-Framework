@@ -1,139 +1,118 @@
-"""A procedural 3D head mesh (matplotlib surfaces, no external assets) that
-is driven by ARKit-52 blend-shapes and carries the anatomical features the
-2D schematic can't show -- ears, hair, a neck, and teeth inside an open
-mouth. So the Category-4 symbols that reference those features (teeth, ears,
-hair, neck) become recognisable as a real head, and every FaceSymbol /
-FaceMovementSymbol gets a fuller 3D render than the flat schematic.
+"""A real 3D head, rendered offscreen with pyvista/VTK (proper depth
+sorting, unlike matplotlib), driven by ARKit-52 blend-shapes. Carries the
+anatomical features the 2D schematic can't: ears, hair, a neck, and teeth in
+an open mouth -- so the Category-4 symbols that reference those features
+(teeth/ears/hair/neck) are recognisable, and every FaceSymbol /
+FaceMovementSymbol gets a solid 3D render.
 
-** Honest scope. ** This is a hand-built approximation, NOT a research face
-model. For research-grade realism the target is a parametric mesh -- the
-free, ARKit-52-native MediaPipe canonical face mesh, or FLAME/SMPL-X (fine
-under their non-commercial research licences) with hair/teeth added as
-separate assets. The whole framework already outputs ARKit-52, so that
-pipeline is ready to drive such a mesh -- see LEVEL3_MESH.md. This module is
-the no-dependency stand-in until one of those assets is integrated.
+Still a hand-built approximation, not a research face model -- for
+research-grade realism the target is a parametric mesh (MediaPipe canonical
+mesh, or FLAME/SMPL-X) driven by the ARKit-52 the framework already emits;
+see LEVEL3_MESH.md. This is the no-face-asset stand-in, now on a proper 3D
+renderer.
 """
 
 from __future__ import annotations
 
 from typing import Mapping, Sequence
 
-import matplotlib
-
-matplotlib.use("Agg")
-
 import numpy as np
-from numpy.typing import NDArray
+import pyvista as pv
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.axes3d import Axes3D
+pv.OFF_SCREEN = True
 
-_SKIN = "#e8b48c"
-_HAIR = "#3a2a1a"
-_Grid = tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-
-
-def _ellipsoid(cx: float, cy: float, cz: float, rx: float, ry: float, rz: float, n: int = 24) -> _Grid:
-    u = np.linspace(0, 2 * np.pi, n)
-    v = np.linspace(0, np.pi, n)
-    x = cx + rx * np.outer(np.cos(u), np.sin(v))
-    y = cy + ry * np.outer(np.sin(u), np.sin(v))
-    z = cz + rz * np.outer(np.ones_like(u), np.cos(v))
-    return x, y, z
+_SKIN = (0.91, 0.72, 0.56)
+_HAIR = (0.24, 0.16, 0.10)
+_LIP = (0.72, 0.16, 0.16)
+_HL = (0.80, 0.12, 0.12)  # highlight
+_DARK = (0.20, 0.05, 0.05)
+_PUPIL = (0.12, 0.08, 0.05)
 
 
-def _surf(ax: Axes3D, grid: _Grid, color: str, alpha: float = 1.0) -> None:
-    # Display swap (x, z, y): our y is up, matplotlib draws the 3rd arg up.
-    x, y, z = grid
-    ax.plot_surface(x, z, y, color=color, alpha=alpha, linewidth=0, shade=True)
-
-
-def draw_mesh_head(ax: Axes3D, blendshapes: Mapping[str, float], highlight: str | None = None) -> None:
-    """Draw the procedural head for one ARKit-52 blend-shape vector.
-    ``highlight`` optionally emphasises a feature ('ears'/'hair'/'neck'/
-    'teeth') for a symbol that references it."""
-    def bs(name: str) -> float:
-        return blendshapes.get(name, 0.0)
-
-    # Head kept semi-transparent: matplotlib 3D does not depth-sort separate
-    # surfaces, so an opaque head hides the front features -- see the module
-    # note on why a real mesh renderer is the production path.
-    _surf(ax, _ellipsoid(0, 0, 0, 0.75, 0.95, 0.85), _SKIN, alpha=0.45)  # head
-    _surf(ax, _ellipsoid(0, -1.15, -0.1, 0.28, 0.35, 0.28), _SKIN)  # neck
-    # Hair: a cap over the top/back.
-    hx, hy, hz = _ellipsoid(0, 0.28, -0.12, 0.78, 0.72, 0.9, 20)
-    mask = hy >= 0.28
-    _surf(ax, (np.where(mask, hx, np.nan), hy, np.where(mask, hz, np.nan)),
-          "#a03030" if highlight == "hair" else _HAIR)
-    for ex in (-0.78, 0.78):  # ears
-        _surf(ax, _ellipsoid(ex, -0.05, -0.05, 0.1, 0.18, 0.14),
-              "#a03030" if highlight == "ears" else _SKIN)
-
-    # Eyes (blink closes them), sitting just proud of the front (+z) surface.
-    for side, cx in (("Left", -0.28), ("Right", 0.28)):
-        blink = bs(f"eyeBlink{side}")
-        wide = bs(f"eyeWide{side}")
-        ry = max(0.02, 0.1 * (1 - blink) + 0.04 * wide)
-        _surf(ax, _ellipsoid(cx, 0.18, 0.82, 0.14, ry, 0.06), "white")
-        if blink < 0.5:
-            gx, gy = _gaze_shift(blendshapes)
-            ax.scatter([cx + gx * 0.06], [0.9], [0.18 + gy * 0.05], color="#20140a", s=25)
-
-    # Brows.
-    for side, cx in (("Left", -0.28), ("Right", 0.28)):
-        up = bs(f"browOuterUp{side}") + 0.6 * bs("browInnerUp") - bs(f"browDown{side}")
-        by = 0.4 + 0.08 * up
-        ax.plot([cx - 0.14, cx + 0.14], [0.88, 0.88], [by, by], color="#3a2a1a", linewidth=3)
-
-    ax.plot([0, 0], [0.95, 1.0], [0.12, -0.12], color="#c99", linewidth=3)  # nose
-
-    _draw_mouth(ax, blendshapes, highlight == "teeth")
-
-    ax.set_title("", fontsize="small")
-    for setter in (ax.set_xlim, ax.set_zlim):
-        setter(-1.2, 1.2)
-    ax.set_ylim(-1.4, 1.2)
-    ax.set_box_aspect((1, 1, 1))
-    ax.set_axis_off()
-    ax.view_init(elev=6, azim=-90)  # look at the face (front = +z)
+def _ellipsoid(rx: float, ry: float, rz: float, center: tuple[float, float, float]) -> pv.PolyData:
+    mesh = pv.ParametricEllipsoid(rx, ry, rz)
+    mesh.translate(center, inplace=True)
+    return mesh
 
 
 def _gaze_shift(bs: Mapping[str, float]) -> tuple[float, float]:
-    pr = (bs.get("eyeLookInLeft", 0) + bs.get("eyeLookOutRight", 0)) / 2
-    pl = (bs.get("eyeLookOutLeft", 0) + bs.get("eyeLookInRight", 0)) / 2
-    up = (bs.get("eyeLookUpLeft", 0) + bs.get("eyeLookUpRight", 0)) / 2
-    dn = (bs.get("eyeLookDownLeft", 0) + bs.get("eyeLookDownRight", 0)) / 2
+    pr = (bs.get("eyeLookInLeft", 0.0) + bs.get("eyeLookOutRight", 0.0)) / 2
+    pl = (bs.get("eyeLookOutLeft", 0.0) + bs.get("eyeLookInRight", 0.0)) / 2
+    up = (bs.get("eyeLookUpLeft", 0.0) + bs.get("eyeLookUpRight", 0.0)) / 2
+    dn = (bs.get("eyeLookDownLeft", 0.0) + bs.get("eyeLookDownRight", 0.0)) / 2
     return pl - pr, up - dn
 
 
-def _draw_mouth(ax: Axes3D, bs: Mapping[str, float], show_teeth: bool) -> None:
+def _lip_curve(cy: float, curve: float, z: float) -> pv.PolyData:
+    xs = np.linspace(-0.3, 0.3, 20)
+    ys = cy + curve * (xs / 0.3) ** 2  # corners raised (smile) / lowered (frown)
+    pts = np.column_stack([xs, ys, np.full_like(xs, z)])
+    return pv.Spline(pts, 40).tube(radius=0.028)
+
+
+def add_head(pl: pv.Plotter, bs: Mapping[str, float], highlight: str | None = None) -> None:
+    """Add the head meshes for one ARKit-52 blend-shape vector to ``pl``."""
+    pl.add_mesh(_ellipsoid(0.75, 0.95, 0.82, (0, 0, 0)), color=_SKIN, smooth_shading=True)
+    pl.add_mesh(
+        pv.Cylinder(center=(0, -1.05, -0.05), direction=(0, 1, 0), radius=0.3, height=0.5),
+        color=_HL if highlight == "neck" else _SKIN, smooth_shading=True,
+    )
+    # Hair: a slightly larger skull clipped to a cap above the brow line, so
+    # it sits on top/back and never covers the face.
+    hair = _ellipsoid(0.8, 1.0, 0.86, (0, 0.06, -0.05)).clip("y", origin=(0, 0.42, 0), invert=False)
+    pl.add_mesh(hair, color=_HL if highlight == "hair" else _HAIR, smooth_shading=True)
+    for ex in (-0.76, 0.76):  # ears
+        pl.add_mesh(_ellipsoid(0.12, 0.2, 0.15, (ex, -0.05, -0.05)),
+                    color=_HL if highlight == "ears" else _SKIN, smooth_shading=True)
+
+    gx, gy = _gaze_shift(bs)
+    for side, cx in (("Left", -0.28), ("Right", 0.28)):
+        blink = bs.get(f"eyeBlink{side}", 0.0)
+        wide = bs.get(f"eyeWide{side}", 0.0)
+        ry = 0.12 * (1.0 - blink) + 0.05 * wide
+        pl.add_mesh(_ellipsoid(0.15, max(0.02, ry), 0.08, (cx, 0.2, 0.78)), color="white", smooth_shading=True)
+        if blink < 0.5:
+            pl.add_mesh(pv.Sphere(0.05, center=(cx + gx * 0.06, 0.2 + gy * 0.05, 0.9)), color=_PUPIL)
+        # brow
+        up = bs.get(f"browOuterUp{side}", 0.0) + 0.6 * bs.get("browInnerUp", 0.0) - bs.get(f"browDown{side}", 0.0)
+        pl.add_mesh(pv.Cylinder(center=(cx, 0.42 + 0.08 * up, 0.82), direction=(1, 0, 0), radius=0.02, height=0.28),
+                    color=_HAIR)
+
+    pl.add_mesh(_ellipsoid(0.08, 0.14, 0.12, (0, 0.0, 0.88)), color=_SKIN, smooth_shading=True)  # nose
+
+    _add_mouth(pl, bs, highlight == "teeth")
+    if bs.get("tongueOut", 0.0) > 0.0:
+        length = bs["tongueOut"]
+        pl.add_mesh(_ellipsoid(0.1, 0.06, 0.14 * length, (0, -0.62, 0.85)), color=(0.85, 0.4, 0.45))
+
+
+def _add_mouth(pl: pv.Plotter, bs: Mapping[str, float], show_teeth: bool) -> None:
     jaw = bs.get("jawOpen", 0.0)
-    smile = (bs.get("mouthSmileLeft", 0) + bs.get("mouthSmileRight", 0)) / 2
-    frown = (bs.get("mouthFrownLeft", 0) + bs.get("mouthFrownRight", 0)) / 2
-    open_h = 0.28 * jaw + (0.12 if show_teeth else 0.0)
-    cy = -0.5 + 0.12 * smile - 0.12 * frown
-    xs = np.linspace(-0.28, 0.28, 20)
-    arch = 1 - (xs / 0.28) ** 2
-    top = cy + open_h * arch * 0.5 + 0.06 * (smile - frown) * (1 - arch)
-    bot = cy - open_h * arch * 0.5 - 0.06 * (smile - frown) * (1 - arch)
-    if open_h > 0.06:  # open mouth: dark interior + a white teeth band on top
-        ax.plot(np.r_[xs, xs[::-1]], np.full(40, 0.9), np.r_[top, bot[::-1]], color="#7a1f1f")
-        ax.plot(xs, np.full(20, 0.92), top - 0.02, color="white", linewidth=4)
-    ax.plot(xs, np.full(20, 0.93), top, color="#a02020", linewidth=2)
-    ax.plot(xs, np.full(20, 0.93), bot, color="#a02020", linewidth=2)
+    smile = (bs.get("mouthSmileLeft", 0.0) + bs.get("mouthSmileRight", 0.0)) / 2
+    frown = (bs.get("mouthFrownLeft", 0.0) + bs.get("mouthFrownRight", 0.0)) / 2
+    curve = 0.22 * smile - 0.22 * frown
+    open_h = 0.3 * jaw + (0.14 if show_teeth else 0.0)
+    cy = -0.5
+    if open_h > 0.06:  # open: dark cavity + white teeth, framed by the lips
+        pl.add_mesh(_ellipsoid(0.26, open_h / 2 + 0.02, 0.06, (0, cy, 0.8)), color=_DARK)
+        pl.add_mesh(_ellipsoid(0.24, 0.03, 0.05, (0, cy + open_h / 2 - 0.02, 0.83)), color="white")
+        pl.add_mesh(_lip_curve(cy + open_h / 2, curve, 0.84), color=_LIP)
+        pl.add_mesh(_lip_curve(cy - open_h / 2, curve, 0.84), color=_LIP)
+    else:
+        pl.add_mesh(_lip_curve(cy, curve, 0.84), color=_LIP)
 
 
 def render_mesh_head_to_file(
-    ax_source: Sequence[tuple[Mapping[str, float], str, str | None]], output_path: str
+    heads: Sequence[tuple[Mapping[str, float], str, str | None]], output_path: str
 ) -> None:
-    """Render a row of procedural heads: each item is
-    (blendshapes, title, highlight-feature-or-None)."""
-    fig = plt.figure(figsize=(4 * len(ax_source), 4))
-    for i, (blendshapes, title, highlight) in enumerate(ax_source):
-        ax = fig.add_subplot(1, len(ax_source), i + 1, projection="3d")
-        assert isinstance(ax, Axes3D)
-        draw_mesh_head(ax, blendshapes, highlight)
-        ax.set_title(title, fontsize="small")
-    fig.tight_layout()
-    fig.savefig(output_path, dpi=130)
-    plt.close(fig)
+    """Render a row of 3D heads: each item is (blendshapes, title,
+    highlight-feature-or-None)."""
+    pl = pv.Plotter(shape=(1, len(heads)), off_screen=True, window_size=[420 * len(heads), 480], border=False)
+    for i, (blendshapes, title, highlight) in enumerate(heads):
+        pl.subplot(0, i)
+        add_head(pl, blendshapes, highlight)
+        pl.add_text(title, position="upper_edge", font_size=9, color="black")
+        pl.set_background("white")
+        pl.camera_position = [(0.0, 0.0, 4.2), (0.0, -0.1, 0.0), (0.0, 1.0, 0.0)]
+    pl.screenshot(output_path)
+    pl.close()
