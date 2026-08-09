@@ -29,12 +29,12 @@ import math
 EYEGAZE_BASES: frozenset[int] = frozenset(range(0x321, 0x327))
 
 
-def gaze_blendshapes(rotation: int, amount: float = 0.9) -> dict[str, float]:
-    """ARKit-52 ``eyeLook*`` weights for a gaze in the direction ``rotation``
-    encodes (see module docstring). Returns only the non-zero targets."""
-    angle = math.radians((rotation % 8) * 45.0)  # 0 = up, CCW
-    vertical = math.cos(angle)  # +1 up, -1 down
-    viewer_left = math.sin(angle)  # +1 viewer-left, -1 viewer-right
+def gaze_blendshapes_at_angle(angle_rad: float, amount: float = 0.9) -> dict[str, float]:
+    """ARKit-52 ``eyeLook*`` weights for a gaze at a continuous compass angle
+    (0 = up, counter-clockwise). Used both by the discrete eyegaze symbols
+    and by gaze *movements* (a gaze sweeping a path over time)."""
+    vertical = math.cos(angle_rad)  # +1 up, -1 down
+    viewer_left = math.sin(angle_rad)  # +1 viewer-left, -1 viewer-right
 
     weights: dict[str, float] = {}
 
@@ -53,3 +53,9 @@ def gaze_blendshapes(rotation: int, amount: float = 0.9) -> dict[str, float]:
     add("eyeLookOutLeft", -viewer_left)
     add("eyeLookInRight", -viewer_left)
     return weights
+
+
+def gaze_blendshapes(rotation: int, amount: float = 0.9) -> dict[str, float]:
+    """ARKit-52 ``eyeLook*`` weights for a gaze in the direction ``rotation``
+    encodes (see module docstring). Returns only the non-zero targets."""
+    return gaze_blendshapes_at_angle(math.radians((rotation % 8) * 45.0), amount)

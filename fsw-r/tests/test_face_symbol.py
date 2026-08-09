@@ -62,11 +62,11 @@ def test_known_symbol_expression_is_meaningful() -> None:
 
 
 def test_unmodelled_category4_bases_build_as_annotation() -> None:
-    # Non-facial-deformation Category 4 bases build as AnnotationSymbol
-    # (marker), NOT FaceSymbol: 0x327 Eyegaze Curved (gaze movement), 0x356
+    # Bases with no modelled pose build as AnnotationSymbol (marker): 0x356
     # Mouth Corners (annotation mark), 0x330 Ears / 0x335 Air Blowing Out,
-    # 0x361 Teeth / 0x36a Neck, 0x301 Head Movement, 0x30d Dreamy brow.
-    for key in ("S32700", "S35600", "S33000", "S33500", "S36100", "S36a00", "S30100", "S30d00"):
+    # 0x361 Teeth / 0x36a Neck (non-facial), 0x320 Eyelashes Fluttering /
+    # 0x362 Teeth Movement (movements with no ARKit target), 0x30d Dreamy brow.
+    for key in ("S35600", "S33000", "S33500", "S36100", "S36a00", "S32000", "S36200", "S30d00"):
         symbol = symbol_from_fsw(key)
         assert isinstance(symbol, AnnotationSymbol)
         assert not isinstance(symbol, FaceSymbol)

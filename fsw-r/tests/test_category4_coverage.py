@@ -2,12 +2,13 @@
 
 The "Phase 4 complete" guarantee (choice B): EVERY one of the 110 Category-4
 base symbols BUILDS -- never a crash, wrong type, or un-decided base -- and
-is exactly one of four kinds:
-  * ``FaceSymbol``: an ARKit-52 blend-shape expression (mouth/brow/eye/cheek/
-    nose/tongue) or a rotation-driven eyegaze -- a real, static pose.
+is exactly one of five kinds:
+  * ``FaceSymbol``: a static ARKit-52 blend-shape expression or eyegaze.
   * ``FaceMovementSymbol``: an ARKit-52 expression over time (blink, jaw,
-    tongue lick... -- ``expression_at(t)``).
+    tongue lick, gaze path... -- ``expression_at(t)``).
   * ``HeadSymbol``: a rigid 3D head orientation (the head-direction bases).
+  * ``HeadMovementSymbol``: a head orientation over time (nod/shake/tilt/
+    circle -- ``orientation_at(t)``).
   * ``AnnotationSymbol``: a labelled marker with no modelled pose -- the
     honest home for non-facial marks (teeth/ears/hair/neck/airflow), the
     no-ARKit-target movements, and angled "dreamy" brows.
@@ -24,6 +25,7 @@ from fsw_r.core.annotation_symbol import AnnotationSymbol
 from fsw_r.core.face_movement import FACE_MOVEMENT_BASES, FaceMovementSymbol
 from fsw_r.core.face_pose_table import EXPECTED_FACE_SYMBOL_COUNT
 from fsw_r.core.face_symbol import FaceSymbol
+from fsw_r.core.head_movement import HEAD_MOVEMENT_BASES, HeadMovementSymbol
 from fsw_r.core.head_symbol import HEAD_ORIENTATION_BASES, HeadSymbol
 from fsw_r.core.iswa_data import CATEGORY_START, category_of, valid_combinations_for
 from fsw_r.core.registry import symbol_from_fsw
@@ -45,22 +47,27 @@ def test_category_4_has_110_base_symbols() -> None:
 @pytest.mark.parametrize("base_hex", _CATEGORY_4_BASES)
 def test_every_base_builds_as_a_known_type(base_hex: int) -> None:
     symbol = symbol_from_fsw(_first_valid_key(base_hex))
-    assert isinstance(symbol, (FaceSymbol, FaceMovementSymbol, HeadSymbol, AnnotationSymbol))
+    assert isinstance(
+        symbol, (FaceSymbol, FaceMovementSymbol, HeadSymbol, HeadMovementSymbol, AnnotationSymbol)
+    )
 
 
 def test_type_split_is_pinned() -> None:
-    face = movement = head = annotation = 0
+    face = face_move = head = head_move = annotation = 0
     for base_hex in _CATEGORY_4_BASES:
         symbol = symbol_from_fsw(_first_valid_key(base_hex))
         if isinstance(symbol, FaceMovementSymbol):
-            movement += 1
+            face_move += 1
         elif isinstance(symbol, FaceSymbol):
             face += 1
+        elif isinstance(symbol, HeadMovementSymbol):
+            head_move += 1
         elif isinstance(symbol, HeadSymbol):
             head += 1
         elif isinstance(symbol, AnnotationSymbol):
             annotation += 1
     assert face == EXPECTED_FACE_SYMBOL_COUNT
-    assert movement == len(FACE_MOVEMENT_BASES)  # 8 animated facial movements
+    assert face_move == len(FACE_MOVEMENT_BASES)  # 11 animated facial movements (incl. gaze paths)
     assert head == len(HEAD_ORIENTATION_BASES)  # 5 head-orientation bases
-    assert face + movement + head + annotation == 110  # every base decided
+    assert head_move == len(HEAD_MOVEMENT_BASES)  # 6 head movements
+    assert face + face_move + head + head_move + annotation == 110  # every base decided

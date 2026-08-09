@@ -18,6 +18,7 @@ matplotlib.use("Agg")
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.spatial.transform import Rotation
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.axes3d import Axes3D
@@ -40,8 +41,9 @@ def _sphere(n: int = 16) -> tuple[NDArray[np.float64], NDArray[np.float64], NDAr
     return x, y, z
 
 
-def _plot_on(ax: Axes3D, symbol: FSWHeadRenderable, title: str) -> None:
-    rot = symbol.get_head_orientation()
+def draw_head_orientation(ax: Axes3D, rot: Rotation, title: str) -> None:
+    """Draw the schematic 3D head at one orientation. Split out so an
+    animation can draw a frame per time step (see animate_head.py)."""
     sx, sy, sz = _sphere()
     # Light head sphere (display swap x, z, y).
     ax.plot_wireframe(sx, sz, sy, color="0.85", linewidth=0.5)
@@ -61,6 +63,10 @@ def _plot_on(ax: Axes3D, symbol: FSWHeadRenderable, title: str) -> None:
     ax.set_ylabel("z (depth)")
     ax.set_zlabel("y (up)")
     ax.view_init(elev=12, azim=-70)
+
+
+def _plot_on(ax: Axes3D, symbol: FSWHeadRenderable, title: str) -> None:
+    draw_head_orientation(ax, symbol.get_head_orientation(), title)
 
 
 def render_head_to_file(symbol: FSWHeadRenderable, output_path: str, title: str | None = None) -> None:

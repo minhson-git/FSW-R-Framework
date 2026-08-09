@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import math
 
+from fsw_r.core.eyegaze import gaze_blendshapes_at_angle
 from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.core.renderable_symbol import FSWFaceRenderable
 from fsw_r.core.types import HandSide
@@ -27,6 +28,9 @@ _MOVEMENT_NAMES: dict[int, str] = {
     0x317: "Eye Blink Single",
     0x318: "Eye Blinks Multiple",
     0x31C: "Eyes Widening Movement",
+    0x327: "Eyegaze Curved Wall Plane",
+    0x328: "Eyegaze Curved Floor Plane",
+    0x329: "Eyegaze Circles Wall Plane",
     0x334: "Nose Wiggles",
     0x35A: "Tongue Licks Lips",
     0x35E: "Tongue Moves Against Cheek",
@@ -70,6 +74,10 @@ def movement_expression_at(base_hex: int, t: float) -> FaceExpressionPose:
     if base_hex == 0x369:  # Jaw Movement Floor Plane (side to side)
         s = math.sin(2 * math.pi * t)
         return FaceExpressionPose({"jawRight": round(0.5 * max(s, 0.0), 3), "jawLeft": round(0.5 * max(-s, 0.0), 3)})
+    if base_hex == 0x329:  # Eyegaze Circles: gaze sweeps a full circle
+        return FaceExpressionPose(gaze_blendshapes_at_angle(2 * math.pi * t))
+    if base_hex in (0x327, 0x328):  # Eyegaze Curved: gaze sweeps an arc through 'up'
+        return FaceExpressionPose(gaze_blendshapes_at_angle(math.radians(-70.0 + 140.0 * t)))
     raise ValueError(f"0x{base_hex:03x} is not a modelled facial movement")
 
 

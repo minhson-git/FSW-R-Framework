@@ -37,6 +37,7 @@ from fsw_r.core.face_pose_table import FACE_POSE_TABLE
 from fsw_r.core.face_symbol import FaceSymbol
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol, parse_fsw_symbol_key
 from fsw_r.core.hand_symbol import HandSymbol
+from fsw_r.core.head_movement import HEAD_MOVEMENT_BASES, HeadMovementSymbol
 from fsw_r.core.head_symbol import HEAD_ORIENTATION_BASES, HeadSymbol
 from fsw_r.core.movement_symbol import MovementSymbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
@@ -61,6 +62,8 @@ def _make_category4_symbol(base_hex: int, fill: int, rotation: int) -> FSWRender
         return FaceMovementSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
     if base_hex in HEAD_ORIENTATION_BASES:
         return HeadSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
+    if base_hex in HEAD_MOVEMENT_BASES:
+        return HeadMovementSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
     return AnnotationSymbol(base_hex=base_hex, fill=fill, rotation=rotation)
 
 
