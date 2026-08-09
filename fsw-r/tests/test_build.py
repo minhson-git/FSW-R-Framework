@@ -41,6 +41,27 @@ def test_category_4_symbol_is_unsupported() -> None:
         build_timeline((hand, fake_head))
 
 
+def test_category_3_symbol_is_unsupported() -> None:
+    # C6 -- Category 3 (Dynamics) is now a real, registered core/ symbol
+    # (this project's Category 3/5 task), so this is a REAL FSW key, not a
+    # Mock stand-in like test_category_4_symbol_is_unsupported above --
+    # fsw_to_fswr() parses it successfully; build_timeline() must still
+    # reject it, confirming Category 3 was deliberately NOT wired into
+    # SignTimeline in that same task (see PROGRESS.md's Category 3/5 entry
+    # -- "làm tầng ký hiệu... không đụng animation").
+    positioned = fsw_to_fswr("M500x500S10010480x480S2f710500x500")  # Index + Fast (Dynamics)
+    with pytest.raises(UnsupportedSignError, match="category 3"):
+        build_timeline(positioned)
+
+
+def test_category_5_symbol_is_unsupported() -> None:
+    # C6 -- same reasoning as test_category_3_symbol_is_unsupported, for
+    # Category 5 (Trunk & Limb / Body).
+    positioned = fsw_to_fswr("M500x500S10010480x480S36d10500x500")  # Index + Shoulder Hip Spine (Body)
+    with pytest.raises(UnsupportedSignError, match="category 5"):
+        build_timeline(positioned)
+
+
 def test_zero_hand_symbols_is_unsupported() -> None:
     # E3 -- a movement symbol with no hand at all.
     positioned = fsw_to_fswr("M500x500S22a10500x500")

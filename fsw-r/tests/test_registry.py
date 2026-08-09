@@ -4,8 +4,14 @@ import pytest
 
 from fsw_r.core.fsw_symbol_key import ParsedFSWSymbol
 from fsw_r.core.hand_symbol import HandSymbol
-from fsw_r.core.registry import build_symbol, symbol_from_fsw
+from fsw_r.core.registry import _CATEGORY_SYMBOL, build_symbol, symbol_from_fsw
 from fsw_r.core.types import HandSide
+
+
+def test_category_symbol_has_all_five_implemented_categories() -> None:
+    # C1 -- Category 3/5's task brief requires exactly {1, 2, 3, 4, 5}
+    # dispatched (6 Location and 7 Punctuation remain unimplemented).
+    assert set(_CATEGORY_SYMBOL) == {1, 2, 3, 4, 5}
 
 
 def test_symbol_from_fsw_builds_index() -> None:
