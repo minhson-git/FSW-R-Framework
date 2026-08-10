@@ -16,6 +16,10 @@ supports, as a visual sanity-check:
    MVP-1 SignTimeline (one real Category 1 hand symbol + one real
    Category 2 movement symbol) at 25 fps -- the first visual evidence the
    framework produces MOTION, not just a static pose.
+6. ../demo/mvp1_sign.mp4 (or .gif, see render_pose_video.py's fallback) --
+   the same MVP-1 sign, this time through the real export layer
+   (fsw_r.export -> .pose -> PoseVisualizer), committed to the repo (not
+   gitignored like output/) as this project's first real video evidence.
 
 Run with: python -m fsw_r_viz.demo
 """
@@ -42,6 +46,7 @@ from fsw_r_viz.plot_hand import render_symbols_grid
 from fsw_r_viz.plot_head import render_heads_grid
 from fsw_r_viz.plot_mesh_head import render_mesh_head_to_file
 from fsw_r_viz.plot_movement import render_movements_grid
+from fsw_r_viz.render_pose_video import fsw_to_video
 from fsw_r_viz.render_timeline import render_timeline_to_pngs
 
 
@@ -225,9 +230,25 @@ def _render_timeline_demo(output_dir: Path) -> None:
     print(f"Saved {len(paths)} frames to {timeline_dir} (from FSW {fsw!r})")
 
 
+def _render_pose_video_demo(demo_dir: Path) -> None:
+    # First visual evidence of the export layer (fsw_r.export -> .pose ->
+    # real video/GIF), not just a numbered PNG sequence: a real MVP-1 sign
+    # (Index + Straight Wall Plane movement, same sign core/demo signs use
+    # elsewhere in this file) run all the way through
+    # SignTimeline -> pose_export.frames_to_pose -> PoseVisualizer. Written
+    # to demo/ (NOT output/, which is gitignored) so this artifact gets
+    # committed -- see this package's export-layer task brief, Part F.
+    fsw = "M508x515S10000493x485S22a04500x500"
+    video_path = demo_dir / "mvp1_sign.mp4"
+    written = fsw_to_video(fsw, video_path)
+    print(f"Saved: {written} (from FSW {fsw!r})")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
+    demo_dir = Path(__file__).resolve().parent.parent.parent / "demo"
+    demo_dir.mkdir(exist_ok=True)
     _render_rotation_sweep(output_dir)
     _render_fill_sweep(output_dir)
     _render_mouth_expressions(output_dir)
@@ -241,6 +262,7 @@ def main() -> None:
     _render_mesh_heads(output_dir)
     _render_annotation_glyphs(output_dir)
     _render_timeline_demo(output_dir)
+    _render_pose_video_demo(demo_dir)
 
 
 if __name__ == "__main__":
