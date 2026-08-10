@@ -23,16 +23,32 @@ from __future__ import annotations
 import os
 from typing import Sequence
 
-# signwriting.visualizer calls os.register_at_fork at import time, which only
-# exists on POSIX -- shim it so the reference renderer imports on Windows too.
-if not hasattr(os, "register_at_fork"):
-    setattr(os, "register_at_fork", lambda **kwargs: None)
-
 from PIL import Image, ImageDraw, ImageFont
 
-from signwriting.visualizer.visualize import visualize_sign
+# signwriting.visualizer calls os.register_at_fork at import time, which only
+# exists on POSIX -- shim it so the reference renderer imports on Windows too.
+# TEMPORARY, restored right after: the real CPython concurrent.futures.thread
+# (imported by pose_format/mediapipe elsewhere in this process, see
+# export/pose_export.py) relies on the REAL os.register_at_fork actually
+# registering fork-safety hooks on locks (a threading.Lock ends up missing
+# _at_fork_reinit otherwise) -- leaving a fake permanent no-op in place after
+# this import corrupts concurrent.futures for every later import in the same
+# process (concurrent.futures.thread's own import fails with AttributeError,
+# and whatever swallows that leaves ThreadPoolExecutor unbound in
+# sys.modules['concurrent.futures'] for the rest of the process -- found by
+# tests/test_render_pose_video.py failing only when run after this module).
+# Windows genuinely has no os.register_at_fork, so restoring "doesn't exist"
+# after this one import is the honest state, not a regression.
+_had_register_at_fork = hasattr(os, "register_at_fork")
+if not _had_register_at_fork:
+    setattr(os, "register_at_fork", lambda **kwargs: None)
 
-from fsw_r.core.fsw_base_symbol import FSWBaseSymbol
+from signwriting.visualizer.visualize import visualize_sign  # noqa: E402
+
+if not _had_register_at_fork:
+    delattr(os, "register_at_fork")
+
+from fsw_r.core.fsw_base_symbol import FSWBaseSymbol  # noqa: E402
 
 
 def _label_font(size: int = 18) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:

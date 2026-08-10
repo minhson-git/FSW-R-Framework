@@ -15,6 +15,11 @@ dependencies = [
     "matplotlib>=3.8",
     "signwriting>=0.1.12",  # reference ISWA glyph renderer (plot_glyph.py)
     "pyvista>=0.43",  # real offscreen 3D (VTK) for the head mesh renderer
+    # Pinned to match fsw-r's own exact pin (see that package's
+    # pyproject.toml comment) -- PoseVisualizer's drawing behavior is tied
+    # to the same version whose Pose/header shape fsw-r's export layer
+    # produces.
+    "pose-format==0.14.1",
 ]
 
 [project.optional-dependencies]
@@ -50,6 +55,10 @@ ignore_missing_imports = true
 module = "pyvista.*"
 ignore_missing_imports = true
 follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "pose_format.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
