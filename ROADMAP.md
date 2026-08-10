@@ -254,6 +254,37 @@ suy, không phải ở logic phân biệt còn chưa viết.
 - `SIGNBOX_TO_BODY_SCALE` và phép ánh xạ toạ độ signbox → không gian cơ thể
   hiện là tuyến tính đơn giản, chưa hiệu chỉnh theo dữ liệu thật.
 
+### Export sang `.pose` + video (bước 1-2) — ĐÃ XONG
+
+**Lưu ý đánh số:** giống "SignTimeline (MVP-1)" ở trên, đây không có số Pha
+riêng ở file này (không phải category-based) — trong `PROGRESS.md` việc này
+là "Pha 5" theo trục thời gian làm việc (Pha 4 = Category 3 & 5).
+
+**Việc đã làm:** gói mới `fsw_r/export/` + `fsw-r-viz/render_pose_video.py`
+(KHÔNG sửa `core/` hay `timeline/` — xác nhận bằng `git diff --stat`), biến
+`tuple[PoseFrame, ...]` thành video/GIF thật qua thư viện `pose-format`
+(`==0.14.1`, pin chính xác) thay vì tự viết renderer — 3 lý do (topology
+MediaPipe khớp sẵn với `hand_joint_poses.json`, không phải tự làm mesh/
+skinning/camera, `.pose` là định dạng chung để so sánh với pose trích từ
+video thật sau này) và độ dài đốt xương có trích nguồn thật (không phải số
+đoán) đều ghi ở `PROGRESS.md` mục "Pha 5 — Tầng export". `demo/mvp1_sign.gif`
+đã commit — video/GIF thật đầu tiên của dự án (trước đó chỉ có PNG sequence).
+
+**Việc còn lại (bước 3-4, cố ý ngoài phạm vi task này):**
+- Two-bone IK cánh tay (vai→khuỷu→cổ tay) + tư thế thân tĩnh — hiện
+  `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS` confidence 0 toàn bộ, chỉ 2 bàn
+  tay có dữ liệu thật.
+- Nối Category 3 (`DynamicsModifier.speed`) vào duration/frame count của
+  video xuất ra — hiện mọi video vẫn dùng `DEFAULT_SIGN_DURATION` cố định
+  (kế thừa từ MVP-1, chưa đổi).
+- `save_video()` (MP4 thật, cần gói `vidgear` + ffmpeg) chưa từng chạy
+  thành công trên máy hiện tại — mọi bằng chứng video hiện tại là GIF
+  fallback (`save_gif()`, chỉ cần Pillow).
+- Giải phẫu bàn tay bất thường (52,1%/119-261 tư thế Category 1 vượt giới
+  hạn khớp PIP, xem "SignTimeline (MVP-1)" ở trên) giờ sẽ THẤY ĐƯỢC trực
+  tiếp trên video, không chỉ đọc số — thêm lý do ưu tiên tầng validate giải
+  phẫu (mục 1 dưới đây).
+
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
 **Trạng thái:** xong ở tầng ký hiệu — `DynamicsSymbol` + `FSWModifierSymbol`
@@ -298,22 +329,32 @@ cấu trúc thật này. Chi tiết đầy đủ ở `PROGRESS.md` mục "Pha 4 
 signbox tuyến tính đơn giản, chưa dùng `BodyPose` làm khung tham chiếu) —
 cố ý ngoài phạm vi task làm tầng ký hiệu.
 
-**Thứ tự đề xuất tiếp theo** (cập nhật sau khi cả `SignTimeline` MVP-1 VÀ
-Category 3/5's tầng ký hiệu đã xong):
+**Thứ tự đề xuất tiếp theo** (cập nhật sau khi `SignTimeline` MVP-1, Category
+3/5's tầng ký hiệu, VÀ tầng export bước 1-2 đều đã xong — xem mục "Export
+sang `.pose` + video" ở trên):
 1. **Tầng validate giải phẫu** (giới hạn góc khớp thật, vd PIP flexion) —
-   làm trước vì rẻ (không cần category mới), và mọi pose đã sinh ra từ Pha
-   1-3 đều có thể sai theo hướng này mà chưa có cách tự phát hiện.
-2. **Nối Category 3/5 vào `SignTimeline`** — `DynamicsModifier.speed` thay
-   `DEFAULT_SIGN_DURATION`'s hằng số giữ chỗ; `BodyPose` làm khung tham
-   chiếu không gian thật cho `timeline/anchor.py` thay vì toạ độ signbox
-   tuyến tính đơn giản hiện tại. Làm ngay sau tầng validate giải phẫu để dữ
-   liệu thời gian/không gian mới cũng được validate cùng lúc.
+   làm trước vì rẻ (không cần category mới), và giờ SẼ THẤY ĐƯỢC trực tiếp
+   trên video xuất ra (52,1%/119-261 tư thế Category 1 vượt giới hạn PIP,
+   xem "SignTimeline (MVP-1)" ở trên), không chỉ đọc số như trước khi có
+   video.
+2. **Nối Category 3/5 vào `SignTimeline` VÀ export bước 3-4 cùng lúc** —
+   liên quan chặt: `DynamicsModifier.speed` thay `DEFAULT_SIGN_DURATION`'s
+   hằng số giữ chỗ (ảnh hưởng cả `SignTimeline` lẫn số frame video xuất
+   ra); `BodyPose` làm khung tham chiếu không gian thật cho
+   `timeline/anchor.py` VÀ là điểm neo cho two-bone IK cánh tay + tư thế
+   thân tĩnh (export bước 3, hiện `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS`
+   confidence 0 toàn bộ) — cùng 1 dữ liệu (`BodyPose`) phục vụ cả 2 việc,
+   nên làm chung 1 đợt hợp lý hơn tách riêng. Làm ngay sau tầng validate
+   giải phẫu để dữ liệu thời gian/không gian mới cũng được validate cùng lúc.
 3. **MVP-2** (nới phạm vi `SignTimeline` lên sign có nhiều symbol tay/
    chuyển động hơn, ~20,9% sign đo trên SignBank+) — cần logic phân biệt/
    gán track chưa viết ở MVP-1, nên làm sau khi nền tảng (giải phẫu +
-   Dynamics/Body) đã vững.
+   Dynamics/Body + IK) đã vững.
 4. **Category 6-7 (Location, Punctuation)** — xem Pha 6 dưới đây; category
    ISWA cuối cùng còn lại sau Pha 1-5.
+5. **`save_video()` MP4 thật** (cài `vidgear` + ffmpeg thật vào môi trường
+   chạy) — hiện mọi bằng chứng video là GIF fallback; việc phụ, không chặn
+   gì (đã có bằng chứng động, chỉ là định dạng file).
 
 ### Pha 6 — Location & Punctuation (Category 6-7)
 

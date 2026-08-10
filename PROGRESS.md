@@ -1059,6 +1059,146 @@ của việc thêm Category 3, đã ghi rõ ở đây thay vì lặng lẽ sửa
 - Renderer riêng cho Category 3/5 (`fsw-r-viz`) chưa làm — Category 3 không
   cần (không render gì), Category 5 cần nhưng ngoài phạm vi task này.
 
+## Pha 5 — Tầng export sang `.pose` + video (bước 1-2)
+
+Task riêng: biến `tuple[PoseFrame, ...]` (đã có từ Pha 3) thành **video
+thật**, thay vì dừng ở tư thế tĩnh hay PNG sequence. Phạm vi cố ý hẹp — chỉ
+bước 1 (forward kinematics: 15 góc khớp → 21 landmark) và bước 2 (nối
+`SignTimeline` → chuỗi frame → file `.pose` → video/GIF); two-bone IK cánh
+tay + thân tĩnh (bước 3) và nối Category 3 (time-warp) vào duration (bước 4)
+là pha sau. **Không sửa `core/` hay `timeline/`** — gói mới `fsw_r/export/`
+đặt trên, chỉ tiêu thụ đầu ra của `timeline/sample.py` (`git diff --stat`
+xác nhận rỗng ở mọi commit của task này).
+
+### Vì sao chọn `pose-format` thay vì tự viết renderer
+
+1. `data/hand_joint_poses.json` (Category 1) vốn tính từ MediaPipe
+   (`wrist → mcp → pip → dip → tip`, xem mục "Thay toàn bộ góc khớp đoán
+   bằng dữ liệu thật" phía trên). `pose-format` dùng đúng topology MediaPipe
+   Holistic (`pose_format.utils.holistic.HAND_POINTS`, 21 điểm/tay) — **không
+   phải retarget** sang một topology khác, không mất mát ở khâu ánh xạ.
+2. Không phải tự viết renderer (mesh, skinning, camera) — phần tốn công
+   nhất nếu tự làm; `PoseVisualizer` có sẵn.
+3. `.pose` là định dạng chung của cộng đồng sign language processing (chính
+   nhóm `sign-language-processing` làm cả `pose-format` lẫn
+   `3d-hands-benchmark`) → output **so sánh được** với pose trích từ video
+   sign thật — điều kiện cần cho evaluation sau này.
+
+### Kiến trúc tầng export
+
+```
+export/
+  bone_lengths.py        # tỉ lệ đốt xương -- có trích nguồn
+  forward_kinematics.py  # HandJointPose + wrist -> 21 landmark
+  pose_export.py         # PoseFrame tuple -> pose_format.Pose (.pose)
+```
+`fsw-r-viz/render_pose_video.py` (package `fsw-r-viz`, không phải `fsw-r`,
+vì `save_video()`/`save_gif()` cần OpenCV/PIL/ffmpeg-adjacent tooling — layer
+đúng như `.pose` là data, video là visualization).
+
+**B — Forward kinematics:** chuỗi động học tiến tích luỹ phép quay của khớp
+cha (không áp góc độc lập từng khớp vào hệ toàn cục), dùng
+`scipy.spatial.transform.Rotation` như phần còn lại của repo — tái hiện
+đúng pattern đã CHỨNG MINH ở `fsw-r-viz/hand_geometry.py`
+(`_finger_chain`/`_thumb_chain`), không import chéo (hướng dependency là
+`fsw-r-viz` → `fsw-r`, không ngược lại) mà viết lại, dùng hằng số **có
+nguồn** thay vì số ước lượng không trích dẫn của module cũ đó.
+
+Tên 21 landmark lấy **trực tiếp từ thư viện**
+(`pose_format.utils.holistic.HAND_POINTS`), và được parse theo TÊN (không
+theo vị trí cố định trong danh sách) khi dựng dict trả về — đây là chỗ rủi
+ro cao nhất brief nêu ("sai thứ tự một điểm là hỏng cả bàn tay"), xử lý sao
+cho một thay đổi thứ tự `HAND_POINTS` ở phiên bản khác vẫn ra dict đúng nhãn
+(chỉ việc pin phiên bản chính xác mới thật sự đổi ý nghĩa).
+
+**Độ dài đốt xương — giả định mới, có trích nguồn:** repo trước đây KHÔNG
+có dữ liệu này (`hand_joint_poses.json` chỉ có góc khớp, không có độ dài).
+Trích từ Wicaksono et al., *Radiological analysis of finger length ratio and
+dimensional profile of finger anatomy morphology* (Journal of Musculoskeletal
+Surgery and Research, đo trên dân số Indonesia trưởng thành qua X-quang) —
+độ dài đốt gần/giữa/xa của 4 ngón + đốt gần/xa của ngón cái, tính bằng mm.
+Những gì KHÔNG có trong nguồn này (độ dài xương bàn tay từng ngón, độ dài
+xương bàn tay ngón cái, khoảng cách ngang giữa các khớp đốt bàn ngón, góc
+gắn ngón cái, hệ số mm→đơn vị body-space) đều **ước lượng riêng, ghi rõ
+từng mục** trong `export/bone_lengths.py`'s docstring — không trộn lẫn số
+có nguồn với số tự đoán mà không phân biệt.
+
+**C — Xuất `.pose`:** header dùng `holistic_components()` đầy đủ 5 component
+chuẩn (không cắt bớt xuống còn 2 component tay — giữ topology chuẩn để file
+tương thích công cụ khác), các component chưa có dữ liệu (`POSE_LANDMARKS`,
+`FACE_LANDMARKS`, `POSE_WORLD_LANDMARKS`) để confidence 0 mọi frame. **Xác
+nhận, không chỉ giả định:** `NumPyPoseBody` tự MASK dữ liệu ở nơi
+confidence=0 (bọc trong `numpy.ma.MaskedArray`) — thư viện tự công nhận
+"confidence 0 = thiếu" ở tầng cấu trúc dữ liệu, không chỉ là quy ước.
+
+Chỗ rủi ro cao nhất của cả task (đúng như brief cảnh báo): `pose-format`
+dùng toạ độ ẢNH (x phải, **y xuống**), còn `timeline/anchor.py` đã đảo dấu y
+1 lần để dùng toạ độ TOÁN (y lên) — phải đảo dấu y **lần thứ hai** lúc xuất.
+Sai chỗ này thì video lộn ngược mà mọi test khác vẫn xanh (không có test nào
+khác chạm vào y-ảnh) — khoá bằng test E2 riêng.
+
+**D — Xuất video:** `render_pose_to_video()` thử `save_video()`
+(cần gói `vidgear` + ffmpeg thật), bắt lỗi rộng (`except Exception`, có chủ
+đích — nhiều kiểu lỗi khác nhau có thể xảy ra tuỳ môi trường thiếu gì), rồi
+fallback sang `save_gif()` (chỉ cần Pillow) kèm in cảnh báo rõ ràng — **đã
+thực thi thật** trên máy hiện tại (không có `vidgear`, không có ffmpeg thật),
+không phải nhánh code chưa từng chạy.
+
+### Kết quả
+
+`demo/mvp1_sign.gif` (`fsw-r-viz`, đã commit — không phải `output/`, thư mục
+đó bị gitignore) — sign MVP-1 thật (Index + Straight Wall Plane movement),
+20 frame @ 512×512, xác nhận bằng mắt: bàn tay nhận ra được (đúng
+handshape), dịch chuyển xuống dưới qua các frame (đúng hướng movement
+symbol), không lộn ngược (xác nhận trục y đúng).
+
+### Lỗi môi trường thật đã tìm ra và sửa (không phải lỗi của task này, nhưng bị lộ ra bởi nó)
+
+Thêm `mediapipe`/`pose-format` vào cùng process với `fsw-r-viz/plot_glyph.py`
+làm lộ 1 bug thật đã có từ trước: shim `os.register_at_fork` (viết để
+`signwriting.visualizer` import được trên Windows, vốn thiếu hàm POSIX-only
+này) để lại 1 no-op giả VĨNH VIỄN trên `os` sau khi dùng xong — khiến
+`concurrent.futures.thread` (mà `pose_format`/`mediapipe` cần) import lỗi ở
+BẤT KỲ lần import nào sau đó trong cùng process, dù bản thân
+`concurrent.futures` "import được" (đã cache lỗi dở dang trong
+`sys.modules`). Test nào import `fsw_r.export.pose_export` SAU khi
+`plot_glyph.py` đã chạy thì lỗi; chạy riêng thì qua — phải bisect thu hẹp
+xuống đúng 1 module mới tìm ra, không đoán. Sửa bằng cách giới hạn phạm vi
+shim đúng 1 lần import rồi `delattr` lại — Windows thật sự không có hàm này,
+trả về trạng thái đó mới là trung thực, không phải một tính năng mới.
+
+### Ranh giới đóng góp — cần cho báo cáo/paper
+
+> Phần của dự án: FK từ góc khớp ISWA sang 21 landmark, ánh xạ signbox 2D
+> sang không gian cơ thể 3D, tầng `SignTimeline`.
+> Phần dùng thư viện: định dạng `.pose` và `PoseVisualizer` của
+> `pose-format 0.14.1`.
+
+### Giả định CHƯA kiểm chứng (bổ sung ở pha này)
+
+- Độ dài xương bàn tay từng ngón, độ dài xương bàn tay ngón cái, khoảng
+  cách ngang giữa các khớp đốt bàn ngón, góc gắn ngón cái vào lòng bàn tay
+  — KHÔNG có trong nguồn trích dẫn (nguồn chỉ đo độ dài đốt ngón), ước lượng
+  riêng, ghi rõ trong `export/bone_lengths.py`.
+- `HAND_MM_TO_BODY_UNITS` (mm thật → đơn vị body-space của `timeline/`) —
+  chưa hiệu chỉnh theo tham chiếu thật nào, chọn sao cho 1 bàn tay thật cùng
+  bậc độ lớn với 1 dịch chuyển trajectory điển hình.
+- `BODY_UNITS_TO_PIXELS`/`FRAME_WIDTH`/`FRAME_HEIGHT` (hệ số chuẩn hoá
+  signbox → pixel khi xuất `.pose`) — hằng số có tên, nhưng chưa hiệu chỉnh
+  theo tham chiếu thật.
+- `SIGNBOX_TO_BODY_SCALE` (kế thừa từ Pha 3, `timeline/anchor.py`) — vẫn
+  chưa hiệu chỉnh, task này không đụng vào (không sửa `timeline/`).
+
+### Vấn đề đã biết, KHÔNG xử lý trong pha này
+
+52,1% (con số brief nêu; số tự kiểm chứng độc lập trước đó ở mục "Pha 3" là
+119/261 = 45,6% với đúng phân bố theo ngón/giá trị lớn nhất — xem ghi chú ở
+đó) tư thế Category 1 có ít nhất 1 góc khớp vượt giới hạn giải phẫu hợp lý
+(PIP tới 167°, người gập tối đa ~110°) — **hệ quả dự kiến**: video sẽ có vài
+handshape ngón cong bất thường. Đây là dự kiến, không phải lỗi tầng export —
+không clamp, không tinh chỉnh `hand_joint_poses.json` trong task này (task
+riêng, đã ghi ở mục "Vấn đề đã biết, CHƯA xử lý" của Pha 3).
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -1094,16 +1234,23 @@ của việc thêm Category 3, đã ghi rõ ở đây thay vì lặng lẽ sửa
   tra thật từ signbank.org). **0 file `timeline/` bị sửa** (`git diff
   --stat` xác nhận) — cố ý, việc nối 2 category này vào `SignTimeline` là
   pha sau. Chi tiết ở mục "Pha 4 — Category 3 & 5" phía trên.
-- `fsw-r`: `mypy --strict` sạch (37 file `src/`; `src/`+`tests/` còn 1 lỗi
-  cũ không liên quan ở `test_head_symbol.py`, xác nhận có từ trước task này
-  qua `git stash`), `pytest` **1.331/1.331 pass** (1.264 baseline + 67 test
-  mới của mục "Pha 4": `test_body_symbol.py`, `test_dynamics_symbol.py`,
-  cộng vài test mới trong `test_registry.py`/`test_build.py` — đúng 1 test
-  cũ, `test_build_symbol_raises_for_unsupported_category`, buộc phải đổi
-  target thay vì giữ nguyên, xem mục "Pha 4" để biết vì sao).
-- `fsw-r-viz`: `mypy --strict` sạch (7 file), `pytest` 5/5 pass
-  (`test_hand_geometry.py`, `test_plot_hand.py`) — cộng
-  `render_timeline.py` (không có test riêng, xác nhận bằng mắt qua ảnh demo).
+- **Tầng export `.pose` + video (Pha 5, bước 1-2) đã xong** — gói mới
+  `fsw_r/export/` (`fsw-r`) + `render_pose_video.py` (`fsw-r-viz`), **0
+  file `core/` hoặc `timeline/` bị sửa** (`git diff --stat` xác nhận).
+  `demo/mvp1_sign.gif` đã commit — bằng chứng video thật đầu tiên của dự
+  án. Chi tiết ở mục "Pha 5 — Tầng export" phía trên.
+- `fsw-r`: `mypy --strict` sạch (41 file `src/`; `src/`+`tests/` còn 1 lỗi
+  cũ không liên quan ở `test_head_symbol.py`, xác nhận có từ trước Pha 4
+  qua `git stash`), `pytest` **1.350/1.350 pass** (1.264
+  trước Pha 4 + 67 test Pha 4 + 19 test mới Pha 5: `test_forward_
+  kinematics.py`, `test_pose_export.py` — đúng 1 test cũ,
+  `test_build_symbol_raises_for_unsupported_category`, buộc phải đổi
+  target ở Pha 4 thay vì giữ nguyên, xem mục "Pha 4" để biết vì sao).
+- `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
+  `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
+  4/5 qua `git stash`), `pytest` **27/27 pass** (tăng từ 5/5 khi
+  `fsw-r-viz` còn chỉ có Category 1 — đã qua Pha 4 (Head&Face merge, nhóm
+  khác) + Pha 5 (`test_render_pose_video.py`) từ lúc đó).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
   fill: joint pose giống hệt nhau ở mọi rotation/fill/hand_side, chỉ hướng
   ngón (rotation) hoặc mặt bàn tay/mặt phẳng cánh tay (fill) thay đổi.
@@ -1125,6 +1272,23 @@ của việc thêm Category 3, đã ghi rõ ở đây thay vì lặng lẽ sửa
   và `ROADMAP.md`'s "Việc còn lại"). Cụ thể: `DEFAULT_SIGN_DURATION` vẫn là
   hằng số giữ chỗ (chưa dùng `DynamicsModifier.speed`), và toạ độ signbox
   vẫn ánh xạ tuyến tính đơn giản (chưa dùng `BodyPose` làm khung tham chiếu).
+- **Tầng export `.pose`/video (Pha 5) mới xong bước 1-2 — chưa có IK cánh
+  tay, chưa có thân tĩnh, chưa nối Category 3 vào duration** (bước 3-4, cố
+  ý ngoài phạm vi, xem mục "Pha 5 — Tầng export" phía trên và
+  `ROADMAP.md`). Cụ thể còn thiếu:
+  - Two-bone IK cho cánh tay (vai→khuỷu→cổ tay) + tư thế thân tĩnh — hiện
+    `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS` để confidence 0 toàn bộ, chỉ có
+    2 bàn tay là có dữ liệu thật.
+  - `DynamicsModifier.speed` chưa nối vào frame count/fps của video xuất ra
+    — mọi video vẫn dùng `DEFAULT_SIGN_DURATION` cố định.
+  - Độ dài xương (`export/bone_lengths.py`) chỉ có nguồn cho đốt ngón; độ
+    dài xương bàn tay, khoảng cách khớp đốt bàn ngón, góc gắn ngón cái đều
+    là ước lượng riêng — xem "giả định chưa kiểm chứng" ở mục "Pha 5".
+  - `save_video()` (MP4 thật) chưa từng chạy thành công trên máy hiện tại
+    (thiếu `vidgear` + ffmpeg thật) — mọi bằng chứng video hiện tại là GIF
+    fallback, không phải MP4.
+  - 52,1%/119-261 tư thế Category 1 vượt giới hạn giải phẫu (xem mục "Pha
+    3") vẫn CHƯA xử lý — sẽ lộ rõ hơn khi có video thật thay vì chỉ đọc số.
 - **Category 2's `hand_side` trả `None`** (chưa chốt được quy tắc thật —
   `rotation` của Cat 1 không áp dụng được, `fill` có tín hiệu nhưng còn
   nhiễu ~27%) — cần đối chiếu Lessons in SignWriting chương 6 trước khi
