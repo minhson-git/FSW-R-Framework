@@ -11,6 +11,25 @@ dependencies = [
     "scipy>=1.11",
     "signwriting>=0.1.12",
     "numpy>=1.24",
+    # Pinned to an EXACT version, not a floor like the deps above:
+    # export/pose_export.py depends on this library's internal topology
+    # (pose_format.utils.holistic.HAND_POINTS/holistic_components(), read
+    # at runtime rather than hardcoded -- see that module's docstring) and
+    # its Pose/PoseHeader/NumPyPoseBody constructor shapes. Both the point
+    # ordering and the constructor API could change between pose-format
+    # versions without a matching change here; pinning exactly makes that a
+    # loud install-time conflict instead of a silent landmark-order bug.
+    "pose-format==0.14.1",
+    # pose_format.utils.holistic (where HAND_POINTS/holistic_components()
+    # live -- see the comment above) imports mediapipe just to read its
+    # HandLandmark enum names; it raises its own ImportError with an
+    # install hint if mediapipe is missing, so pose-format doesn't declare
+    # this as a hard dependency itself. fsw_r never runs any actual
+    # mediapipe CV pipeline -- this is only here so the point-NAME lookup
+    # this task's brief requires ("đọc từ thư viện, đừng gõ tay danh sách")
+    # is importable at all. Upper-bounded to match pose-format 0.14.1's own
+    # documented requirement.
+    "mediapipe<0.10.30",
 ]
 
 [project.optional-dependencies]
@@ -49,6 +68,14 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "fontTools.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pose_format.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mediapipe.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
