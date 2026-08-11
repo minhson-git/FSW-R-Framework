@@ -1,0 +1,787 @@
+{
+  "_meta": {
+    "source": "data/hand_joint_poses.json (261 Category 1 symbols)",
+    "limits_source": "validation/anatomical_limits.py -- see its module docstring for citations per joint",
+    "estimated_limits": [
+      "finger_mcp.abduction",
+      "thumb_mcp.flexion"
+    ],
+    "generated_by": "scripts/eval_anatomical.py"
+  },
+  "flexion": {
+    "symbols_with_violation": 224,
+    "symbols_total": 261,
+    "angle_checks_with_violation": 400,
+    "angle_checks_total": 3915,
+    "by_finger": {
+      "thumb": 202,
+      "pinky": 73,
+      "ring": 63,
+      "middle": 42,
+      "index": 18
+    },
+    "by_joint": {
+      "pip": 187,
+      "cmc": 201,
+      "dip": 11,
+      "mcp": 1
+    },
+    "worst_overshoot": [
+      {
+        "base_hex": "0x12a",
+        "symbol_id": "01-03-013",
+        "name": "Index Middle Thumb Hook",
+        "worst_overshoot_degrees": 60.0,
+        "violations": [
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 90,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x16c",
+        "symbol_id": "01-05-033",
+        "name": "Open Cup",
+        "worst_overshoot_degrees": 60.0,
+        "violations": [
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 90,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x180",
+        "symbol_id": "01-05-053",
+        "name": "Hinge Thumb Side",
+        "worst_overshoot_degrees": 60.0,
+        "violations": [
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 90,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x128",
+        "symbol_id": "01-03-011",
+        "name": "Index Middle Thumb Cup",
+        "worst_overshoot_degrees": 58.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "dip",
+            "value": 95,
+            "limit": [
+              0.0,
+              90.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "dip",
+            "value": 114,
+            "limit": [
+              0.0,
+              90.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "dip",
+            "value": 99,
+            "limit": [
+              0.0,
+              90.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "mcp",
+            "value": 148,
+            "limit": [
+              0.0,
+              90.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x199",
+        "symbol_id": "01-06-020",
+        "name": "Baby Touches Thumb",
+        "worst_overshoot_degrees": 47.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 145,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 160,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 167,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 40,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1f5",
+        "symbol_id": "01-10-001",
+        "name": "Thumb",
+        "worst_overshoot_degrees": 47.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 122,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 129,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 147,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 167,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 31,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x202",
+        "symbol_id": "01-10-014",
+        "name": "Thumb Over Four Raised Knuckles",
+        "worst_overshoot_degrees": 47.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 132,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 150,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 167,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 158,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 36,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x197",
+        "symbol_id": "01-06-018",
+        "name": "Baby Raised Knuckle",
+        "worst_overshoot_degrees": 46.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 129,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 141,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 151,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 166,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 32,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1ae",
+        "symbol_id": "01-07-011",
+        "name": "Ring Up",
+        "worst_overshoot_degrees": 46.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 130,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 128,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 166,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 54,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1c9",
+        "symbol_id": "01-08-016",
+        "name": "Middle Up, Thumb Side",
+        "worst_overshoot_degrees": 44.0,
+        "violations": [
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 131,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 164,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 33,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x203",
+        "symbol_id": "01-10-015",
+        "name": "Fist",
+        "worst_overshoot_degrees": 44.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 125,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 140,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 148,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 164,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 34,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x14a",
+        "symbol_id": "01-04-007",
+        "name": "Four Fingers Unit Bent",
+        "worst_overshoot_degrees": 43.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 128,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 150,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 163,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 156,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 44,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1f9",
+        "symbol_id": "01-10-005",
+        "name": "Thumb Side Bent",
+        "worst_overshoot_degrees": 42.0,
+        "violations": [
+          {
+            "finger": "index",
+            "joint": "pip",
+            "value": 121,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 133,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 150,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 162,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1cc",
+        "symbol_id": "01-08-019",
+        "name": "Middle Baby",
+        "worst_overshoot_degrees": 40.0,
+        "violations": [
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 160,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 42,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1b5",
+        "symbol_id": "01-07-018",
+        "name": "Ring Middle Unit",
+        "worst_overshoot_degrees": 39.0,
+        "violations": [
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 159,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 50,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1b6",
+        "symbol_id": "01-07-019",
+        "name": "Ring Middle Raised Knuckles",
+        "worst_overshoot_degrees": 39.0,
+        "violations": [
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 138,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 156,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 159,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 38,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1b7",
+        "symbol_id": "01-07-020",
+        "name": "Ring Index",
+        "worst_overshoot_degrees": 39.0,
+        "violations": [
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 122,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 159,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 49,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1ca",
+        "symbol_id": "01-08-017",
+        "name": "Middle Thumb Hook",
+        "worst_overshoot_degrees": 39.0,
+        "violations": [
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 136,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 159,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 39,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1f7",
+        "symbol_id": "01-10-003",
+        "name": "Thumb Side Diagonal",
+        "worst_overshoot_degrees": 38.0,
+        "violations": [
+          {
+            "finger": "middle",
+            "joint": "pip",
+            "value": 126,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "ring",
+            "joint": "pip",
+            "value": 147,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          },
+          {
+            "finger": "pinky",
+            "joint": "pip",
+            "value": 158,
+            "limit": [
+              0.0,
+              120.0
+            ]
+          }
+        ]
+      },
+      {
+        "base_hex": "0x1be",
+        "symbol_id": "01-08-005",
+        "name": "Index Ring Baby on Hook In",
+        "worst_overshoot_degrees": 36.0,
+        "violations": [
+          {
+            "finger": "thumb",
+            "joint": "cmc",
+            "value": 66,
+            "limit": [
+              0.0,
+              30.0
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "abduction": {
+    "symbols_with_violation": 0,
+    "symbols_total": 261,
+    "note": "hand_joint_poses.json's own abduction values are already documented as un-measured estimates (see PROGRESS.md) -- these violation counts are a weaker signal than the flexion ones above, reported separately rather than merged into one number."
+  },
+  "correlation_with_fk_error": {
+    "pearson_r": 0.013796507973681921,
+    "n_symbols": 261,
+    "interpretation": "positive r: symbols with worse anatomical violations tend to also have worse FK reconstruction error (consistent with a shared root cause); near-zero or negative r: the two are not obviously related"
+  }
+}

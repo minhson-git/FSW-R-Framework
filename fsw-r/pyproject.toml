@@ -56,7 +56,15 @@ strict = true
 # scripts/export_joint_poses.py is excluded: it's a frozen historical
 # record of a one-time migration (see its own docstring) whose imports
 # (the since-deleted groups/ package) no longer resolve.
-files = ["src", "tests", "scripts/gen_valid_combinations.py", "scripts/gen_face_poses.py"]
+files = [
+    "src",
+    "tests",
+    "scripts/gen_valid_combinations.py",
+    "scripts/gen_face_poses.py",
+    "scripts/fetch_ground_truth.py",
+    "scripts/eval_fk_accuracy.py",
+    "scripts/eval_anatomical.py",
+]
 
 [[tool.mypy.overrides]]
 module = "scipy.*"
@@ -80,3 +88,9 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# So tests/test_eval_*.py can "import eval_fk_accuracy"/"import
+# eval_anatomical" directly -- scripts/ is not a package (no __init__.py,
+# deliberately: these are one-shot report generators, not library code),
+# so this is the standard pytest mechanism for that instead of sys.path
+# hacks inside the test files themselves.
+pythonpath = ["scripts"]
