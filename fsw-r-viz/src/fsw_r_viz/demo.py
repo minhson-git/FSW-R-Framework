@@ -20,6 +20,11 @@ supports, as a visual sanity-check:
    the same MVP-1 sign, this time through the real export layer
    (fsw_r.export -> .pose -> PoseVisualizer), committed to the repo (not
    gitignored like output/) as this project's first real video evidence.
+   As of the "scale + thân tĩnh + two-bone IK" task, this is a full
+   SIGNER figure (static torso/head + two-bone-IK arm around the hand),
+   not just a hand -- see mvp1_sign_1_before_scale.gif / _2_after_scale.gif
+   / _3_after_body.gif (same file path, kept as this task's own
+   before/after evidence) for the 3-stage progression.
 
 Run with: python -m fsw_r_viz.demo
 """
