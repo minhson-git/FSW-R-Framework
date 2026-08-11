@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import pytest
 from pose_format.utils.holistic import HAND_POINTS
 from scipy.spatial.transform import Rotation
 
@@ -11,6 +12,7 @@ from fsw_r.export.pose_export import (
     BODY_UNITS_TO_PIXELS,
     FRAME_HEIGHT,
     FRAME_WIDTH,
+    VERTICAL_CENTER_OFFSET,
     _component_offsets,
     frames_to_pose,
     save_pose,
@@ -49,15 +51,18 @@ def test_e2_higher_math_y_gives_smaller_image_y() -> None:
 
 
 def test_pixel_normalization_uses_named_constants() -> None:
-    frame = _right_hand_frame(y=0.0)
+    # A wrist at body-space y=VERTICAL_CENTER_OFFSET (not y=0 -- that
+    # constant exists precisely because the full figure's own vertical
+    # midpoint, not the shoulder line, is what's centered in frame; see
+    # pose_export.py's own comment) lands at frame center.
+    frame = _right_hand_frame(y=VERTICAL_CENTER_OFFSET)
     pose = frames_to_pose((frame,))
     offsets = _component_offsets(pose.header)
     start, _count = offsets["RIGHT_HAND_LANDMARKS"]
     wrist_index = start + HAND_POINTS.index("WRIST")
     wrist_pixel = pose.body.data[0, 0, wrist_index]
-    # Wrist at body (0, 0, 0) -> frame center.
     assert wrist_pixel[0] == FRAME_WIDTH / 2
-    assert wrist_pixel[1] == FRAME_HEIGHT / 2
+    assert wrist_pixel[1] == pytest.approx(FRAME_HEIGHT / 2, abs=1e-3)
     assert BODY_UNITS_TO_PIXELS > 0  # named constant exists and is sane
 
 

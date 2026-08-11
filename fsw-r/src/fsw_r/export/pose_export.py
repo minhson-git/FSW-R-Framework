@@ -77,24 +77,41 @@ FRAME_HEIGHT = 512
 
 # UNVERIFIED: how many pixels one fsw_r.timeline body-space unit occupies.
 #
-# CALIBRATED for a HAND-ONLY figure (Part A of this task): at the
-# pre-Part-A value (150.0), a real MVP-1 static sign's hand bounding box
-# measured 94x183 px in a 512x512 frame (~36% of frame height) -- too
-# small for PoseVisualizer's line thickness (which scales with FRAME size
-# only, not subject size -- round(sqrt(w*h)/150) -- see
-# pose_format.pose_visualizer.PoseVisualizer._draw_frame) to read as
-# anything but a toothpick-thin stick figure. 314.0 put that SAME hand's
-# bounding box at ~75% of frame height.
+# CALIBRATED TWICE, both times measured, not guessed:
 #
-# NOT recalibrated again for the full body added in Part B -- a full
-# standing figure (shoulders + arms + torso) is taller/wider than a lone
-# hand, so 314.0 no longer means "fills ~75% of frame" the same way. Kept
-# as-is rather than re-tuned a second time in this task: still produces a
-# complete, recognizable, correctly-proportioned figure (see
-# demo/mvp1_sign_3_after_body.gif), and re-tuning frame occupancy again is
-# a cosmetic follow-up, not a correctness issue -- noted in PROGRESS.md's
-# "giả định chưa kiểm chứng" list rather than iterated on here.
-BODY_UNITS_TO_PIXELS = 314.0
+# 1. Part A of this task, hand-only: at the pre-Part-A value (150.0), a
+#    real MVP-1 static sign's hand bounding box measured 94x183 px in a
+#    512x512 frame (~36% of frame height) -- too small for PoseVisualizer's
+#    line thickness (which scales with FRAME size only, not subject size --
+#    round(sqrt(w*h)/150) -- see
+#    pose_format.pose_visualizer.PoseVisualizer._draw_frame) to read as
+#    anything but a toothpick-thin stick figure. 314.0 put that SAME hand's
+#    bounding box at ~75% of frame height.
+#
+# 2. Part B of this task, full body: 314.0, unchanged, was FIRST assumed
+#    (wrongly) to still produce a recognizable figure once the torso/arms
+#    were added -- checking that assumption (this project's own standing
+#    rule: measure, don't assume) found it does not. A real MVP-1 sign's
+#    full body-space bounding box (head to hip, arms included) measures
+#    4.40 x 6.38 units -- at 314.0 px/unit that is 1382 x 2003 px, mostly
+#    off-canvas in a 512x512 frame (confirmed visually: the first render at
+#    314.0 showed a headless torso with the hand floating disconnected off
+#    the top edge). Recalibrated the same way as Part A: 68.0 puts that
+#    bounding box's height at ~85% of frame height (512x512).
+BODY_UNITS_TO_PIXELS = 68.0
+
+# MEASURED, not guessed, alongside BODY_UNITS_TO_PIXELS above: which
+# body-space y should land at the frame's OWN vertical center. Scaling
+# alone isn't enough once the figure isn't symmetric around body-space
+# y=0 -- the shoulder line sits at y=0 (see body_geometry.py's own
+# comment on why), but the hip sits far below it (TORSO_LENGTH) while the
+# head sits only a little above it, so the figure's real vertical
+# midpoint is well below y=0. Confirmed visually before fixing this: at
+# offset=0, the first full-body render's hips ran off the BOTTOM of the
+# frame while the top had unused empty space. Measured full-body bounding
+# box for a real MVP-1 sign: y in [-5.10, 1.28] body units, midpoint
+# -1.91 -- that midpoint is what now gets centered.
+VERTICAL_CENTER_OFFSET = -1.91
 
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",
@@ -144,11 +161,14 @@ _SIDE_PREFIX_BY_TRACK = {
 def _body_to_pixel(point: NDArray[np.float64]) -> NDArray[np.float64]:
     """Body-space (math convention, y up) -> pose-format pixel space (image
     convention, y down). The y flip is the one thing this function must
-    never get backwards -- see module docstring."""
+    never get backwards -- see module docstring. ``VERTICAL_CENTER_OFFSET``
+    is subtracted before scaling so the FIGURE's own vertical midpoint
+    lands at frame center, not body-space y=0 (see that constant's own
+    comment for why those two aren't the same point)."""
     return np.array(
         [
             FRAME_WIDTH / 2 + point[0] * BODY_UNITS_TO_PIXELS,
-            FRAME_HEIGHT / 2 - point[1] * BODY_UNITS_TO_PIXELS,  # the flip
+            FRAME_HEIGHT / 2 - (point[1] - VERTICAL_CENTER_OFFSET) * BODY_UNITS_TO_PIXELS,  # the flip
             point[2] * BODY_UNITS_TO_PIXELS,
         ]
     )
