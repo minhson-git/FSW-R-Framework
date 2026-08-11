@@ -92,10 +92,10 @@ def test_e7_missing_track_gets_zero_confidence_not_garbage_coordinates() -> None
     assert np.all(right_hand_confidence == 1.0)
 
 
-def test_non_hand_components_stay_present_at_zero_confidence() -> None:
-    # C1 -- header keeps the full holistic topology; POSE/FACE/WORLD
-    # components are present (not dropped) but always confidence 0 at this
-    # task's scope (arm IK + torso are step 3, out of scope here).
+def test_non_hand_components_are_present_in_the_header() -> None:
+    # C1 -- header keeps the full holistic topology; every standard
+    # component is present (not dropped), regardless of which ones this
+    # project actually has data for.
     pose = frames_to_pose((_right_hand_frame(y=0.0),))
     component_names = {c.name for c in pose.header.components}
     assert component_names == {
@@ -105,8 +105,16 @@ def test_non_hand_components_stay_present_at_zero_confidence() -> None:
         "RIGHT_HAND_LANDMARKS",
         "POSE_WORLD_LANDMARKS",
     }
+
+
+def test_face_and_world_landmarks_stay_zero_confidence() -> None:
+    # Still out of this project's scope (no face model, no separate
+    # MediaPipe "world" coordinate space) -- unlike POSE_LANDMARKS, which
+    # this task's body/arm work now partially fills, see
+    # test_body_and_arm.py.
+    pose = frames_to_pose((_right_hand_frame(y=0.0),))
     offsets = _component_offsets(pose.header)
-    for name in ("POSE_LANDMARKS", "FACE_LANDMARKS", "POSE_WORLD_LANDMARKS"):
+    for name in ("FACE_LANDMARKS", "POSE_WORLD_LANDMARKS"):
         start, count = offsets[name]
         assert np.all(pose.body.confidence[:, 0, start : start + count] == 0.0)
 
