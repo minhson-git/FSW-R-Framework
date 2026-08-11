@@ -1414,6 +1414,128 @@ SỬA") — mọi mục trên là khuyến nghị, đã đưa vào `ROADMAP.md`.
   nêu nghi vấn có căn cứ số liệu (phân bố tập trung ngay trên ngưỡng, không
   vượt xa như PIP).
 
+## Pha 7 — Video ra hình người ký hiệu (scale + thân tĩnh + two-bone IK)
+
+Task riêng: video trước pha này chỉ là 1 bàn tay trôi lơ lửng, nét mảnh —
+chẩn đoán đo được: **21/576 điểm có confidence > 0** (chỉ bàn tay), bàn tay
+chiếm **94×183px** trong khung 512px (~36% chiều cao). Mục tiêu: ra được
+**hình người ký hiệu** — có thân, vai, cánh tay nối vào bàn tay. Không sửa
+`core/`, `timeline/`, `validation/`; không hiệu chỉnh hằng số hình học bàn
+tay (`bone_lengths.py`, `_THUMB_BASE_ROTATION`) — việc đó dành cho task
+riêng (dùng MPJPE 48,72 đã đo ở Pha 6 làm cơ sở).
+
+### Phần A — Sửa scale (làm trước, có commit riêng)
+
+`PoseVisualizer`'s độ dày nét chỉ phụ thuộc kích thước KHUNG HÌNH
+(`round(sqrt(w*h)/150)`), không phụ thuộc kích thước chủ thể — bàn tay nhỏ
++ nét dày cố định → nhìn như que tăm. Đo trực tiếp (không đoán):
+`BODY_UNITS_TO_PIXELS` cũ (150.0) cho bàn tay 94×183px; tính lại theo công
+thức `150 × (0.75×512) / 183.22 ≈ 314.4`, chọn **314.0** — đo lại sau khi
+sửa ra đúng **74,9%** chiều cao khung. Commit riêng, xuất 2 ảnh so sánh
+(`demo/mvp1_sign_1_before_scale.gif`/`_2_after_scale.gif`) trước khi sang
+Phần B, đúng yêu cầu brief.
+
+### Phần B — Thân tĩnh + two-bone IK
+
+**B1 — 33 điểm `POSE_LANDMARKS`**: đọc thứ tự thật từ
+`pose_format.utils.holistic.holistic_components()` (không gõ tay) —
+xác nhận đúng bảng chỉ số brief nêu (vai=11,12; khuỷu=13,14; cổ tay=15,16;
+mặt=0,7-10; hông=23,24; pinky/index/thumb=17-22; chân=25-32). Xác nhận
+`BODY_LIMBS` thật (`(15,21),(16,20),(18,20),(15,19),(16,18),(15,17),(16,22),
+(13,15),(14,16),(11,13),(12,14),(11,12),(11,23),(12,24),(23,24)`) — đúng
+brief cảnh báo: bỏ trống 17-22 sẽ làm đứt hình vẽ giữa cổ tay và bàn tay.
+
+**B2 — `export/body_geometry.py`** (tư thế thân tĩnh): 4 tỉ lệ có trích
+nguồn thật — Drillis & Contini (1966) "Body Segment Parameters", lấy trực
+tiếp từ bản tái hiện trong Winter, D.A., *Biomechanics and Motor Control of
+Human Movement*, Hình 4.1 (tải được trang thật, không suy đoán số):
+shoulder width = 0,259H, hip width = 0,191H, upper arm = 0,186H, forearm =
+0,146H (H = chiều cao giả định 1700mm, một số tròn phổ biến, ĐÁNH DẤU giả
+định). Chiều dài thân (vai→hông) và vị trí các điểm đầu (mũi/tai/miệng)
+KHÔNG lấy được từ chính nguồn này (nhãn trục dọc trong hình gốc không đọc
+rõ được qua bản fetch) — tách riêng, đánh dấu ƯỚC LƯỢNG minh bạch, không
+gán nhầm cho nguồn trích dẫn. **Không dùng `Category 5 BodyPose`** (đúng
+ràng buộc — `body_poses.json` vẫn là placeholder rỗng, xem `_meta` của
+chính file đó).
+
+**B3 — `export/arm_ik.py`** (two-bone IK): **nghiệm đóng bằng lượng giác**
+(định lý cosin + đúng 1 lần gọi `Rotation.from_rotvec()` áp góc đã biết
+quanh trục đã biết) — **không** dùng `scipy.optimize` hay solver lặp, có
+test riêng parse AST của module để xác nhận không import `scipy.optimize`
+(không chỉ dựa vào `grep` thủ công). Pole vector (hướng khuỷu bẻ về) là
+hằng số ƯỚC LƯỢNG có tên (`POLE_DIRECTION_RIGHT`/`_LEFT`, đối xứng qua trục
+x) — "khuỷu hướng ra sau và xuống dưới" theo đúng brief, không có nguồn đo.
+3 trường hợp biên (ngoài tầm với, quá gần, trùng vị trí) đều xử lý không
+raise/NaN, có test riêng cho từng trường hợp.
+
+**B4 — nối vào `frames_to_pose`**: landmark bàn tay tính **1 lần/track/
+frame**, dùng lại cho cả component tay THẬT lẫn 6 điểm trùng lặp trong
+`POSE_LANDMARKS` — đây là điều **đảm bảo** (không chỉ test) cổ tay khớp
+nhau tuyệt đối giữa 2 nơi (C6), vì cùng 1 giá trị được ghi vào cả 2 chỗ.
+Vai/hông tĩnh luôn được điền bất kể track nào đang hoạt động (đúng "tư thế
+tĩnh"); khuỷu/cổ tay/3 điểm trùng lặp của 1 bên chỉ điền khi track bên đó
+đang hoạt động.
+
+### Phát hiện thật khi kiểm chứng bằng video thực tế (không chỉ đoán)
+
+Sau khi lắp xong Phần B, **render thử và xem** (đúng kỷ luật "đo, không
+đoán" của cả dự án) lộ ra: `BODY_UNITS_TO_PIXELS=314.0` (hiệu chỉnh riêng
+cho BÀN TAY ở Phần A) làm cả người **tràn ra ngoài khung** — bounding box
+thân+tay đo được `4,40 × 6,38` đơn vị body-space, ở tỉ lệ 314 thành
+`1382×2003px`, phần lớn ngoài khung 512×512 (thấy rõ: hông tràn khỏi đáy
+khung, bàn tay như trôi lơ lửng tách rời thân). Ban đầu (sai) giả định "vẫn
+ra hình đầy đủ, hợp lý" mà KHÔNG kiểm chứng — bị chính việc render lộ ra
+ngay. Sửa bằng đo lại đúng phương pháp Phần A: **68.0** đưa bounding box về
+~85% chiều cao khung.
+
+Riêng việc đổi tỉ lệ chưa đủ — vai nằm ở body-space y=0 (theo đúng hiệu
+chỉnh `timeline/anchor.py`), nhưng hông cách vai xa hơn nhiều so với đầu
+cách vai gần — trung điểm thật của cả hình (`-1,91`, đo trực tiếp) không
+phải y=0. Thêm hằng số mới `VERTICAL_CENTER_OFFSET = -1.91` (đo được, không
+đoán), trừ vào toạ độ y TRƯỚC khi nhân tỉ lệ trong `_body_to_pixel`. Sau
+sửa: xác nhận bằng mắt — hình thân đầy đủ, cánh tay nối rõ vào bàn tay, dấu
+"gập khuỷu xuống dưới rồi vòng lên cổ tay" khớp đúng pole vector đã đặt
+(kiểm tra bằng số pixel thật, không chỉ nhìn hình), không còn phần nào bị
+cắt khỏi khung.
+
+### Kết quả
+
+Số điểm confidence > 0: **21 → 35** cho 1 sign MVP-1 thật (1 tay — đúng
+phạm vi MVP-1). Brief ước lượng "khoảng 60+" — kiểm tra bổ sung với 1
+frame giả lập **2 tay** cho ra đúng **61** điểm, xác nhận số "60+" của
+brief giả định 2 tay, còn MVP-1 (chỉ 1 tay theo thiết kế `timeline/
+build.py`) tự nhiên thấp hơn — không phải thiếu sót, ghi rõ khác biệt thay
+vì ép số cho khớp. `reports/fk_accuracy.md` xác nhận **không đổi** sau
+toàn bộ pha này (chạy lại `eval_fk_accuracy.py`, diff rỗng) — đúng yêu cầu
+C7, vì pha này không chạm vào FK bàn tay/dữ liệu góc khớp.
+
+`demo/mvp1_sign_1_before_scale.gif` → `_2_after_scale.gif` → `_3_after_body.gif`
+(= `mvp1_sign.gif` hiện tại): 3 file so sánh trực quan đã commit.
+
+### Giả định CHƯA kiểm chứng (bổ sung ở pha này)
+
+- Tỉ lệ nhân trắc học thân người: 4 tỉ lệ CÓ nguồn (Drillis & Contini
+  1966, qua Winter Hình 4.1); `ASSUMED_STATURE_MM=1700` (chiều cao giả
+  định) và mọi thứ tính từ đó KHÔNG có nguồn dân số cụ thể — ước lượng.
+- Chiều dài thân (vai→hông), vị trí điểm đầu (mũi/tai/miệng) — ƯỚC LƯỢNG,
+  không lấy được từ Drillis-Contini (nhãn trục dọc không đọc rõ qua bản
+  fetch).
+- Hướng pole vector của khuỷu tay (`POLE_DIRECTION_RIGHT`/`_LEFT`) — ƯỚC
+  LƯỢNG, theo đúng mô tả định tính của brief ("ra sau, xuống dưới"), không
+  có số đo thật.
+- `BODY_UNITS_TO_PIXELS` (68.0) và `VERTICAL_CENTER_OFFSET` (-1.91) — hiệu
+  chỉnh MỚI (đo trực tiếp trên 1 sign cụ thể, không phải hằng số vật lý)
+  — có thể cần đo lại nếu hình dạng/tỉ lệ nhân vật thay đổi ở pha sau.
+- Tư thế thân là TĨNH — chưa dùng `Category 5 BodyPose` (đang là
+  placeholder rỗng, xem `_meta` của `body_poses.json`) — cố ý, ghi TODO
+  cho pha sau khi có dữ liệu thật.
+- Cross-check chưa đối chiếu: 0,108H (Drillis-Contini, độ dài bàn tay) =
+  183,6mm ở H=1700mm, so với chuỗi ngón giữa tự tính của FK
+  (`bone_lengths.py`) = 151,1mm — lệch ~18%, nhiều khả năng do
+  `FINGER_METACARPAL_LENGTH_MM`'s công thức ước lượng ("1,5×PP", đã tự
+  đánh dấu "WEAKER") chứ không phải tỉ lệ Drillis-Contini sai — không sửa
+  trong task này (ngoài phạm vi, brief cấm hiệu chỉnh hằng số bàn tay).
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -1463,14 +1585,27 @@ SỬA") — mọi mục trên là khuyến nghị, đã đưa vào `ROADMAP.md`.
   thuyết che khuất (C4) và tương quan giải phẫu-FK (C3) **đều không được số
   liệu xác nhận** — ghi nhận trung thực, không ép khớp kỳ vọng. Khuyến nghị:
   giữ kiến trúc góc khớp, ưu tiên điều tra ngón cái trước khi làm IK.
-- `fsw-r`: `mypy --strict` sạch (44 file `src/`; `src/`+`tests/` còn 1 lỗi
+- **Video ra hình người ký hiệu (Pha 7) đã xong** — bàn tay trôi lơ lửng
+  trước đây giờ có thân + cánh tay two-bone IK, **0 file `core/`,
+  `timeline/`, `validation/` bị sửa** (`git diff --stat` xác nhận),
+  `reports/fk_accuracy.md` không đổi (chạy lại xác nhận diff rỗng). Số
+  điểm confidence > 0: 21 → 35 (1 tay, đúng phạm vi MVP-1). 3 file demo so
+  sánh trực quan đã commit (`mvp1_sign_1/2/3_*.gif`). Chi tiết ở mục "Pha 7"
+  phía trên, gồm 1 phát hiện thật lúc kiểm chứng bằng video (không phải
+  đoán): hiệu chỉnh Phần A cho riêng bàn tay không đủ cho cả người, phải đo
+  và sửa lại (`BODY_UNITS_TO_PIXELS`, `VERTICAL_CENTER_OFFSET`) sau khi
+  render thử.
+- `fsw-r`: `mypy --strict` sạch (46 file `src/`; `src/`+`tests/` còn 1 lỗi
   cũ không liên quan ở `test_head_symbol.py`, xác nhận có từ trước Pha 4
-  qua `git stash`), `pytest` **1.381/1.381 pass** (1.264
-  trước Pha 4 + 67 test Pha 4 + 19 test Pha 5 + 31 test Pha 6:
-  `test_normalization.py`, `test_anatomical_limits.py`,
-  `test_eval_fk_accuracy.py`, `test_eval_anatomical.py` — đúng 1 test cũ,
-  `test_build_symbol_raises_for_unsupported_category`, buộc phải đổi
-  target ở Pha 4 thay vì giữ nguyên, xem mục "Pha 4" để biết vì sao).
+  qua `git stash`), `pytest` **1.402/1.402 pass** (1.264
+  trước Pha 4 + 67 test Pha 4 + 19 test Pha 5 + 31 test Pha 6 + 21 test
+  Pha 7: `test_arm_ik.py`, `test_body_geometry.py`, `test_body_and_arm.py`
+  — đúng 2 test cũ buộc phải đổi (1 ở Pha 4, xem mục đó; 1 ở Pha 7 —
+  `test_non_hand_components_stay_present_at_zero_confidence` khẳng định
+  `POSE_LANDMARKS` luôn confidence 0, đúng ngược lại mục tiêu chính của
+  Pha 7 — tách thành 2 test, giữ nguyên phần vẫn đúng (FACE/WORLD landmarks
+  vẫn rỗng) — và `test_pixel_normalization_uses_named_constants` đổi điểm
+  kiểm tra theo `VERTICAL_CENTER_OFFSET` mới).
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
   4/5 qua `git stash`), `pytest` **27/27 pass** (tăng từ 5/5 khi
@@ -1497,21 +1632,24 @@ SỬA") — mọi mục trên là khuyến nghị, đã đưa vào `ROADMAP.md`.
   và `ROADMAP.md`'s "Việc còn lại"). Cụ thể: `DEFAULT_SIGN_DURATION` vẫn là
   hằng số giữ chỗ (chưa dùng `DynamicsModifier.speed`), và toạ độ signbox
   vẫn ánh xạ tuyến tính đơn giản (chưa dùng `BodyPose` làm khung tham chiếu).
-- **Tầng export `.pose`/video (Pha 5) mới xong bước 1-2 — chưa có IK cánh
-  tay, chưa có thân tĩnh, chưa nối Category 3 vào duration** (bước 3-4, cố
-  ý ngoài phạm vi, xem mục "Pha 5 — Tầng export" phía trên và
-  `ROADMAP.md`). Cụ thể còn thiếu:
-  - Two-bone IK cho cánh tay (vai→khuỷu→cổ tay) + tư thế thân tĩnh — hiện
-    `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS` để confidence 0 toàn bộ, chỉ có
-    2 bàn tay là có dữ liệu thật.
+- **Tầng export `.pose`/video: bước 1-2 (Pha 5) VÀ scale+thân tĩnh+IK
+  (Pha 7) đã xong — chỉ còn bước 3-4 thật sự** (nối Category 3 vào duration,
+  xem mục "Pha 5 — Tầng export" và "Pha 7" phía trên và `ROADMAP.md`). Cụ
+  thể còn thiếu:
   - `DynamicsModifier.speed` chưa nối vào frame count/fps của video xuất ra
     — mọi video vẫn dùng `DEFAULT_SIGN_DURATION` cố định.
+  - `Category 5 BodyPose` chưa nối vào tư thế thân (đang TĨNH, dùng
+    `body_geometry.py`'s hằng số riêng) — cố ý, `body_poses.json` vẫn là
+    placeholder rỗng (xem `_meta` của chính file đó).
   - Độ dài xương (`export/bone_lengths.py`) chỉ có nguồn cho đốt ngón; độ
     dài xương bàn tay, khoảng cách khớp đốt bàn ngón, góc gắn ngón cái đều
     là ước lượng riêng — xem "giả định chưa kiểm chứng" ở mục "Pha 5".
   - `save_video()` (MP4 thật) chưa từng chạy thành công trên máy hiện tại
     (thiếu `vidgear` + ffmpeg thật) — mọi bằng chứng video hiện tại là GIF
     fallback, không phải MP4.
+  - `BODY_UNITS_TO_PIXELS`/`VERTICAL_CENTER_OFFSET` (Pha 7) hiệu chỉnh trên
+    ĐÚNG 1 sign cụ thể — có thể cần đo lại nếu hình dạng nhân vật (tỉ lệ
+    thân, tầm với cánh tay) thay đổi ở pha sau.
   - Vi phạm giới hạn giải phẫu vẫn CHƯA xử lý — số đo CHÍNH XÁC nhất hiện có
     là 224/261 (85,8%) từ Pha 6 (kiểm cả 8 khớp, không riêng PIP; xem lưu ý
     quan trọng về khả năng lệch định nghĩa CMC ngón cái ở mục "Pha 6"), thay

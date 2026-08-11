@@ -270,20 +270,15 @@ video thật sau này) và độ dài đốt xương có trích nguồn thật (
 đoán) đều ghi ở `PROGRESS.md` mục "Pha 5 — Tầng export". `demo/mvp1_sign.gif`
 đã commit — video/GIF thật đầu tiên của dự án (trước đó chỉ có PNG sequence).
 
-**Việc còn lại (bước 3-4, cố ý ngoài phạm vi task này):**
-- Two-bone IK cánh tay (vai→khuỷu→cổ tay) + tư thế thân tĩnh — hiện
-  `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS` confidence 0 toàn bộ, chỉ 2 bàn
-  tay có dữ liệu thật.
+**Việc còn lại lúc đó (bước 3-4)** -- bước 3 (two-bone IK + thân tĩnh) ĐÃ
+XONG, xem mục "Video ra hình người ký hiệu" ngay dưới "Tầng đánh giá". Bước
+4 (nối Category 3) vẫn còn:
 - Nối Category 3 (`DynamicsModifier.speed`) vào duration/frame count của
   video xuất ra — hiện mọi video vẫn dùng `DEFAULT_SIGN_DURATION` cố định
   (kế thừa từ MVP-1, chưa đổi).
 - `save_video()` (MP4 thật, cần gói `vidgear` + ffmpeg) chưa từng chạy
   thành công trên máy hiện tại — mọi bằng chứng video hiện tại là GIF
   fallback (`save_gif()`, chỉ cần Pillow).
-- Giải phẫu bàn tay bất thường (số đo chính xác nhất hiện có: 224/261 —
-  85,8% — từ mục "Tầng đánh giá" ngay dưới đây) giờ sẽ THẤY ĐƯỢC trực tiếp
-  trên video, không chỉ đọc số — thêm lý do ưu tiên tầng validate giải phẫu
-  (mục 1 dưới đây).
 
 ### Tầng đánh giá (FK accuracy + ràng buộc giải phẫu) — ĐÃ XONG
 
@@ -317,7 +312,44 @@ không sửa `core/`/`timeline/`/`export/`.
 **Khuyến nghị (không tự đổi kiến trúc trong task này):** giữ kiến trúc góc
 khớp; ưu tiên điều tra riêng ngón cái (định nghĩa `thumb.cmc` +
 `export/bone_lengths.py`'s giả định hình học ngón cái) trước khi đầu tư IK
-cánh tay — tránh khuếch đại lỗi có sẵn.
+cánh tay — tránh khuếch đại lỗi có sẵn. **Cập nhật:** phần "làm IK cánh
+tay" đã LÀM RỒI ngay sau task đo này (xem mục dưới đây) — việc điều tra
+ngón cái vẫn CHƯA làm, vẫn là ưu tiên hàng đầu còn lại.
+
+### Video ra hình người ký hiệu (scale + thân tĩnh + two-bone IK) — ĐÃ XONG
+
+**Lưu ý đánh số:** cùng kiểu với các mục "ĐÃ XONG" không đánh category ở
+trên — trong `PROGRESS.md` việc này là "Pha 7".
+
+**Việc đã làm:** video trước đây chỉ có bàn tay (21/576 điểm, bàn tay
+chiếm ~36% khung) — giờ có **thân + cánh tay two-bone IK nối vào bàn tay**
+(21→35 điểm cho 1 sign MVP-1 thật). 2 phần, mỗi phần 1 commit riêng đúng
+brief yêu cầu:
+- **Phần A** (làm trước, rẻ nhất): hiệu chỉnh `BODY_UNITS_TO_PIXELS` (đo
+  trực tiếp, không đoán) để bàn tay chiếm ~75% khung thay vì ~36%.
+- **Phần B**: `export/body_geometry.py` (thân tĩnh, 4 tỉ lệ có trích nguồn
+  thật — Drillis & Contini 1966 qua Winter's textbook Hình 4.1) +
+  `export/arm_ik.py` (two-bone IK **nghiệm đóng lượng giác**, không dùng
+  solver lặp/`scipy.optimize` — có test parse AST xác nhận).
+
+**Phát hiện thật đáng chú ý (kiểm chứng bằng cách render+xem, không phải
+đoán):** hiệu chỉnh `BODY_UNITS_TO_PIXELS` của Phần A (riêng cho bàn tay)
+KHÔNG đủ cho cả người — bounding box thân+tay tràn khỏi khung 512px hơn 3
+lần. Phải đo lại và thêm hằng số mới (`VERTICAL_CENTER_OFFSET`) để căn
+giữa cả hình, không chỉ scale. Xem `PROGRESS.md` mục "Pha 7" để biết chi
+tiết đầy đủ.
+
+**Việc còn lại:**
+- **Điều tra ngón cái** (đã nêu ở mục "Tầng đánh giá" phía trên) — vẫn
+  chưa làm, vẫn là ưu tiên số 1.
+- Nối `Category 5 BodyPose` vào tư thế thân (đang tĩnh, dùng hằng số riêng
+  của `body_geometry.py`) — chờ `body_poses.json` có dữ liệu thật (hiện là
+  placeholder).
+- Nối Category 3 vào duration (bước 4 của "Export sang .pose + video", vẫn
+  chưa làm — xem mục đó ở trên).
+- `BODY_UNITS_TO_PIXELS`/`VERTICAL_CENTER_OFFSET` hiệu chỉnh trên đúng 1
+  sign cụ thể — có thể cần đo lại nếu tỉ lệ nhân vật thay đổi (vd sau khi
+  điều tra ngón cái, hoặc khi nối `BodyPose` thật).
 
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
@@ -364,8 +396,13 @@ signbox tuyến tính đơn giản, chưa dùng `BodyPose` làm khung tham chi�
 cố ý ngoài phạm vi task làm tầng ký hiệu.
 
 **Thứ tự đề xuất tiếp theo** (cập nhật sau khi `SignTimeline` MVP-1, Category
-3/5's tầng ký hiệu, tầng export bước 1-2, VÀ tầng đánh giá đều đã xong — xem
-mục "Tầng đánh giá (FK accuracy + ràng buộc giải phẫu)" ở trên):
+3/5's tầng ký hiệu, tầng export bước 1-2, tầng đánh giá, VÀ video ra hình
+người (thân tĩnh + two-bone IK) đều đã xong — xem mục "Video ra hình người
+ký hiệu" ở trên). **Lưu ý:** thứ tự THỰC TẾ đã làm khác đề xuất trước đó — IK
+cánh tay (mục 2 cũ) đã làm TRƯỚC khi điều tra ngón cái (mục 1 cũ), dùng thân
+TĨNH (hằng số ước lượng riêng, không phải `BodyPose`) làm điểm neo tạm thời,
+không phải vì đề xuất cũ sai mà vì đó là task được giao tiếp theo — ghi nhận
+đúng thực tế, không sửa lại lịch sử:
 1. **Điều tra riêng ngón cái** (KHÔNG phải "tầng validate giải phẫu" nói
    chung nữa — việc đó đã có `validation/anatomical_limits.py` + số đo thật
    từ Pha đánh giá) — MPJPE ngón cái (80,29) cao hơn hẳn 4 ngón còn lại
@@ -373,22 +410,23 @@ mục "Tầng đánh giá (FK accuracy + ràng buộc giải phẫu)" ở trên)
    chưa xác minh). Đối chiếu định nghĩa `thumb.cmc` của 3d-hands-benchmark
    với định nghĩa lâm sàng đã trích trong `anatomical_limits.py`, VÀ soát
    lại `export/bone_lengths.py`'s giả định hình học ngón cái
-   (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) — làm trước IK vì rẻ
-   (không cần category/kiến trúc mới) và tránh khuếch đại lỗi có sẵn khi
-   thêm IK cánh tay.
-2. **Nối Category 3/5 vào `SignTimeline` VÀ export bước 3-4 cùng lúc** —
-   liên quan chặt: `DynamicsModifier.speed` thay `DEFAULT_SIGN_DURATION`'s
-   hằng số giữ chỗ (ảnh hưởng cả `SignTimeline` lẫn số frame video xuất
-   ra); `BodyPose` làm khung tham chiếu không gian thật cho
-   `timeline/anchor.py` VÀ là điểm neo cho two-bone IK cánh tay + tư thế
-   thân tĩnh (export bước 3, hiện `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS`
-   confidence 0 toàn bộ) — cùng 1 dữ liệu (`BodyPose`) phục vụ cả 2 việc,
-   nên làm chung 1 đợt hợp lý hơn tách riêng. Làm sau khi đã điều tra xong
-   ngón cái (mục 1) để không mang lỗi có sẵn vào IK.
+   (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) — vẫn CHƯA làm, vẫn là
+   ưu tiên hàng đầu (giờ còn thêm lý do: sai số ngón cái giờ sẽ khuếch đại
+   qua cả cánh tay IK, vì elbow đã neo vào cổ tay — sửa ngón cái sau khi có
+   IK vẫn tốt hơn không sửa, nhưng sửa CÀNG SỚM CÀNG RẺ vẫn đúng nguyên tắc
+   cũ).
+2. **Nối Category 3/5 vào `SignTimeline` VÀ export bước 4 (Category 3 vào
+   duration)** — `DynamicsModifier.speed` thay `DEFAULT_SIGN_DURATION`'s
+   hằng số giữ chỗ; `BodyPose` làm khung tham chiếu không gian thật cho
+   `timeline/anchor.py` VÀ thay thế tư thế thân TĨNH hiện tại của
+   `export/body_geometry.py` (hằng số ước lượng riêng, đo trên 1 sign cụ
+   thể) bằng dữ liệu thật theo từng symbol Category 5 — cùng 1 dữ liệu
+   (`BodyPose`) phục vụ cả 2 việc, nên làm chung 1 đợt hợp lý hơn tách
+   riêng.
 3. **MVP-2** (nới phạm vi `SignTimeline` lên sign có nhiều symbol tay/
    chuyển động hơn, ~20,9% sign đo trên SignBank+) — cần logic phân biệt/
    gán track chưa viết ở MVP-1, nên làm sau khi nền tảng (ngón cái +
-   Dynamics/Body + IK) đã vững.
+   Dynamics/Body) đã vững.
 4. **Category 6-7 (Location, Punctuation)** — xem Pha 6 dưới đây; category
    ISWA cuối cùng còn lại sau Pha 1-5.
 5. **`save_video()` MP4 thật** (cài `vidgear` + ffmpeg thật vào môi trường
