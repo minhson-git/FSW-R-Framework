@@ -53,12 +53,20 @@ FRAME_WIDTH = 512
 FRAME_HEIGHT = 512
 
 # UNVERIFIED: how many pixels one fsw_r.timeline body-space unit occupies.
-# Chosen so a moving sign's trajectory (~1 body unit, see
-# bone_lengths.py's HAND_MM_TO_BODY_UNITS docstring for the same reasoning)
-# stays comfortably inside FRAME_WIDTH/FRAME_HEIGHT alongside a full hand --
-# not calibrated against any real reference. See PROGRESS.md's "giả định
-# chưa kiểm chứng" list.
-BODY_UNITS_TO_PIXELS = 150.0
+#
+# CALIBRATED, not guessed: at the previous value (150.0), a real MVP-1
+# static sign's hand bounding box measured 94x183 px in a 512x512 frame
+# (~36% of frame height) -- too small for PoseVisualizer's line thickness
+# (which scales with FRAME size only, not subject size --
+# round(sqrt(w*h)/150) -- see pose_format.pose_visualizer.PoseVisualizer.
+# _draw_frame) to read as anything but a toothpick-thin stick figure. This
+# value is set so that SAME hand's bounding box height lands at ~75% of
+# FRAME_HEIGHT instead: 150 * (0.75 * 512) / 183.22 =~ 314.4, rounded.
+# Still just a hand-sized calibration, not a real body -- Part B (adding a
+# torso/arms around the hand) changes what "fills the frame" means and
+# will need this recalibrated again; see PROGRESS.md's export-layer
+# entry and "giả định chưa kiểm chứng" list for both calibrations.
+BODY_UNITS_TO_PIXELS = 314.0
 
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",
