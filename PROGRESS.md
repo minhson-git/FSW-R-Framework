@@ -875,7 +875,11 @@ ra brief. Dùng số đã tự kiểm chứng (119/261, 45,6%) trong tài liệu
 chênh lệch này thay vì lặng lẽ chọn 1 trong 2 số.
 
 **Không sửa trong pha này** — đây là việc riêng, đã ghi vào `ROADMAP.md`
-làm ưu tiên tiếp theo.
+làm ưu tiên tiếp theo. **Cập nhật:** Pha 6 ("Tầng đánh giá", phía dưới) đã
+đo lại chính xác hơn — kiểm cả 8 khớp (không riêng PIP) qua giới hạn AAOS có
+trích nguồn, ra **224/261 (85,8%)**, khác con số ước lượng 52,1%/119-261 ở
+đây (mục đích/phạm vi đo khác nhau, xem mục "Pha 6" để biết chi tiết và lưu
+ý về khả năng lệch định nghĩa CMC ngón cái).
 
 ## Pha 4 — Category 3 (Dynamics) & Category 5 (Trunk & Limb / Body): tầng ký hiệu
 
@@ -1199,6 +1203,217 @@ handshape ngón cong bất thường. Đây là dự kiến, không phải lỗi
 không clamp, không tinh chỉnh `hand_joint_poses.json` trong task này (task
 riêng, đã ghi ở mục "Vấn đề đã biết, CHƯA xử lý" của Pha 3).
 
+## Pha 6 — Tầng đánh giá (FK accuracy + ràng buộc giải phẫu)
+
+Task riêng, **task ĐO, không phải task SỬA**: framework chạy end-to-end từ
+Pha 5 nhưng chưa có con số đánh giá nào — mọi thứ trước đó là *verification*
+(hệ thống làm đúng thiết kế), chưa phải *evaluation* (kết quả đúng thực tế
+không). Trả lời 2 câu hỏi quyết định hướng đi tiếp theo, gói mới
+`fsw_r/validation/` + `scripts/fetch_ground_truth.py`/`eval_fk_accuracy.py`/
+`eval_anatomical.py` — không sửa `core/`, `timeline/`, `export/`.
+
+### Nguồn ground truth và giấy phép
+
+- `sign-language-processing/3d-hands-benchmark` v0.10.3 (MIT) — nguồn GỐC,
+  **cùng nguồn** `data/hand_joint_poses.json` đã dùng.
+- `sign-language-processing/synthetic-signwriting` (MIT) — chỉ đóng gói lại
+  thành `hands.npy` cho tiện, không phải dataset khác. Tải qua
+  `scripts/fetch_ground_truth.py` vào `data/external/` (gitignore, không
+  commit — file thật ~18MB, không phải 38MB như brief ước tính, đã xác nhận
+  bằng `Content-Length` thật khi tải).
+- `pose_format` (`sign-language-processing/pose`, MIT) — cho
+  `PoseNormalizer` (chuẩn hoá) và `holistic_hand_component`.
+
+### Phần B — Chuẩn hoá: 1 bug thật tìm ra và sửa
+
+Dùng đúng cấu hình `PoseNormalizer` mà
+`synthetic_signwriting/hands/hands.py` dùng (đọc trực tiếp source thật, không
+suy từ brief): `plane=(WRIST, PINKY_MCP, INDEX_FINGER_MCP)`,
+`line=(WRIST, MIDDLE_FINGER_MCP)`, `size=150`.
+
+**Phát hiện thật, kiểm chứng bằng thực nghiệm, không phải giả định**:
+`PoseNormalizer` của chính thư viện **KHÔNG idempotent** khi chuẩn hoá lại dữ
+liệu ĐÃ chuẩn hoá — pháp tuyến của mặt phẳng có 2 hướng hợp lệ (±N), và
+`get_normal()` chọn 1 hướng qua tích có hướng thô, không có quy ước dấu cố
+định. Khi 3 điểm mặt phẳng đã nằm phẳng đúng z=0 (kết quả tất yếu của lần
+chuẩn hoá trước), dấu tích có hướng trở thành ngẫu nhiên theo nhiễu số thực.
+Kiểm chứng trên CẢ dữ liệu ground truth thật (không chỉ FK): chuẩn hoá 2 lần
+lệch tới ~130 đơn vị (thang size=150) — không phải lỗi riêng của
+`forward_kinematics.py`.
+
+Hệ quả nghiêm trọng hơn cả test idempotence: **2 pose chuẩn hoá ĐỘC LẬP** (ground
+truth thật vs. FK output) có thể rơi vào 2 phía đối xứng gương của sự mơ hồ
+này một cách ngẫu nhiên — làm hỏng MỌI số MPJPE trước khi đo được gì. Đã sửa
+bằng cách canonical hoá dấu z sau khi gọi `PoseNormalizer` (không đổi
+plane/line/size — chỉ thêm bước cố định dấu, dùng z trung bình của 5 đầu
+ngón làm neo — điểm xa mặt phẳng mơ hồ nên tín hiệu mạnh, không gần 0 như
+chính 3 điểm mặt phẳng). Sau sửa: `normalize(normalize(x)) == normalize(x)`
+đúng tới sai số làm tròn (~3e-6).
+
+### Phần A3 — Kiểm chứng index → base_hex
+
+`base_hex = 0x100 + hand_index`, xác nhận qua `get_hand_signwriting_symbol()`
+thật trong `hands.py`. Kiểm chứng chéo với `iswa_valid_combinations.json`
+(783 cặp `(base, fill)` — 261 base × 3 fill Wall Plane):
+
+**Đính chính khung brief đưa ra**: brief nói "7/8 trùng khớp... bảng của repo
+bắt thêm `0x15b`" — kiểm tra trực tiếp cho ra **7/7 khớp chính xác tuyệt đối**
+với danh sách `[77, 79, 81, 92, 94, 246, 260]` hardcode trong `hands.py`
+(quy ra base: `0x14d, 0x14f, 0x151, 0x15c, 0x15e, 0x1f6, 0x204`), không phải
+7/8. `0x15b` THẬT SỰ có trong bảng "8 base có fill set khác chuẩn" của repo,
+nhưng là loại khác hẳn: `fills=[0,1,2,3]` (fill=0 hợp lệ, chỉ thiếu 2 fill
+Floor Plane 4-5) — không liên quan gì đến "fill=0 không hợp lệ" mà
+`hands.py`'s danh sách đang xử lý. 2 hiện tượng khác nhau, gộp chung nhầm.
+
+**Phát hiện thêm, `hands.py` không lọc**: ground truth của chính thư viện
+tham chiếu bao gồm CẢ 3 fill Wall Plane (0,1,2) cho MỌI base, không kiểm tra
+`iswa_valid_combinations.json` trước. Với 7 base ngoại lệ trên (chỉ hợp lệ ở
+fill=1), điều này nghĩa là **14/783 cặp (base,fill) dùng làm ground truth
+thực ra không hợp lệ theo ISWA thật**. Task này KHÔNG lọc lại (mục tiêu là so
+sánh công bằng với đúng phương pháp `hands.py`), chỉ ghi nhận — xem
+`reports/fk_accuracy.json`'s `index_to_base_hex_verification`.
+
+### Câu 1 — Sai số vòng khứ hồi góc khớp (C1/C2)
+
+Toàn bộ kết quả số trong `reports/fk_accuracy.json`/`.md` (từ chạy thật trên
+`hands.npy`, không phải số minh hoạ).
+
+| | mean | median | p75 | p95 | max |
+|---|---|---|---|---|---|
+| **fsw-r (261 pose/symbol)** | **48,72** | 46,49 | 50,99 | 66,19 | 193,37 |
+| Baseline: 1 pose trung bình (261→1) | 64,84 | 64,03 | 72,25 | 83,31 | 181,79 |
+| Baseline: 1 pose/group (261→10) | 60,44 | 59,87 | 68,10 | 81,15 | 197,18 |
+
+(Đơn vị: khoảng cách landmark sau chuẩn hoá, thang `size=150` — quãng
+wrist→middle_MCP dài đúng 150 đơn vị, dùng làm tham chiếu để đọc số.)
+
+**261 tham số THẮNG rõ cả 2 baseline** (48,72 so với 60,44/64,84 — giảm
+24-25%) — bằng chứng số cho thấy làm riêng góc khớp từng symbol có giá trị
+thật, không phải 261 tham số dư thừa. Nhưng **sai số tuyệt đối vẫn đáng kể**
+(~33% quãng tham chiếu 150) — không nhỏ.
+
+MPJPE theo ngón — **ngón cái tệ hẳn** so với 4 ngón còn lại:
+
+| Ngón | mean | median |
+|---|---|---|
+| **thumb** | **80,29** | 71,33 |
+| pinky | 47,76 | 41,62 |
+| ring | 45,58 | 39,99 |
+| index | 43,21 | 36,82 |
+| middle | 38,92 | 35,05 |
+
+MPJPE theo loại khớp — CMC/IP (chỉ ngón cái) cao nhất, xác nhận thêm ngón
+cái là nguồn lỗi chính, không chỉ hiệu ứng tích luỹ dọc chuỗi (TIP mới là
+"tích luỹ" thật cho 4 ngón còn lại, và nó cũng cao — 70,16 — nhưng thấp hơn
+IP=90,63 của ngón cái).
+
+### Câu 1b — Kiểm chứng giả thuyết che khuất (C4)
+
+Kỳ vọng: ring > pinky > middle > index (mức độ bị che khuất khi nắm tay).
+**Thực tế đo được: pinky > ring > index > middle — KHÔNG khớp giả thuyết.**
+Ghi nhận đúng như brief yêu cầu ("nếu khác, báo lại"), không ép số liệu.
+Occlusion vẫn có thể là 1 phần nguyên nhân (pinky/ring đều nằm trong top 2
+tệ nhất, khớp phần nào), nhưng thứ tự chính xác thì không đúng như dự đoán —
+kết luận "che khuất là NGUYÊN NHÂN DUY NHẤT" không có đủ bằng chứng.
+
+### Câu 2 — Vi phạm giới hạn giải phẫu (C3)
+
+`fsw_r/validation/anatomical_limits.py`: giới hạn theo AAOS (American
+Academy of Orthopaedic Surgeons, tài liệu goniometry lâm sàng chuẩn) cho
+MCP/PIP/DIP 4 ngón + CMC/MCP/IP ngón cái — dùng đầu khoảng trên của các
+nguồn khác nhau (100°/120°/90° cho MCP/PIP/DIP) làm NGƯỠNG (không phải giá
+trị "trung bình" AAOS hay dùng, vì câu hỏi ở đây là "có khả dĩ không", không
+phải "có phải tay trung bình không"). 2 giới hạn đánh dấu rõ là ƯỚC LƯỢNG
+(không tìm được trích dẫn chắc chắn): `finger_mcp.abduction`, `thumb_mcp`'s
+ngưỡng trên (biến thiên cá nhân theo 1 nghiên cứu lên tới 126°, không có số
+trần rõ ràng).
+
+Kết quả thật (`reports/anatomical.json`/`.md`):
+- **224/261 (85,8%) symbol có ≥1 vi phạm flexion** — **cao hơn hẳn** số đã
+  ước lượng trước đó (136/261=52,1% brief nêu; 119/261=45,6% tự kiểm chứng ở
+  Pha 3 — cả 2 chỉ tính riêng PIP). Lý do khác biệt: đánh giá này kiểm TẤT CẢ
+  8 khớp (không riêng PIP), và bị áp đảo bởi **CMC ngón cái (201/261 symbol
+  vi phạm)** — nhiều hơn cả PIP (187).
+- **⚠️ Lưu ý quan trọng về con số CMC**: giá trị `thumb.cmc.flexion` trong dữ
+  liệu trải 8°-90° (median 37°), phần lớn chỉ VƯỢT NHẸ ngưỡng 30° đã chọn
+  (trích từ 1 nghiên cứu: mean 22°, SD 6,8 → ~95% dữ liệu trong 8-36°) —
+  KHÁC hẳn kiểu vi phạm "167° so với trần 110°" của PIP (vượt xa, rõ ràng
+  bất khả). Nhiều khả năng đây là **lệch định nghĩa khớp** (góc "cmc.flexion"
+  trong dữ liệu benchmark có thể đo khác quy ước lâm sàng hẹp đã trích dẫn)
+  chứ không phải 77% bàn tay thật sự phi giải phẫu. Không tự sửa ngưỡng để
+  "đẹp số" — ghi rõ nghi vấn này, để task sau kiểm chứng kỹ hơn.
+- Riêng PIP (so sánh trực tiếp được với số liệu Pha 3): 187 lượt vi phạm góc
+  (không phải số symbol) — nhất quán về hướng với phát hiện Pha 3, dù ngưỡng
+  khác (120° ở đây, 110° ở Pha 3) nên không so trực tiếp 1-1 được.
+- Vi phạm abduction: **0/261** — nhất quán với việc `abduction` trong
+  `hand_joint_poses.json` đã biết là số CHƯA đo (ước lượng cũ, phần lớn gần
+  0), không mang tín hiệu để vi phạm giới hạn 20° đã đặt.
+
+**Tương quan vi phạm giải phẫu ↔ sai số FK (C3, yêu cầu cuối)**: Pearson
+r = **0,014** (gần như 0, n=261) — **KHÔNG có tương quan đáng kể**. Giả
+thuyết "2 vấn đề cùng 1 gốc (sai lệch hệ thống của MediaPipe ở ngón bị che)"
+**không được số liệu ủng hộ**. Ghi nhận đúng như đo được, không ép khớp.
+
+### Mục quyết định (E.2) — khuyến nghị dựa trên số liệu, KHÔNG tự đổi kiến trúc
+
+**Tóm tắt bằng chứng, có phần mâu thuẫn nhau, nêu đầy đủ chứ không chọn phần
+đẹp:**
+- 261 tham số góc khớp thắng rõ cả 2 baseline (giảm sai số 24-25%) → có giá
+  trị thật, không phải overfitting/dư thừa.
+- Nhưng sai số tuyệt đối không nhỏ (~33% thang tham chiếu) → không thể nói
+  "đủ tốt, không cần làm gì thêm".
+- Giả thuyết "che khuất là nguyên nhân" (C4) VÀ giả thuyết "vi phạm giải
+  phẫu cùng gốc với sai số FK" (C3) đều **không được số liệu xác nhận** —
+  câu chuyện "MediaPipe làm sai ngón bị che, dẫn tới cả góc khớp phi giải
+  phẫu lẫn FK sai" ĐẸP về mặt trực giác nhưng KHÔNG có bằng chứng thống kê
+  ủng hộ ở đây.
+- Ngón cái là nguồn lỗi lớn nhất, rõ rệt, nhất quán (MPJPE cao nhất theo
+  ngón VÀ theo loại khớp CMC/IP) — đây là tín hiệu THỰC SỰ mạnh, không mơ hồ
+  như 2 giả thuyết trên.
+
+**Khuyến nghị**: **giữ nguyên kiến trúc góc khớp** (không chuyển sang lưu
+landmark trực tiếp) — lý do:
+1. Bằng chứng baseline cho thấy góc khớp per-symbol có thông tin thật, có
+   giá trị đo được.
+2. Ưu điểm gốc của kiến trúc góc khớp (áp được lên rig 3D bất kỳ, không
+   khoá cứng vào 1 bộ landmark cụ thể) vẫn còn nguyên giá trị — vấn đề tìm
+   thấy không phải "góc khớp là ý tưởng sai", mà là "hình học tái dựng
+   (`export/`) và/hoặc góc ngón cái cụ thể cần soát lại".
+3. Chuyển sang landmark trực tiếp sẽ không tự động sửa vấn đề chính đã tìm
+   ra (ngón cái) — landmark ngón cái từ MediaPipe cũng chịu cùng độ tin cậy
+   thấp do bị che khuất khi chụp, chỉ là né được việc tự làm FK, không né
+   được nguồn nhiễu gốc.
+
+**Nhưng KHÔNG khuyến nghị "coi như xong"** — việc ưu tiên trước khi đầu tư
+IK cánh tay/thân người (tránh khuếch đại lỗi có sẵn, đúng lý do Phần 0 nêu
+để làm task đo này trước IK):
+1. Điều tra riêng ngón cái: đối chiếu định nghĩa `thumb.cmc` trong
+   3d-hands-benchmark's quy trình đo với định nghĩa lâm sàng CMC flexion đã
+   trích — khả năng cao đây là lệch định nghĩa, không phải lỗi đo.
+2. Soát lại `export/bone_lengths.py`'s giả định hình học ngón cái
+   (`_THUMB_BASE_OFFSET_MM`, `_THUMB_BASE_ROTATION` — đã tự nhận là "WEAKER"
+   trong chính docstring của nó) — đây rất có thể là nguồn lỗi tái dựng
+   (reconstruction), tách biệt với chất lượng dữ liệu góc khớp gốc.
+3. KHÔNG dựa vào giả thuyết che khuất (C4) hay tương quan giải phẫu-FK (C3)
+   để định hướng sửa lỗi — cả 2 không được số liệu xác nhận ở đây.
+
+Không tự sửa gì trong task này (đúng ràng buộc "task ĐO, không phải task
+SỬA") — mọi mục trên là khuyến nghị, đã đưa vào `ROADMAP.md`.
+
+### Giả định CHƯA kiểm chứng (bổ sung ở pha này)
+
+- Toàn bộ `JOINT_LIMITS` trong `anatomical_limits.py` trừ 2 mục đã đánh dấu
+  `ESTIMATED_LIMITS` — có trích nguồn AAOS, nhưng là "ngưỡng khả dĩ" tự chọn
+  (đầu khoảng trên các nguồn khác nhau), không phải 1 con số chuẩn hoá duy
+  nhất — flag rõ trong docstring của module.
+- Giới hạn hyperextension (góc âm) đặt bằng 0 cho mọi khớp — không tìm được
+  nguồn cho giới hạn duỗi quá mức cụ thể, có thể ĐẾM THIẾU vi phạm theo
+  hướng ngược lại.
+- Nghi vấn lệch định nghĩa `thumb.cmc.flexion` giữa dữ liệu benchmark và
+  ngưỡng lâm sàng đã trích (xem "Câu 2" ở trên) — chưa xác minh được, chỉ
+  nêu nghi vấn có căn cứ số liệu (phân bố tập trung ngay trên ngưỡng, không
+  vượt xa như PIP).
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -1239,11 +1454,21 @@ riêng, đã ghi ở mục "Vấn đề đã biết, CHƯA xử lý" của Pha 3
   file `core/` hoặc `timeline/` bị sửa** (`git diff --stat` xác nhận).
   `demo/mvp1_sign.gif` đã commit — bằng chứng video thật đầu tiên của dự
   án. Chi tiết ở mục "Pha 5 — Tầng export" phía trên.
-- `fsw-r`: `mypy --strict` sạch (41 file `src/`; `src/`+`tests/` còn 1 lỗi
+- **Tầng đánh giá (Pha 6) đã xong** — gói mới `fsw_r/validation/` +
+  `scripts/fetch_ground_truth.py`/`eval_fk_accuracy.py`/`eval_anatomical.py`,
+  **0 file `core/`, `timeline/`, `export/` bị sửa** (`git diff --stat` xác
+  nhận). Kết quả thật đã commit ở `reports/`: MPJPE=48,72 (thang 150,
+  thắng cả 2 baseline), 224/261 symbol vi phạm ≥1 giới hạn giải phẫu (đa số
+  do CMC ngón cái, nghi lệch định nghĩa — xem mục "Pha 6" phía trên), giả
+  thuyết che khuất (C4) và tương quan giải phẫu-FK (C3) **đều không được số
+  liệu xác nhận** — ghi nhận trung thực, không ép khớp kỳ vọng. Khuyến nghị:
+  giữ kiến trúc góc khớp, ưu tiên điều tra ngón cái trước khi làm IK.
+- `fsw-r`: `mypy --strict` sạch (44 file `src/`; `src/`+`tests/` còn 1 lỗi
   cũ không liên quan ở `test_head_symbol.py`, xác nhận có từ trước Pha 4
-  qua `git stash`), `pytest` **1.350/1.350 pass** (1.264
-  trước Pha 4 + 67 test Pha 4 + 19 test mới Pha 5: `test_forward_
-  kinematics.py`, `test_pose_export.py` — đúng 1 test cũ,
+  qua `git stash`), `pytest` **1.381/1.381 pass** (1.264
+  trước Pha 4 + 67 test Pha 4 + 19 test Pha 5 + 31 test Pha 6:
+  `test_normalization.py`, `test_anatomical_limits.py`,
+  `test_eval_fk_accuracy.py`, `test_eval_anatomical.py` — đúng 1 test cũ,
   `test_build_symbol_raises_for_unsupported_category`, buộc phải đổi
   target ở Pha 4 thay vì giữ nguyên, xem mục "Pha 4" để biết vì sao).
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
@@ -1287,8 +1512,25 @@ riêng, đã ghi ở mục "Vấn đề đã biết, CHƯA xử lý" của Pha 3
   - `save_video()` (MP4 thật) chưa từng chạy thành công trên máy hiện tại
     (thiếu `vidgear` + ffmpeg thật) — mọi bằng chứng video hiện tại là GIF
     fallback, không phải MP4.
-  - 52,1%/119-261 tư thế Category 1 vượt giới hạn giải phẫu (xem mục "Pha
-    3") vẫn CHƯA xử lý — sẽ lộ rõ hơn khi có video thật thay vì chỉ đọc số.
+  - Vi phạm giới hạn giải phẫu vẫn CHƯA xử lý — số đo CHÍNH XÁC nhất hiện có
+    là 224/261 (85,8%) từ Pha 6 (kiểm cả 8 khớp, không riêng PIP; xem lưu ý
+    quan trọng về khả năng lệch định nghĩa CMC ngón cái ở mục "Pha 6"), thay
+    cho số ước lượng cũ 52,1%/119-261 ở Pha 3 (chỉ riêng PIP).
+- **Tầng đánh giá (Pha 6) đã đo, CHƯA sửa gì** (đúng phạm vi "task ĐO" của
+  chính nó) — việc ưu tiên tiếp theo theo khuyến nghị của Pha 6 (xem mục
+  "Pha 6" phía trên và `ROADMAP.md`):
+  - Điều tra riêng ngón cái: đối chiếu định nghĩa `thumb.cmc` của
+    3d-hands-benchmark với định nghĩa lâm sàng CMC flexion đã trích trong
+    `anatomical_limits.py` — nghi vấn lệch định nghĩa, chưa xác minh.
+  - Soát lại `export/bone_lengths.py`'s giả định hình học ngón cái
+    (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) — MPJPE ngón cái
+    (80,29) cao hơn hẳn 4 ngón còn lại (38,92-47,76), khả năng cao là
+    nguồn lỗi tái dựng, tách biệt với chất lượng góc khớp gốc.
+  - Giả thuyết che khuất (C4) và tương quan giải phẫu-FK (C3) đều KHÔNG
+    được số liệu xác nhận ở Pha 6 — không dùng 2 giả thuyết này để định
+    hướng sửa lỗi tiếp theo.
+  - `hyperextension` (góc âm) chưa có giới hạn thật trong
+    `anatomical_limits.py` (đặt 0 cho mọi khớp) — có thể đếm thiếu vi phạm.
 - **Category 2's `hand_side` trả `None`** (chưa chốt được quy tắc thật —
   `rotation` của Cat 1 không áp dụng được, `fill` có tín hiệu nhưng còn
   nhiễu ~27%) — cần đối chiếu Lessons in SignWriting chương 6 trước khi

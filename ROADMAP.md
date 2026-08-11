@@ -280,10 +280,44 @@ video thật sau này) và độ dài đốt xương có trích nguồn thật (
 - `save_video()` (MP4 thật, cần gói `vidgear` + ffmpeg) chưa từng chạy
   thành công trên máy hiện tại — mọi bằng chứng video hiện tại là GIF
   fallback (`save_gif()`, chỉ cần Pillow).
-- Giải phẫu bàn tay bất thường (52,1%/119-261 tư thế Category 1 vượt giới
-  hạn khớp PIP, xem "SignTimeline (MVP-1)" ở trên) giờ sẽ THẤY ĐƯỢC trực
-  tiếp trên video, không chỉ đọc số — thêm lý do ưu tiên tầng validate giải
-  phẫu (mục 1 dưới đây).
+- Giải phẫu bàn tay bất thường (số đo chính xác nhất hiện có: 224/261 —
+  85,8% — từ mục "Tầng đánh giá" ngay dưới đây) giờ sẽ THẤY ĐƯỢC trực tiếp
+  trên video, không chỉ đọc số — thêm lý do ưu tiên tầng validate giải phẫu
+  (mục 1 dưới đây).
+
+### Tầng đánh giá (FK accuracy + ràng buộc giải phẫu) — ĐÃ XONG
+
+**Lưu ý đánh số:** cùng kiểu với "SignTimeline (MVP-1)"/"Export sang .pose"
+ở trên — trong `PROGRESS.md` việc này là "Pha 6" theo trục thời gian làm
+việc, không phải category-based.
+
+**Vì sao làm trước khi làm IK/thân người:** framework chạy end-to-end từ
+"Export .pose + video" nhưng chưa có con số đánh giá nào — task này đo
+2 câu hỏi quyết định hướng đi: (1) vòng khứ hồi góc-khớp→FK mất mát bao
+nhiêu, (2) vi phạm giới hạn giải phẫu ảnh hưởng thật đến đâu. Task ĐO,
+không sửa `core/`/`timeline/`/`export/`.
+
+**Kết quả (đầy đủ, kèm số liệu, xem `PROGRESS.md` mục "Pha 6"):**
+- **MPJPE = 48,72** (thang chuẩn hoá size=150) — 261 tham số góc khớp
+  thắng rõ 2 baseline bắt buộc (1 pose trung bình: 64,84; 1 pose/group:
+  60,44) → kiến trúc góc khớp per-symbol có giá trị thật, nhưng sai số
+  tuyệt đối không nhỏ.
+- **Ngón cái là nguồn lỗi lớn nhất, rõ rệt** (MPJPE=80,29 so với 38,92-47,76
+  của 4 ngón còn lại).
+- Giả thuyết che khuất (C4: kỳ vọng ring>pinky>middle>index) — **không khớp**
+  (đo được pinky>ring>index>middle).
+- Tương quan vi phạm giải phẫu ↔ sai số FK (C3) — **gần như 0** (Pearson
+  r=0,014) — 2 vấn đề KHÔNG cùng 1 nguồn gốc rõ ràng như giả thuyết ban đầu.
+- Vi phạm giải phẫu: **224/261 (85,8%)**, đa số do ngón cái CMC — nghi vấn
+  lệch định nghĩa khớp (xem `PROGRESS.md`), chưa xác minh.
+- Sửa 1 bug thật trong `pose_format.utils.normalization_3d.PoseNormalizer`
+  (pháp tuyến mặt phẳng có dấu mơ hồ, không idempotent) — nếu không tìm ra
+  thì mọi số MPJPE ở trên vô nghĩa. Xem `PROGRESS.md` để biết chi tiết.
+
+**Khuyến nghị (không tự đổi kiến trúc trong task này):** giữ kiến trúc góc
+khớp; ưu tiên điều tra riêng ngón cái (định nghĩa `thumb.cmc` +
+`export/bone_lengths.py`'s giả định hình học ngón cái) trước khi đầu tư IK
+cánh tay — tránh khuếch đại lỗi có sẵn.
 
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
@@ -330,13 +364,18 @@ signbox tuyến tính đơn giản, chưa dùng `BodyPose` làm khung tham chi�
 cố ý ngoài phạm vi task làm tầng ký hiệu.
 
 **Thứ tự đề xuất tiếp theo** (cập nhật sau khi `SignTimeline` MVP-1, Category
-3/5's tầng ký hiệu, VÀ tầng export bước 1-2 đều đã xong — xem mục "Export
-sang `.pose` + video" ở trên):
-1. **Tầng validate giải phẫu** (giới hạn góc khớp thật, vd PIP flexion) —
-   làm trước vì rẻ (không cần category mới), và giờ SẼ THẤY ĐƯỢC trực tiếp
-   trên video xuất ra (52,1%/119-261 tư thế Category 1 vượt giới hạn PIP,
-   xem "SignTimeline (MVP-1)" ở trên), không chỉ đọc số như trước khi có
-   video.
+3/5's tầng ký hiệu, tầng export bước 1-2, VÀ tầng đánh giá đều đã xong — xem
+mục "Tầng đánh giá (FK accuracy + ràng buộc giải phẫu)" ở trên):
+1. **Điều tra riêng ngón cái** (KHÔNG phải "tầng validate giải phẫu" nói
+   chung nữa — việc đó đã có `validation/anatomical_limits.py` + số đo thật
+   từ Pha đánh giá) — MPJPE ngón cái (80,29) cao hơn hẳn 4 ngón còn lại
+   (38,92-47,76), và 201/261 symbol vi phạm CMC (nghi lệch định nghĩa,
+   chưa xác minh). Đối chiếu định nghĩa `thumb.cmc` của 3d-hands-benchmark
+   với định nghĩa lâm sàng đã trích trong `anatomical_limits.py`, VÀ soát
+   lại `export/bone_lengths.py`'s giả định hình học ngón cái
+   (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) — làm trước IK vì rẻ
+   (không cần category/kiến trúc mới) và tránh khuếch đại lỗi có sẵn khi
+   thêm IK cánh tay.
 2. **Nối Category 3/5 vào `SignTimeline` VÀ export bước 3-4 cùng lúc** —
    liên quan chặt: `DynamicsModifier.speed` thay `DEFAULT_SIGN_DURATION`'s
    hằng số giữ chỗ (ảnh hưởng cả `SignTimeline` lẫn số frame video xuất
@@ -344,11 +383,11 @@ sang `.pose` + video" ở trên):
    `timeline/anchor.py` VÀ là điểm neo cho two-bone IK cánh tay + tư thế
    thân tĩnh (export bước 3, hiện `POSE_LANDMARKS`/`POSE_WORLD_LANDMARKS`
    confidence 0 toàn bộ) — cùng 1 dữ liệu (`BodyPose`) phục vụ cả 2 việc,
-   nên làm chung 1 đợt hợp lý hơn tách riêng. Làm ngay sau tầng validate
-   giải phẫu để dữ liệu thời gian/không gian mới cũng được validate cùng lúc.
+   nên làm chung 1 đợt hợp lý hơn tách riêng. Làm sau khi đã điều tra xong
+   ngón cái (mục 1) để không mang lỗi có sẵn vào IK.
 3. **MVP-2** (nới phạm vi `SignTimeline` lên sign có nhiều symbol tay/
    chuyển động hơn, ~20,9% sign đo trên SignBank+) — cần logic phân biệt/
-   gán track chưa viết ở MVP-1, nên làm sau khi nền tảng (giải phẫu +
+   gán track chưa viết ở MVP-1, nên làm sau khi nền tảng (ngón cái +
    Dynamics/Body + IK) đã vững.
 4. **Category 6-7 (Location, Punctuation)** — xem Pha 6 dưới đây; category
    ISWA cuối cùng còn lại sau Pha 1-5.
