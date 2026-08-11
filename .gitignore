@@ -25,6 +25,14 @@ htmlcov/
 # Generated demo output
 output/
 
+# Externally-downloaded evaluation ground truth (large, fetched on demand by
+# scripts/fetch_ground_truth.py -- never committed, see PROGRESS.md's
+# evaluation-layer entry). "**/" because this pattern has an inner slash
+# (data/external/), which gitignore anchors to the .gitignore's own
+# directory (repo root) unless prefixed -- without "**/" this would NOT
+# match fsw-r/data/external/, only a repo-root-level data/external/.
+**/data/external/
+
 # OS
 .DS_Store
 Thumbs.db
