@@ -421,10 +421,19 @@ làm luôn vì mỗi việc không nhỏ):**
   "MVP-2" ở trên) — video hiện chỉ có 1 tay (phải); cần logic phân biệt/
   gán track cho tay trái mà `SignTimeline` MVP-1 chưa viết.
 
-### Sửa bug hướng xoay IK + chỉnh khung hình demo — ĐÃ XONG
+### Sửa bug hướng xoay IK + chỉnh khung hình demo — ĐÃ XONG (phần elbow SAU ĐÓ PHÁT HIỆN SAI)
 
 **Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 10" (tiếp Pha 9).
 Task nhỏ, chỉ trong `export/` — không đổi dữ liệu, không ảnh hưởng MPJPE.
+
+**⚠️ Cập nhật quan trọng:** phần hiệu chỉnh `POLE_DIRECTION_*` (Y=0) mô tả
+dưới đây **ĐÃ ĐƯỢC PHÁT HIỆN LÀ SAI và ĐÃ REVERT** ở task tiếp theo ("Sửa
+lại bất biến IK sai", mục ngay dưới) — nguyên nhân gốc không phải hằng số
+pole tự nó sai, mà là bất biến TEST mà task này tự thêm (`test_c1`) có cận
+dưới sai giải phẫu, khiến việc "sửa" pole theo hướng đó cũng sai theo. Phần
+chỉnh khung hình (chiều rộng vai 81%→60%) vẫn ĐÚNG, không bị revert. Giữ
+nguyên mục này làm bản ghi lịch sử trung thực (không xoá/viết lại) — xem
+mục "Sửa lại bất biến IK sai" để biết chi tiết đầy đủ.
 
 **Việc đã làm:** khuỷu tay phải (elbow) từng chúc xuống ~160px dưới CẢ vai
 lẫn cổ tay ("tam giác nhọn chĩa xuống", về giải phẫu là cánh tay gập
@@ -460,6 +469,50 @@ phần hình học thêm mới sau này (vd nếu có Category 5 `BodyPose` th�
 thân tĩnh, hay mở rộng 2 tay ở MVP-2): viết test bất biến CẤU HÌNH (vị trí
 tương đối so với điểm neo, hướng nghiêng...) NGAY TỪ ĐẦU, không chờ tới
 khi phát hiện bằng mắt sau khi đã commit.
+
+### Sửa lại bất biến IK sai (hồi quy từ Pha 10) — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 11" (tiếp Pha 10).
+Task rất nhỏ, chỉ đụng `export/arm_ik.py` + `tests/test_arm_configuration.py`
+(cộng 2 file phụ thuộc dây chuyền do bounding box đổi lại).
+
+**Việc đã làm:** Pha 10 tự thêm test `test_c1_elbow_stays_within_the_
+shoulder_wrist_vertical_span`, ép khuỷu tay nằm trong khoảng dọc giữa vai
+và cổ tay — CẢ cận trên lẫn cận dưới. Cận dưới sai về giải phẫu: khuỷu tay
+buông thõng xuống dưới cả vai lẫn cổ tay khi giơ tay lên ngang vai là tư
+thế TỰ NHIÊN đúng (hình chữ V), không phải lỗi. Để thoả cận dưới sai đó,
+Pha 10 hiệu chỉnh `POLE_DIRECTION_RIGHT/LEFT` về `(∓0,15, 0,0, 1,0)`
+(thành phần xuống = 0), vô tình làm phẳng cánh tay thành gần như 1 đường
+ngang. Đã sửa: (1) bỏ cận dưới của `test_c1` (đổi tên thành
+`test_c1_elbow_never_rises_above_both_shoulder_and_wrist`, chỉ còn cận
+trên — khuỷu không được cao hơn CẢ vai lẫn cổ tay cùng lúc), (2) trả
+`POLE_DIRECTION_RIGHT/LEFT` về giá trị gốc của Pha 9 (`(∓0,3, -1,0, 1,0)`)
+— đã kiểm chứng lại (không giả định) với bất biến ĐÚNG trên cả 4 cấu hình
+× 2 bên tay. Giữ nguyên công thức `cos(angle)*aim + sin(angle)*bend_direction`
+của Pha 10 (không liên quan tới bug này) và `BODY_UNITS_TO_PIXELS=69,8`
+(chiều rộng vai, không phụ thuộc pole direction). `VERTICAL_CENTER_OFFSET`
+đo lại lần 3: 0,53 → -0,22 (quay gần về giá trị Pha 9, vì bounding box
+body-space giờ gần như y hệt — chỉ pole đổi, hình học thân/đầu không đổi).
+GIF thứ 7 (`mvp1_sign_7_elbow_invariant_fix.gif`) đã render, xem lại bằng
+mắt (so sánh với cả GIF Pha 9 và Pha 10), và commit. Chi tiết đầy đủ ở
+`PROGRESS.md` mục "Pha 11".
+
+**Bài học rút ra (2 lớp, cả 2 đều đáng ghi):**
+1. **Một test có thể khoá hành vi SAI, không chỉ "thiếu test" mới nguy
+   hiểm.** Pha 10 nghĩ mình đang "thêm test bất biến hình học còn thiếu"
+   (đúng tinh thần bài học của chính Pha 10 rút ra từ Pha 9) — nhưng bất
+   biến TỰ NÓ sai (suy luận hình học trừu tượng "khuỷu nằm giữa 2 điểm neo"
+   nghe hợp lý nhưng không khớp tư thế giải phẫu thật khi tay giơ cao). Một
+   khi bất biến sai đã có test khoá lại, nó còn NGUY HIỂM HƠN không có test
+   nào — tạo cảm giác an toàn giả (29 test pass!) và chủ động kéo việc hiệu
+   chỉnh tiếp theo (`POLE_DIRECTION_*`) đi theo hướng sai, thay vì chỉ đơn
+   giản là bỏ sót.
+2. **Bất biến hình học phải kiểm chứng với TƯ THẾ THẬT trước khi đưa vào
+   test**, không chỉ suy luận trừu tượng. Cách kiểm chứng đúng (đã áp dụng
+   ở Pha 11): tự hỏi "người thật làm gì trong tư thế này" (giơ tay ký hiệu
+   → khuỷu thõng xuống là bình thường) TRƯỚC khi viết assert, thay vì suy
+   diễn thuần hình học rồi tin ngay. Áp dụng cho mọi thành phần hình học
+   thêm mới sau này (Category 5 `BodyPose`, MVP-2 hai tay...).
 
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
