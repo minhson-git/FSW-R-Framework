@@ -26,7 +26,10 @@ supports, as a visual sanity-check:
    / _3_after_body.gif for the 3-stage progression, then
    _4_unified_scale.gif (the hand<->body scale-unification task: the hand
    now derives from the SAME assumed stature as the body, so it is no
-   longer ~1.5x too small relative to the torso).
+   longer ~1.5x too small relative to the torso), then
+   _5_readable_frame.gif (the "khung hình demo dễ đọc hơn" task: cropped
+   at the hip so PoseVisualizer's closed shoulder-hip-hip trapezoid no
+   longer dominates the frame, plus eyes so the head has real shape).
 
 Run with: python -m fsw_r_viz.demo
 """
