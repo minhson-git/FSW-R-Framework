@@ -32,17 +32,21 @@ def _right_hand_frame(position: np.ndarray[tuple[int, ...], np.dtype[np.float64]
     return PoseFrame(time_seconds=0.0, tracks={TrackName.RIGHT_HAND: track_pose})
 
 
-def test_c4_shoulder_is_above_hip_in_image_space() -> None:
-    # C4 -- shoulder must have a SMALLER image-y than hip (shoulder is
-    # visually above hip). Protects the y-flip in _body_to_pixel against a
-    # regression introduced by this task's new points, same reasoning as
-    # test_pose_export.py's E2 for the hand.
+def test_c4_nose_is_above_shoulder_in_image_space() -> None:
+    # C4 -- nose must have a SMALLER image-y than shoulder (nose is
+    # visually above the shoulder). Protects the y-flip in _body_to_pixel
+    # against a regression, same reasoning as test_pose_export.py's E2 for
+    # the hand. Was originally "shoulder above hip" -- rewritten for the
+    # "khung hình demo dễ đọc hơn" task, which stops exporting the hip (see
+    # that task's own C1/C4 in tests/test_readable_demo_frame.py); NOSE vs
+    # SHOULDER protects the exact same y-flip risk with points that still
+    # exist.
     pose = frames_to_pose((_right_hand_frame(np.array([0.0, 0.0, 0.0])),))
     offsets = _component_offsets(pose.header)
     start, _count = offsets["POSE_LANDMARKS"]
+    nose_y = pose.body.data[0, 0, start + _POSE_POINT_NAMES.index("NOSE"), 1]
     shoulder_y = pose.body.data[0, 0, start + _POSE_POINT_NAMES.index("RIGHT_SHOULDER"), 1]
-    hip_y = pose.body.data[0, 0, start + _POSE_POINT_NAMES.index("RIGHT_HIP"), 1]
-    assert shoulder_y < hip_y
+    assert nose_y < shoulder_y
 
 
 def test_c5_point_count_increases_clearly_and_legs_stay_zero() -> None:
@@ -94,9 +98,12 @@ def test_c6_pose_wrist_matches_hand_wrist_exactly() -> None:
 
 def test_inactive_side_arm_points_stay_zero_confidence() -> None:
     # A right-hand-only sign: every LEFT arm/hand-duplicate point in
-    # POSE_LANDMARKS must stay confidence 0 -- shoulders/hips are static
-    # (both sides always drawn), but the arm itself needs a wrist to solve
-    # IK against.
+    # POSE_LANDMARKS must stay confidence 0 -- shoulders are static (both
+    # sides always drawn), but the arm itself needs a wrist to solve IK
+    # against. Hips are no longer exported at all as of the "khung hình
+    # demo dễ đọc hơn" task (see tests/test_readable_demo_frame.py's C1) --
+    # dropped from the "should be 1" list here, not asserted 0 again (that
+    # belongs to this task's own C1 test, not this pre-existing one).
     pose = frames_to_pose((_right_hand_frame(np.array([0.0, 0.0, 0.0])),))
     offsets = _component_offsets(pose.header)
     start, _count = offsets["POSE_LANDMARKS"]
@@ -104,6 +111,6 @@ def test_inactive_side_arm_points_stay_zero_confidence() -> None:
         index = start + _POSE_POINT_NAMES.index(name)
         assert pose.body.confidence[0, 0, index] == 0.0
 
-    for name in ("LEFT_SHOULDER", "RIGHT_SHOULDER", "LEFT_HIP", "RIGHT_HIP"):
+    for name in ("LEFT_SHOULDER", "RIGHT_SHOULDER"):
         index = start + _POSE_POINT_NAMES.index(name)
         assert pose.body.confidence[0, 0, index] == 1.0

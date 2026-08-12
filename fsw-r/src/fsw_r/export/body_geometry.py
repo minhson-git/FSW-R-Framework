@@ -36,7 +36,13 @@ scope. See ``bone_lengths.py``'s docstring for the full reasoning.
   fetched page (only the horizontal segment brackets this module actually
   needs were legible), so this is a separate, simpler estimate, not
   mis-attributed to the cited source.
-- Head landmark offsets (nose/ear/mouth relative to a neck/head anchor).
+- Head landmark offsets (nose/ear/mouth/eyes relative to a neck/head
+  anchor) -- the eye offsets (added for the "khung hình demo dễ đọc hơn"
+  task) ARE defined directly as fractions of ``ASSUMED_STATURE_MM`` (per
+  that task's own brief), unlike the pre-existing nose/ear/mouth constants
+  just above them, which are flat millimetres -- an inconsistency in the
+  existing code this task did not go back and fix, noted rather than
+  silently harmonized.
 - The shoulder line's vertical anchor in body-space -- see
   ``SHOULDER_CENTER_BODY_SPACE``'s own comment for the reasoning (not
   arbitrary, but not a citation either).
@@ -69,6 +75,21 @@ NOSE_FORWARD_OFFSET_MM = 60.0  # small forward (toward viewer) offset so the nos
 EAR_SIDE_OFFSET_MM = 80.0
 MOUTH_DROP_MM = 40.0  # below the head center used for the nose
 
+# ESTIMATED, added for the "khung hình demo dễ đọc hơn" task -- no citation
+# found for exact eye placement (unlike NOSE/EAR/MOUTH above, these ARE
+# defined directly as a fraction of ASSUMED_STATURE_MM, per that task's own
+# brief, rather than as flat millimetres like the 3 constants just above --
+# an inconsistency in the pre-existing constants this task did not go back
+# and fix, noted honestly rather than silently harmonized).
+# EYE_HEIGHT is kept well under NECK_TO_HEAD_CENTER_MM's own magnitude
+# (0.05 vs. the ~0.065 that constant works out to) so the eyes land between
+# the head center and the top of the head, never above it.
+EYE_HEIGHT_ABOVE_HEAD_CENTER_MM = 0.05 * ASSUMED_STATURE_MM
+EYE_INNER_OFFSET_MM = 0.012 * ASSUMED_STATURE_MM  # nearer the nose bridge
+EYE_CENTER_OFFSET_MM = 0.020 * ASSUMED_STATURE_MM
+EYE_OUTER_OFFSET_MM = 0.028 * ASSUMED_STATURE_MM  # nearer the ear, still inside EAR_SIDE_OFFSET_MM
+EYE_FORWARD_OFFSET_MM = 0.018 * ASSUMED_STATURE_MM  # set back from the nose tip, forward of the ears
+
 # All the above, converted once into fsw_r.timeline's body-space units --
 # the SAME conversion bone_lengths.py's hand geometry already uses, so the
 # body and the hand share one consistent scale (otherwise the hand would
@@ -82,6 +103,11 @@ _NECK_TO_HEAD_CENTER = NECK_TO_HEAD_CENTER_MM * HAND_MM_TO_BODY_UNITS
 _NOSE_FORWARD = NOSE_FORWARD_OFFSET_MM * HAND_MM_TO_BODY_UNITS
 _EAR_SIDE = EAR_SIDE_OFFSET_MM * HAND_MM_TO_BODY_UNITS
 _MOUTH_DROP = MOUTH_DROP_MM * HAND_MM_TO_BODY_UNITS
+_EYE_HEIGHT = EYE_HEIGHT_ABOVE_HEAD_CENTER_MM * HAND_MM_TO_BODY_UNITS
+_EYE_INNER = EYE_INNER_OFFSET_MM * HAND_MM_TO_BODY_UNITS
+_EYE_CENTER = EYE_CENTER_OFFSET_MM * HAND_MM_TO_BODY_UNITS
+_EYE_OUTER = EYE_OUTER_OFFSET_MM * HAND_MM_TO_BODY_UNITS
+_EYE_FORWARD = EYE_FORWARD_OFFSET_MM * HAND_MM_TO_BODY_UNITS
 
 # ESTIMATED: where the shoulder line sits in fsw_r.timeline's body space.
 # Not arbitrary -- timeline/anchor.py's own y=0 (signbox y=500) was
@@ -119,8 +145,8 @@ def hip_position(is_right: bool) -> NDArray[np.float64]:
 
 def static_head_landmarks() -> dict[str, NDArray[np.float64]]:
     """NOSE/LEFT_EAR/RIGHT_EAR/MOUTH_LEFT/MOUTH_RIGHT -- POSE_LANDMARKS
-    indices 0, 7, 8, 9, 10 per this task's brief Part B1 (eyes, indices
-    1-6, deliberately left out -- not listed in the brief's own table)."""
+    indices 0, 7, 8, 9, 10. Eyes (indices 1-6) are a separate function, see
+    ``static_eye_landmarks()`` below."""
     head_center = SHOULDER_CENTER_BODY_SPACE + np.array([0.0, _NECK_TO_HEAD_CENTER, 0.0])
     return {
         "NOSE": head_center + np.array([0.0, 0.0, _NOSE_FORWARD]),
@@ -128,4 +154,26 @@ def static_head_landmarks() -> dict[str, NDArray[np.float64]]:
         "RIGHT_EAR": head_center + np.array([-_EAR_SIDE, 0.0, 0.0]),
         "MOUTH_LEFT": head_center + np.array([_EAR_SIDE / 3, -_MOUTH_DROP, _NOSE_FORWARD / 2]),
         "MOUTH_RIGHT": head_center + np.array([-_EAR_SIDE / 3, -_MOUTH_DROP, _NOSE_FORWARD / 2]),
+    }
+
+
+def static_eye_landmarks() -> dict[str, NDArray[np.float64]]:
+    """LEFT/RIGHT_EYE_INNER/EYE/EYE_OUTER -- POSE_LANDMARKS indices 1-6,
+    added so the head reads as a head instead of two dots (see this task's
+    brief, "khung hình demo dễ đọc hơn", Part B). ESTIMATED (see module
+    docstring): placed above NOSE's own height (0, at head_center) and
+    below the implied top of the head (``_NECK_TO_HEAD_CENTER`` above
+    head_center, reusing that same magnitude as the "other half" of the
+    head -- head_center sits at the vertical MIDPOINT of the head by
+    construction, see ``NECK_TO_HEAD_CENTER_MM``'s own comment), inner ->
+    outer spanning from near the nose bridge toward (but staying inside)
+    the ears."""
+    head_center = SHOULDER_CENTER_BODY_SPACE + np.array([0.0, _NECK_TO_HEAD_CENTER, 0.0])
+    return {
+        "LEFT_EYE_INNER": head_center + np.array([_EYE_INNER, _EYE_HEIGHT, _EYE_FORWARD]),
+        "LEFT_EYE": head_center + np.array([_EYE_CENTER, _EYE_HEIGHT, _EYE_FORWARD]),
+        "LEFT_EYE_OUTER": head_center + np.array([_EYE_OUTER, _EYE_HEIGHT, _EYE_FORWARD]),
+        "RIGHT_EYE_INNER": head_center + np.array([-_EYE_INNER, _EYE_HEIGHT, _EYE_FORWARD]),
+        "RIGHT_EYE": head_center + np.array([-_EYE_CENTER, _EYE_HEIGHT, _EYE_FORWARD]),
+        "RIGHT_EYE_OUTER": head_center + np.array([-_EYE_OUTER, _EYE_HEIGHT, _EYE_FORWARD]),
     }

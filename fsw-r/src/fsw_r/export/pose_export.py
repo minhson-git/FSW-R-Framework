@@ -20,20 +20,38 @@ assumed: ``NumPyPoseBody`` itself wraps ``data`` in a
 recognizes "confidence 0" as "missing" at the data-structure level, not
 just by convention (see ``tests/test_pose_export.py``'s E7).
 
-**``POSE_LANDMARKS`` (the body)**: as of this task, filled for everything
-EXCEPT the legs (indices 25-32, outside the signing space this project
-models -- confidence 0) and the eyes (indices 1-6, not listed in this
-task's own brief and left unset). A static neutral torso/head
-(``export/body_geometry.py``) anchors two-bone IK (``export/arm_ik.py``)
-that solves for each active hand track's elbow from its (fixed) shoulder
-and its (per-frame) wrist position. The 6 duplicated hand-adjacent points
-POSE_LANDMARKS itself defines (``LEFT/RIGHT_PINKY/INDEX/THUMB``, indices
-17-22) are filled from that SAME frame's already-computed hand landmarks
-(``PINKY_MCP``/``INDEX_FINGER_MCP``/``THUMB_TIP`` respectively -- MediaPipe's
-own convention, confirmed by ``BODY_LIMBS``' wrist-to-these-points
-connections) rather than recomputed independently, which is also what
-guarantees ``POSE_LANDMARKS.WRIST`` and ``*_HAND_LANDMARKS.WRIST`` land at
-the exact same pixel every frame (see ``tests/test_pose_export.py``'s C6).
+**``POSE_LANDMARKS`` (the body), cropped at the hip**: filled for the head
+(including the 6 eye points, added this task -- see
+``body_geometry.static_eye_landmarks()``), both shoulders, and each active
+hand track's arm (via two-bone IK, ``export/arm_ik.py``) and 3 duplicated
+hand-adjacent points. The legs (indices 25-32) stay confidence 0 -- outside
+the signing space this project models at all. The HIPS (23, 24) ALSO stay
+confidence 0, as of this task -- deliberately, even though
+``body_geometry.hip_position()`` computes a perfectly good position for
+them: a real sign-language video frame is cropped to the upper body (head
+to roughly waist/shoulder), never the hips, and ``PoseVisualizer`` draws
+``BODY_LIMBS``' shoulder-hip and hip-hip edges as SOLID FILLED-LOOKING
+lines that, at this project's current point density (35-39 of 576 points,
+vs. a real ``.pose`` file's ~544/586 balanced out by 468 face points this
+project doesn't have), visually dominate the frame -- confirmed by
+rendering before this task's fix, not assumed (see PROGRESS.md's Pha 8
+entry). Since ``PoseVisualizer`` only draws a limb when BOTH endpoints have
+confidence > 0 (verified by reading its ``_draw_frame`` source, not
+assumed), leaving the hips unset also removes those 3 edges automatically
+-- no separate "don't draw this limb" logic needed. ``hip_position()``/
+``TORSO_LENGTH_MM`` stay fully defined in ``body_geometry.py`` (this
+function just doesn't call ``hip_position()`` for the export) -- the
+geometry is still correct and may be needed again once Category 5
+(``BodyPose``) replaces this static torso.
+
+The 6 duplicated hand-adjacent points POSE_LANDMARKS itself defines
+(``LEFT/RIGHT_PINKY/INDEX/THUMB``, indices 17-22) are filled from that SAME
+frame's already-computed hand landmarks (``PINKY_MCP``/``INDEX_FINGER_MCP``/
+``THUMB_TIP`` respectively -- MediaPipe's own convention, confirmed by
+``BODY_LIMBS``' wrist-to-these-points connections) rather than recomputed
+independently, which is also what guarantees ``POSE_LANDMARKS.WRIST`` and
+``*_HAND_LANDMARKS.WRIST`` land at the exact same pixel every frame (see
+``tests/test_pose_export.py``'s C6).
 
 **Coordinate system, the highest-risk spot in this module** (per this
 package's task brief): ``pose_format`` uses IMAGE coordinates (x right, y
@@ -63,8 +81,8 @@ from fsw_r.export.arm_ik import POLE_DIRECTION_LEFT, POLE_DIRECTION_RIGHT, solve
 from fsw_r.export.body_geometry import (
     FOREARM_LENGTH,
     UPPER_ARM_LENGTH,
-    hip_position,
     shoulder_position,
+    static_eye_landmarks,
     static_head_landmarks,
 )
 from fsw_r.export.forward_kinematics import hand_to_landmarks
@@ -105,7 +123,18 @@ FRAME_HEIGHT = 512
 #    higher across the moving sign), so at 68.0 it measured 299 x 529 px --
 #    529 > 512, running off the frame. Recalibrated the same measured way:
 #    56.0 puts the 7.77-unit height back at ~85% of frame height (435 px).
-BODY_UNITS_TO_PIXELS = 56.0
+#
+# 4. The "khung hình demo dễ đọc hơn" task: cropping at the hip (see
+#    _pose_landmarks_for_frame's own comment) removes the lower ~3.4 units
+#    of that same bounding box -- measured fresh (across all frames of a
+#    real moving MVP-1 sign, not just frame 0) rather than subtracted by
+#    hand: 4.40 x 4.35 units. At the old 56.0 that is only ~244 px tall,
+#    ~48% of the frame -- correct proportions, but now UNDER the 70-90%
+#    target this task asks for (the earlier calibrations targeted the
+#    now-removed hip-to-head span, not this smaller upper-body one).
+#    Recalibrated the same measured way: 94.0 puts the new 4.35-unit height
+#    at ~80% of frame height (410 px).
+BODY_UNITS_TO_PIXELS = 94.0
 
 # MEASURED, not guessed, alongside BODY_UNITS_TO_PIXELS above: which
 # body-space y should land at the frame's OWN vertical center. Scaling
@@ -119,8 +148,12 @@ BODY_UNITS_TO_PIXELS = 56.0
 # box for a real MVP-1 sign: y in [-5.10, 1.28] body units, midpoint
 # -1.91 -- that midpoint is what now gets centered. Re-measured after the
 # hand-body-scale task: the longer fingers push the top up (y in [-5.10,
-# 2.67]), moving the midpoint to -1.21 -- recentered to match.
-VERTICAL_CENTER_OFFSET = -1.21
+# 2.67]), moving the midpoint to -1.21 -- recentered to match. Re-measured
+# again after cropping at the hip (the "khung hình demo dễ đọc hơn" task):
+# the bottom of the bounding box is now the lowest ACTIVE point (the
+# moving hand's lowest frame, not the hip anymore), y in [-2.39, 1.96],
+# midpoint -0.22.
+VERTICAL_CENTER_OFFSET = -0.22
 
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",
@@ -205,15 +238,24 @@ def _pose_landmarks_for_frame(
 ) -> dict[str, NDArray[np.float64]]:
     """The subset of POSE_LANDMARKS' 33 points this project has data for
     at this frame -- see module docstring for what's covered. Points not
-    returned here (legs, eyes) get confidence 0, same as a track-less hand."""
+    returned here (legs, eyes, hips -- see module docstring's "cropped at
+    the hip" note) get confidence 0, same as a track-less hand.
+
+    ``HIP`` is deliberately NOT included, even though ``body_geometry.
+    hip_position()`` computes a perfectly good position for it -- see the
+    module docstring's "cropped at the hip" section for why, and why
+    ``hip_position()``/``TORSO_LENGTH_MM`` stay defined in
+    ``body_geometry.py`` regardless (this function just doesn't call
+    ``hip_position()`` -- the geometry itself is untouched, only what gets
+    exported)."""
     points: dict[str, NDArray[np.float64]] = {}
     points.update(static_head_landmarks())
+    points.update(static_eye_landmarks())
 
     for is_right, track_name in ((True, TrackName.RIGHT_HAND), (False, TrackName.LEFT_HAND)):
         side = _SIDE_PREFIX_BY_TRACK[track_name]
         shoulder = shoulder_position(is_right)
         points[f"{side}_SHOULDER"] = shoulder
-        points[f"{side}_HIP"] = hip_position(is_right)
 
         hand_landmarks = hand_landmarks_by_track.get(track_name)
         if hand_landmarks is None:
