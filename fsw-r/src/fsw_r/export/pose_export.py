@@ -139,22 +139,28 @@ FRAME_HEIGHT = 512
 #    SHOULDER WIDTH (not height) measured 4.40 body units -- 414 px, 81% of
 #    FRAME_WIDTH, which that task's brief flags as too close to the edges
 #    (the "đường ngang dài" -- long horizontal line -- in the before-fix
-#    GIF). Also, fixing the elbow's downward-spike bug (see arm_ik.py) on
-#    its own shrinks the overall bounding box: the pathological elbow no
-#    longer drags the lowest point down to y=-2.39, so the full body-space
-#    height dropped from 4.35 to 2.85 units. Recalibrated the measured way,
-#    targeting the MIDDLE of this task's own shoulder-width target (Part B's
-#    prose says 55-65%; Part C's own C6 test asserts the slightly wider
-#    [0.50, 0.70] -- 60% sits comfortably inside both): 512 * 0.60 / 4.403 =
-#    69.77, rounded to 69.8. Measured result: shoulder width 307.3 px =
-#    60.0% of frame width. The resulting
-#    height is a SIDE EFFECT, not a separate target this task sets: 2.85
-#    units * 69.8 = 198.9 px = 38.8% of frame height -- smaller than the
-#    prior 70-90% target, because that target was calibrated against a
-#    bounding box that included the since-fixed pathological elbow droop;
-#    see tests/test_readable_demo_frame.py's C5, updated to match (was
-#    "70-90% of height", now "shoulder occupies 55-65% of width", this
-#    task's own actual framing goal).
+#    GIF). That task ALSO changed the elbow-position calibration in
+#    arm_ik.py (POLE_DIRECTION_* to y=0), which -- SEE ENTRY 6 BELOW, this
+#    was later found to rest on a wrong invariant and was reverted --
+#    shrank the bounding box height as a side effect at the time. Shoulder
+#    width itself only depends on SHOULDER_WIDTH_MM (unaffected by the pole
+#    direction either way), so THIS constant's own value did not need to
+#    change again when entry 6 reverted the elbow calibration. Recalibrated
+#    the measured way, targeting the MIDDLE of this task's own
+#    shoulder-width target (Part B's prose says 55-65%; Part C's own C6
+#    test asserts the slightly wider [0.50, 0.70] -- 60% sits comfortably
+#    inside both): 512 * 0.60 / 4.403 = 69.77, rounded to 69.8. Measured
+#    result: shoulder width 307.3 px = 60.0% of frame width -- unchanged by
+#    entry 6 below.
+#
+# 6. The "sửa lại bất biến IK sai (hồi quy từ Pha 10)" task: entry 5's
+#    intervening elbow-position fix (POLE_DIRECTION_* to y=0) turned out to
+#    satisfy a WRONG test invariant (an elbow that never droops below
+#    either the shoulder or the wrist -- anatomically incorrect, see
+#    arm_ik.py's module docstring for the full trace) and was reverted to
+#    this project's original pole direction. This constant
+#    (BODY_UNITS_TO_PIXELS) did NOT need to change again -- it is driven by
+#    shoulder width alone, which the pole direction never affected.
 BODY_UNITS_TO_PIXELS = 69.8
 
 # MEASURED, not guessed, alongside BODY_UNITS_TO_PIXELS above: which
@@ -173,11 +179,20 @@ BODY_UNITS_TO_PIXELS = 69.8
 # again after cropping at the hip (the "khung hình demo dễ đọc hơn" task):
 # the bottom of the bounding box is now the lowest ACTIVE point (the
 # moving hand's lowest frame, not the hip anymore), y in [-2.39, 1.96],
-# midpoint -0.22. Re-measured again after fixing the elbow's downward-spike
-# bug (this task, see arm_ik.py): the elbow no longer drags the bottom of
-# the box down -- y in [-0.89, 1.96] (top unchanged, still the eyes/head),
-# midpoint 0.53.
-VERTICAL_CENTER_OFFSET = 0.53
+# midpoint -0.22. Re-measured again after the "sửa bug hướng xoay IK +
+# chỉnh khung hình demo" task's (later-reverted, see below) elbow fix: the
+# elbow briefly stopped dragging the bottom of the box down -- y in [-0.89,
+# 1.96], midpoint 0.53. Re-measured a THIRD time after the "sửa lại bất
+# biến IK sai" task reverted that elbow calibration (POLE_DIRECTION_* back
+# to (∓0.3, -1.0, 1.0) -- see arm_ik.py's module docstring): the elbow
+# droops below the wrist again (correctly, this time -- see that
+# docstring), so the bounding box is back to essentially the SAME shape as
+# it was before the intervening task: y in [-2.39, 1.96], midpoint -0.22 --
+# matches the earlier "khung hình demo dễ đọc hơn" measurement almost
+# exactly, as expected, since the pole direction is back to that task's own
+# value and BODY_UNITS_TO_PIXELS/shoulder geometry are unaffected either
+# way.
+VERTICAL_CENTER_OFFSET = -0.22
 
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",

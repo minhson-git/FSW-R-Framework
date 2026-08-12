@@ -109,15 +109,19 @@ def test_c5_figure_height_stays_in_a_measured_range_after_ik_fix() -> None:
     # hình demo" task, which explicitly recalibrates the frame around
     # SHOULDER WIDTH instead (see tests/test_arm_configuration.py's C6, the
     # actual current framing target/acceptance criterion). That task's own
-    # elbow-position fix (arm_ik.py) also shrinks this bounding box as a
-    # side effect: the pathological downward-spiking elbow no longer drags
-    # the lowest point down, so height dropped from ~80% to ~39% of frame
-    # height at the new (smaller, width-driven) BODY_UNITS_TO_PIXELS -- see
-    # pose_export.py's own calibration-history comment, entry 5. Height is
-    # no longer a DESIGN TARGET here, but this is still worth a regression
-    # bound (measured, not guessed) so a future accidental change to the
-    # scale or the arm geometry doesn't silently balloon or collapse the
-    # figure without any test catching it.
+    # elbow-position fix (arm_ik.py) shrank this bounding box as a side
+    # effect at the time (~80% -> ~39% of frame height) -- but that elbow
+    # fix rested on a WRONG invariant (see arm_ik.py's module docstring)
+    # and was reverted by the "sửa lại bất biến IK sai" task, which put the
+    # elbow's natural downward droop back and grew this same bounding box
+    # back out to ~59% (measured fresh, not assumed -- the elbow droop is
+    # now a real part of the figure's height again, not a bug). Height is
+    # still not a DESIGN TARGET here (shoulder width is, see C6 above), but
+    # this is still worth a regression bound (measured, not guessed) so a
+    # future accidental change to the scale or the arm geometry doesn't
+    # silently balloon or collapse the figure without any test catching
+    # it -- re-measure and update this bound again if either legitimately
+    # changes, same as the two updates already recorded here.
     from fsw_r.core.fswr_converter import fsw_to_fswr
     from fsw_r.timeline.build import build_timeline
     from fsw_r.timeline.sample import sample
@@ -136,7 +140,7 @@ def test_c5_figure_height_stays_in_a_measured_range_after_ik_fix() -> None:
 
     height_px = max(all_active_y) - min(all_active_y)
     fraction = height_px / FRAME_HEIGHT
-    assert 0.30 <= fraction <= 0.50, f"figure occupies {fraction:.2%} of frame height, expected 30-50%"
+    assert 0.50 <= fraction <= 0.70, f"figure occupies {fraction:.2%} of frame height, expected 50-70%"
     assert BODY_UNITS_TO_PIXELS > 0  # named constant, sanity
 
 # C6 (this task's brief: "1.407 test cũ pass nguyên") is the whole existing

@@ -1,11 +1,24 @@
-"""C1-C7 (this task's brief, "Sửa bug hướng xoay IK + chỉnh khung hình
-demo", Part C). The class of test the previous "khung hình dễ đọc hơn"
-task was missing: geometry INVARIANTS on the arm configuration itself, not
-just bone lengths (``tests/test_arm_ik.py``'s own pre-existing C1/C2) or
-symmetry alone. All 1,407+5 tests before this task passed with a
-hyperextended-looking elbow -- these tests are written so that specific
-failure mode (elbow well outside the shoulder-wrist vertical span) cannot
-silently pass again.
+"""C1-C7 (originally "Sửa bug hướng xoay IK + chỉnh khung hình demo",
+Part C). The class of test that task was itself missing before it: geometry
+INVARIANTS on the arm configuration, not just bone lengths (``tests/
+test_arm_ik.py``'s own pre-existing C1/C2) or symmetry alone.
+
+**"Sửa lại bất biến IK sai (hồi quy từ Pha 10)" task -- C1 corrected, read
+before touching it again:** the ORIGINAL C1 in this file
+(``test_c1_elbow_stays_within_the_shoulder_wrist_vertical_span``) asserted
+the elbow stays between the shoulder and the wrist on BOTH sides -- upper
+AND lower bound. The lower bound was anatomically wrong: a real elbow
+droops BELOW both the shoulder and the wrist when the hand is raised to
+shoulder height or above (the natural "V" -- shoulder high, elbow low,
+wrist raised back up), not a defect. Satisfying that wrong lower bound is
+what drove the previous task's ``POLE_DIRECTION_*`` recalibration to
+``y = 0`` (no downward droop at all), which flattened the arm into a
+near-straight line instead of a V -- see ``arm_ik.py``'s module docstring
+for the full trace. Fixed: C1 now only checks the upper bound (see
+``test_c1_elbow_never_rises_above_both_shoulder_and_wrist`` below), and
+``POLE_DIRECTION_RIGHT``/``LEFT`` are back to this project's original
+``(∓0.3, -1.0, 1.0)``. C2-C6 were untouched by this correction (still pass
+against the reverted pole -- verified by running them, not assumed).
 
 Uses the SAME closed-form ``solve_two_bone_ik`` (see ``arm_ik.py`` -- no
 new solver here), and the SAME real bone lengths from
@@ -59,16 +72,27 @@ def _configs(is_right: bool) -> dict[str, NDArray[np.float64]]:
 
 @pytest.mark.parametrize("is_right", [True, False])
 @pytest.mark.parametrize("config_name", ["level", "high", "low", "splayed"])
-def test_c1_elbow_stays_within_the_shoulder_wrist_vertical_span(config_name: str, is_right: bool) -> None:
+def test_c1_elbow_never_rises_above_both_shoulder_and_wrist(config_name: str, is_right: bool) -> None:
+    # UPPER bound only -- see this file's module docstring for why there is
+    # deliberately no lower bound. Body space: +y is UP (see
+    # pose_export.py's own extensive comment on this convention and its
+    # pixel-space flip) -- an elbow ABOVE both the shoulder and the wrist
+    # (a bigger y than both) is the genuine hyperextension/backward-bend
+    # artifact this test guards against. An elbow BELOW both is not a bug:
+    # raise a hand to shoulder height or higher to sign, and a real elbow
+    # hangs down, often well below both endpoints -- that is the natural
+    # "V" shape (shoulder high, elbow low, wrist raised back up). Do not
+    # add a lower bound back here without re-reading the module docstring
+    # above and ROADMAP.md's lesson-learned note for this task -- that is
+    # exactly the mistake this task corrects.
     shoulder = shoulder_position(is_right)
     pole = POLE_DIRECTION_RIGHT if is_right else POLE_DIRECTION_LEFT
     wrist = _configs(is_right)[config_name]
 
     elbow = solve_two_bone_ik(shoulder, wrist, pole, _L1, _L2)
 
-    lo = min(shoulder[1], wrist[1]) - _EPS
     hi = max(shoulder[1], wrist[1]) + _EPS
-    assert lo <= elbow[1] <= hi, f"{config_name} (is_right={is_right}): elbow.y={elbow[1]:.3f} outside [{lo:.3f}, {hi:.3f}]"
+    assert elbow[1] <= hi, f"{config_name} (is_right={is_right}): elbow.y={elbow[1]:.3f} above {hi:.3f}"
 
 
 @pytest.mark.parametrize("is_right", [True, False])
