@@ -53,6 +53,7 @@ from fsw_r.export.bone_lengths import (
     FINGER_METACARPAL_LENGTH_MM,
     FINGER_PHALANX_LENGTHS_MM,
     HAND_MM_TO_BODY_UNITS,
+    HAND_SCALE,
     KNUCKLE_LATERAL_SPACING_MM,
     THUMB_METACARPAL_LENGTH_MM,
     THUMB_PHALANX_LENGTHS_MM,
@@ -78,7 +79,15 @@ _FINGER_LATERAL_SLOTS: dict[str, float] = {
 # citation covers this 3D attachment angle (bone_lengths.py's module
 # docstring); reuses the same qualitative convention already visually
 # verified in fsw-r-viz/hand_geometry.py's _THUMB_BASE_ROTATION.
-_THUMB_BASE_OFFSET_MM: _Vec3 = np.array([26.0, 15.0, 0.0])
+#
+# Scaled by HAND_SCALE -- this is the ONE hand dimension not stored as a
+# bone_lengths constant, so it must be multiplied by the same uniform factor
+# as every bone, or the thumb's attachment point would stay put while its
+# bones grew, changing the hand's relative shape (and MPJPE). Only the raw
+# [26, 15, 0] RATIO carries the un-cited attachment geometry; the magnitude
+# now derives from the same single stature as everything else. See
+# bone_lengths.HAND_SCALE's comment.
+_THUMB_BASE_OFFSET_MM: _Vec3 = np.array([26.0, 15.0, 0.0]) * HAND_SCALE
 _THUMB_BASE_ROTATION = Rotation.from_euler("zy", [-65, -20], degrees=True)
 
 _FINGER_JOINT_NAMES = ("MCP", "PIP", "DIP", "TIP")

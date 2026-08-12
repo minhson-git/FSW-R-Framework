@@ -351,6 +351,35 @@ tiết đầy đủ.
   sign cụ thể — có thể cần đo lại nếu tỉ lệ nhân vật thay đổi (vd sau khi
   điều tra ngón cái, hoặc khi nối `BodyPose` thật).
 
+### Thống nhất scale bàn tay ↔ thân người — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 8" (tiếp Pha 7).
+
+**Việc đã làm:** bàn tay ở Pha 7 nhỏ bất tương xứng với thân vì
+`bone_lengths.py` dùng số mm KHÔNG neo vào chiều cao nào, còn
+`body_geometry.py` suy từ `ASSUMED_STATURE_MM`. Giờ **cả hai neo vào MỘT
+chiều cao** qua module lá mới `export/anthropometry.py` (phá vòng import).
+Bàn tay to lên đúng tỉ lệ nhân trắc (palm/shoulder 0,149 → 0,200) bằng cách
+nhân ĐỒNG NHẤT 1 hệ số scale (giữ nguyên tỉ lệ tương đối giữa các đốt/ngón).
+5 test bất biến mới (`test_hand_body_scale.py`), GIF thứ 4 đã commit.
+
+**⚠️ Điểm mấu chốt — đây chỉ đổi scale TỔNG THỂ bàn tay, MPJPE KHÔNG được
+đổi:** `validation/` chuẩn hoá mọi landmark qua `PoseNormalizer(size=150)`
+TRƯỚC khi so sánh, tức khử scale tổng thể — nên scale đồng đều KHÔNG đổi
+MPJPE (vẫn 48,72). Nếu MPJPE đổi thì nghĩa là hình dạng TƯƠNG ĐỐI trong bàn
+tay đã bị đổi ngoài ý muốn: đúng như vậy đã xảy ra 1 lần khi
+`_THUMB_BASE_OFFSET_MM` (điểm gắn ngón cái, hardcode trong
+`forward_kinematics.py`) chưa được nhân hệ số scale — MPJPE lệch
+48,72→48,74, đã bắt bằng cách chạy lại `eval_fk_accuracy.py` và sửa (nhân
+`HAND_SCALE` cho offset). Bất kỳ thay đổi scale bàn tay nào sau này PHẢI
+chạy lại eval để xác nhận `reports/fk_accuracy.md` không đổi.
+
+**Việc còn lại:** như phần rederive metacarpal ngón cái đã nêu — palm của
+bàn tay này ~0,43 chiều dài (không phải ~0,50 nhân trắc), nên `HAND_LENGTH_
+TO_STATURE=0,1197` phải khít 3 bất biến; sửa triệt để cần rederive metacarpal
+(sẽ đổi hình dạng tương đối ⇒ đổi MPJPE), nằm cùng nhóm với "điều tra ngón
+cái" ở trên.
+
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
 **Trạng thái:** xong ở tầng ký hiệu — `DynamicsSymbol` + `FSWModifierSymbol`

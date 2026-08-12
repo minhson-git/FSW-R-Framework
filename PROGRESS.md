@@ -1536,6 +1536,103 @@ C7, vì pha này không chạm vào FK bàn tay/dữ liệu góc khớp.
   đánh dấu "WEAKER") chứ không phải tỉ lệ Drillis-Contini sai — không sửa
   trong task này (ngoài phạm vi, brief cấm hiệu chỉnh hằng số bàn tay).
 
+## Pha 8 — Thống nhất scale bàn tay ↔ thân người
+
+Task riêng (tiếp Pha 7): video Pha 7 đã ra hình người, nhưng **bàn tay nhỏ bất
+tương xứng với thân**. Chẩn đoán gốc rễ (đo, không đoán): `bone_lengths.py`
+dùng số mm rời rạc **KHÔNG neo vào chiều cao nào**, còn `body_geometry.py` suy
+mọi thứ từ `ASSUMED_STATURE_MM=1700`. Hai module scale từ 2 cơ sở khác nhau →
+bàn tay ~1,5× quá nhỏ so với thân (đo: palm/shoulder = 0,149 vs nhân trắc ~0,24).
+
+### A — Neo cả hai vào MỘT chiều cao
+
+- **`export/anthropometry.py` (module lá MỚI)**: giữ 2 hằng số cơ sở
+  (`ASSUMED_STATURE_MM`, `HAND_MM_TO_BODY_UNITS`). Trước đây `ASSUMED_STATURE_MM`
+  nằm ở `body_geometry.py`, `HAND_MM_TO_BODY_UNITS` ở `bone_lengths.py`, và
+  `body_geometry` import từ `bone_lengths`. Neo bàn tay vào cùng stature sẽ bắt
+  `bone_lengths` import ngược `body_geometry` → **vòng import**. Tách 2 hằng số
+  ra module lá phá vòng: cả hai chỉ import từ module lá, không import lẫn nhau.
+- **`bone_lengths.py`**: mọi độ dài giờ là `_RAW_* × _HAND_SCALE`, với
+  `_HAND_SCALE` neo độ dài bàn tay duỗi vào `HAND_LENGTH_TO_STATURE ×
+  ASSUMED_STATURE_MM`. **Tỉ lệ tương đối giữa các đốt/ngón KHÔNG đổi** (nhân
+  đồng nhất 1 hệ số) — chỉ đổi scale tổng thể. Nguồn tỉ lệ tương đối vẫn là
+  Wicaksono et al. (đã trích ở Pha 5).
+- **Vì sao `HAND_LENGTH_TO_STATURE = 0,1197` chứ không phải 0,108 nhân trắc**:
+  bàn tay này có palm/hand ~0,43 (không phải ~0,50 như nhân trắc), nên ở 0,108
+  palm/shoulder tụt xuống ~0,18 — dưới sàn test bất biến. 0,1197 là giá trị đồng
+  thời thoả cả 3 bất biến GIVEN hình dạng cố định; là hệ quả trực tiếp của lệch
+  metacarpal ~0,43-vs-0,50 mà brief đặt NGOÀI phạm vi (sửa nó = đổi hình dạng
+  tương đối = đổi MPJPE).
+
+### Bug scale KHÔNG đồng đều (phát hiện thật lúc verify MPJPE, không đoán)
+
+`_THUMB_BASE_OFFSET_MM` (điểm gắn gốc ngón cái vào lòng bàn tay) hardcode trong
+`forward_kinematics.py`, **KHÔNG phải hằng số của `bone_lengths.py`** → lần đầu
+KHÔNG được nhân `_HAND_SCALE`. Hậu quả: xương ngón cái phóng to 1,347× nhưng
+điểm gắn giữ nguyên → **hình dạng tương đối ngón cái đổi** → chạy lại
+`eval_fk_accuracy.py` ra MPJPE **48,72 → 48,74** (median 46,49 → 46,65). Đúng
+loại lỗi criterion "MPJPE không được đổi" dùng để bắt (nếu chỉ đọc diff `.md`
+rỗng do script bail lúc thiếu ground truth thì đã bỏ sót). Sửa: export
+`HAND_SCALE` từ `bone_lengths.py`, nhân vào offset để **toàn bàn tay** (kể cả
+điểm gắn ngón cái) phóng đều. Sau sửa MPJPE trở lại **48,72 chính xác** —
+`reports/fk_accuracy.md` diff RỖNG.
+
+### Bảng đo trước/sau (thật, chạy FK)
+
+| Tỉ lệ | Trước | Sau | Cửa sổ chấp nhận | Cơ sở |
+|---|---|---|---|---|
+| palm / shoulder | 0,149 | 0,200 | [0,20; 0,28] | Drillis-Contini vai 0,259H |
+| palm / forearm | 0,264 | 0,355 | [0,33; 0,43] | Drillis-Contini cẳng tay 0,146H |
+| hand-length / stature | 0,089 | 0,120 | [0,10; 0,12] | nhân trắc học ~0,108H |
+
+(hệ số scale ĐỒNG NHẤT = 1,347; độ dài bàn tay duỗi 151,1mm → 203,5mm)
+
+### ⚠️ Đo "palm" bằng `MIDDLE_FINGER_MCP`, KHÔNG phải `_TIP`
+
+Test bất biến B1/B2 đo palm = khoảng cách cổ tay → **MCP ngón giữa** (khớp
+đốt bàn-ngón, đầu của bộ xương lòng bàn tay CỐ ĐỊNH), nên bất biến với việc
+GẬP ngón. Nếu đo tới **TIP**, đầu ngón dịch về phía cổ tay khi ngón cong →
+palm co lại theo tư thế → test sẽ đo TƯ THẾ chứ không phải giải phẫu. Có test
+riêng (`test_b4_palm_length_is_invariant_to_finger_flexion`) chứng minh: gập
+cả bàn tay thành nắm đấm KHÔNG đổi palm-đo-bằng-MCP. (Ngược lại, B3 đo
+hand-length tới TIP là ĐÚNG, vì đo trên bàn tay DUỖI hoàn toàn, flexion=0.)
+
+### A3 — hiệu chỉnh lại tỉ lệ pixel
+
+Bàn tay to hơn → bounding box thân+tay cao hơn (6,38 → 7,77 đơn vị) →
+`BODY_UNITS_TO_PIXELS` 68,0 → **56,0** (đưa 7,77u ≈ 85% chiều cao khung),
+`VERTICAL_CENTER_OFFSET` -1,91 → **-1,21** (trung điểm bbox mới, đo trực tiếp).
+
+### Kết quả
+
+5 test bất biến MỚI (`tests/test_hand_body_scale.py` B1-B5) đều pass.
+`reports/fk_accuracy.md` **KHÔNG đổi** (MPJPE=48,72; diff rỗng sau khi sửa bug
+thumb-offset) — vì `validation/` chuẩn hoá qua `PoseNormalizer(size=150)` khử
+scale tổng thể, nên scale ĐỒNG ĐỀU không đổi MPJPE (chứng minh cả toán học:
+`normalize(k·X)==normalize(X)`, lẫn thực nghiệm: fetch ground truth + chạy lại
+eval). GIF thứ 4 `demo/mvp1_sign_4_unified_scale.gif` đã commit (tiếp chuỗi so
+sánh 3 giai đoạn). **0 file `core/`, `timeline/`, `validation/` bị sửa**
+(`git diff --stat` xác nhận); mọi kích thước bàn tay VÀ thân giờ suy từ MỘT
+hằng số chiều cao.
+
+Ngoài lề (drive-by): sửa 1 lỗi mypy `[type-arg]` CÓ TỪ TRƯỚC ở
+`tests/test_head_symbol.py` (`np.ndarray` thiếu tham số generic, từ commit
+HeadSymbol không liên quan) để `mypy --strict` sạch hoàn toàn — thuần
+annotation, không đổi runtime.
+
+### Giả định CHƯA kiểm chứng (cập nhật ở pha này)
+
+- `HAND_LENGTH_TO_STATURE = 0,1197`: KHÔNG phải nhân trắc 0,108 — chọn để thoả
+  đồng thời 3 bất biến GIVEN hình dạng bàn tay cố định (palm ~0,43 hand). Nằm
+  sát sàn B1 [0,20] và đỉnh B3 [0,12] — khít có chủ đích, là triệu chứng của
+  lệch metacarpal 0,43-vs-0,50 (ngoài phạm vi, sửa sẽ đổi MPJPE).
+- Lệch cross-check 18% ghi ở Pha 5 (0,108H=183,6mm vs chuỗi FK 151,1mm) giờ
+  ĐÓNG một phần: bàn tay đã neo vào stature (203,5mm ở 0,1197H), nhưng lệch
+  palm-proportion vẫn còn (chưa rederive metacarpal — sẽ đổi MPJPE).
+- `BODY_UNITS_TO_PIXELS=56,0` / `VERTICAL_CENTER_OFFSET=-1,21` thay cho số Pha 7
+  (68,0 / -1,91) — vẫn là hiệu chỉnh trên ĐÚNG 1 sign, cần đo lại nếu tỉ lệ
+  nhân vật đổi ở pha sau.
+
 ## `fsw-r-viz`: visualization
 
 - `hand_geometry.py`: forward-kinematics gần đúng (độ dài xương, vị trí gốc
@@ -1595,11 +1692,21 @@ C7, vì pha này không chạm vào FK bàn tay/dữ liệu góc khớp.
   đoán): hiệu chỉnh Phần A cho riêng bàn tay không đủ cho cả người, phải đo
   và sửa lại (`BODY_UNITS_TO_PIXELS`, `VERTICAL_CENTER_OFFSET`) sau khi
   render thử.
-- `fsw-r`: `mypy --strict` sạch (46 file `src/`; `src/`+`tests/` còn 1 lỗi
-  cũ không liên quan ở `test_head_symbol.py`, xác nhận có từ trước Pha 4
-  qua `git stash`), `pytest` **1.402/1.402 pass** (1.264
+- **Thống nhất scale bàn tay ↔ thân (Pha 8) đã xong** — bàn tay và thân giờ
+  suy từ MỘT chiều cao (`export/anthropometry.py` mới phá vòng import), bàn
+  tay ~1,5× to lên đúng tỉ lệ nhân trắc (palm/shoulder 0,149 → 0,200). **0
+  file `core/`, `timeline/`, `validation/` bị sửa** (`git diff --stat` xác
+  nhận), `reports/fk_accuracy.md` **KHÔNG đổi** (MPJPE=48,72) — sau khi bắt
+  và sửa 1 bug scale không đồng đều (`_THUMB_BASE_OFFSET_MM` chưa nhân
+  `HAND_SCALE`, từng làm MPJPE lệch 48,72→48,74). 5 test bất biến mới
+  (`test_hand_body_scale.py`), GIF thứ 4 (`mvp1_sign_4_unified_scale.gif`)
+  đã commit. Chi tiết ở mục "Pha 8" phía trên.
+- `fsw-r`: `mypy --strict` **sạch hoàn toàn** (`src/`+`tests/`, 87 file — lỗi
+  cũ `[type-arg]` ở `test_head_symbol.py` đã sửa drive-by ở Pha 8), `pytest`
+  **1.407/1.407 pass** (1.264
   trước Pha 4 + 67 test Pha 4 + 19 test Pha 5 + 31 test Pha 6 + 21 test
-  Pha 7: `test_arm_ik.py`, `test_body_geometry.py`, `test_body_and_arm.py`
+  Pha 7 + 5 test Pha 8 (`test_hand_body_scale.py` B1-B5): `test_arm_ik.py`,
+  `test_body_geometry.py`, `test_body_and_arm.py`
   — đúng 2 test cũ buộc phải đổi (1 ở Pha 4, xem mục đó; 1 ở Pha 7 —
   `test_non_hand_components_stay_present_at_zero_confidence` khẳng định
   `POSE_LANDMARKS` luôn confidence 0, đúng ngược lại mục tiêu chính của

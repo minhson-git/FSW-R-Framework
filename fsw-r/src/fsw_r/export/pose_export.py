@@ -98,7 +98,14 @@ FRAME_HEIGHT = 512
 #    314.0 showed a headless torso with the hand floating disconnected off
 #    the top edge). Recalibrated the same way as Part A: 68.0 puts that
 #    bounding box's height at ~85% of frame height (512x512).
-BODY_UNITS_TO_PIXELS = 68.0
+#
+# 3. The hand-body-scale task, hand grown ~1.347x (bone_lengths.py anchored
+#    to stature): the SAME real MVP-1 sign's full body-space bounding box
+#    grew from 6.38 to 7.77 units tall (the longer fingers reach ~1.4 units
+#    higher across the moving sign), so at 68.0 it measured 299 x 529 px --
+#    529 > 512, running off the frame. Recalibrated the same measured way:
+#    56.0 puts the 7.77-unit height back at ~85% of frame height (435 px).
+BODY_UNITS_TO_PIXELS = 56.0
 
 # MEASURED, not guessed, alongside BODY_UNITS_TO_PIXELS above: which
 # body-space y should land at the frame's OWN vertical center. Scaling
@@ -110,8 +117,10 @@ BODY_UNITS_TO_PIXELS = 68.0
 # offset=0, the first full-body render's hips ran off the BOTTOM of the
 # frame while the top had unused empty space. Measured full-body bounding
 # box for a real MVP-1 sign: y in [-5.10, 1.28] body units, midpoint
-# -1.91 -- that midpoint is what now gets centered.
-VERTICAL_CENTER_OFFSET = -1.91
+# -1.91 -- that midpoint is what now gets centered. Re-measured after the
+# hand-body-scale task: the longer fingers push the top up (y in [-5.10,
+# 2.67]), moving the midpoint to -1.21 -- recentered to match.
+VERTICAL_CENTER_OFFSET = -1.21
 
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",

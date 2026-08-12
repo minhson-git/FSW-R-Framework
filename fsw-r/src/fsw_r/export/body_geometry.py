@@ -18,17 +18,17 @@ gives segment length as a fraction of body height ``H``:
     hand (wrist -> fingertip)        = 0.108 H   -- cross-check only, see below
 
 ``H`` (assumed adult stature) is NOT from that source -- ``ASSUMED_STATURE_MM``
-below is a commonly-cited round approximate adult height, not a specific
-population statistic. Flagged as an assumption, same as
-``bone_lengths.py``'s ``HAND_MM_TO_BODY_UNITS``.
+(now in ``anthropometry.py``, imported below) is a commonly-cited round
+approximate adult height, not a specific population statistic. Flagged as an
+assumption, same as ``HAND_MM_TO_BODY_UNITS``.
 
-**Cross-check, not reconciled**: 0.108 H = 183.6 mm at the assumed stature,
-vs. this project's own FK-derived middle-finger chain length (metacarpal +
-3 phalanges, ``bone_lengths.py``) = 151.1 mm -- an ~18% difference, most
-likely because ``bone_lengths.py``'s metacarpal length is itself a derived
-estimate (flagged "WEAKER" there), not because this module's ratio is
-wrong. This task's brief explicitly puts hand-geometry recalibration out of
-scope (Part 0) -- noted here, not fixed.
+**Hand now anchors to the same H**: ``bone_lengths.py`` scales its cited
+finger shape to ``HAND_LENGTH_TO_STATURE x ASSUMED_STATURE_MM`` (this task),
+so hand and body derive from ONE height. That fraction is 0.1197, not this
+source's cross-check 0.108 H (= 183.6 mm), because this hand's palm is ~0.43
+of its length vs the anthropometric ~0.50 -- reconciling THAT (rederiving the
+metacarpal) would change the hand's relative shape and MPJPE, still out of
+scope. See ``bone_lengths.py``'s docstring for the full reasoning.
 
 **NOT from Drillis-Contini, individually flagged as ESTIMATED:**
 - ``TORSO_LENGTH_MM`` (shoulder-to-hip vertical) -- the source figure's own
@@ -50,12 +50,12 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from fsw_r.export.bone_lengths import HAND_MM_TO_BODY_UNITS
-
-# Commonly-cited round approximate adult stature -- NOT a specific
-# population statistic, just the scale Drillis-Contini's fractions are
-# applied to. See module docstring.
-ASSUMED_STATURE_MM = 1700.0
+# Both base constants now live in the leaf ``anthropometry`` module so the
+# HAND (bone_lengths.py) can anchor to the SAME stature without an import
+# cycle -- see anthropometry.py's docstring and the task brief Part A1.
+# Re-exported here (``ASSUMED_STATURE_MM``) so existing importers of it from
+# this module keep working.
+from fsw_r.export.anthropometry import ASSUMED_STATURE_MM, HAND_MM_TO_BODY_UNITS
 
 SHOULDER_WIDTH_MM = 0.259 * ASSUMED_STATURE_MM
 HIP_WIDTH_MM = 0.191 * ASSUMED_STATURE_MM
