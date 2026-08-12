@@ -31,10 +31,14 @@ supports, as a visual sanity-check:
    at the hip so PoseVisualizer's closed shoulder-hip-hip trapezoid no
    longer dominates the frame, plus eyes so the head has real shape), then
    _6_arm_ik_fix.gif (the "sửa bug hướng xoay IK + chỉnh khung hình demo"
-   task: the elbow no longer swings ~160px below both the shoulder and
-   wrist -- a bad POLE_DIRECTION_* calibration, not the rotation-sign bug
-   the task's own brief first suspected, see arm_ik.py's module docstring
-   -- and the shoulders no longer span 81% of the frame width).
+   task: shoulders no longer span 81% of the frame width -- kept; but that
+   task's own elbow recalibration, meant to fix the elbow swinging ~160px
+   below both the shoulder and wrist, itself rested on a WRONG invariant
+   and flattened the arm into a near-straight line, see arm_ik.py's module
+   docstring), then _7_elbow_invariant_fix.gif (the "sửa lại bất biến IK
+   sai" task: reverted that wrong invariant/pole recalibration -- the
+   elbow droops below the shoulder-wrist line again, correctly this time,
+   forming a natural V, while keeping _6's frame-width fix).
 
 Run with: python -m fsw_r_viz.demo
 """
