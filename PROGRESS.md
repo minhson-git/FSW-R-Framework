@@ -1758,11 +1758,26 @@ annotation, không đổi runtime.
   (`test_readable_demo_frame.py`'s C5 — khung hình đổi mục tiêu từ chiều
   cao 70-90% sang chiều rộng vai, xem mục "Pha 10" phía trên — Pha 11 đo
   lại con số này LẦN 3, xem mục "Pha 11").
+- **Video cận cảnh bàn tay (Pha 12) đã xong** — video toàn thân không đọc
+  được handshape (MCP cách nhau 8,4px, dưới độ dày nét 3px của
+  `PoseVisualizer`) — thêm video THỨ HAI (`render_hand_closeup.py`, file
+  mới, chỉ trong `fsw-r-viz/`), không sửa video toàn thân. Neo cổ tay,
+  phóng theo kích thước RIÊNG của bàn tay (3,6×, đo được — không phải fit
+  bbox quỹ đạo, chỉ 2,3×): MCP tối thiểu 8,4px → 30px, bàn tay chiếm 80%
+  chiều cao khung. `HAND_CLOSEUP_THICKNESS=2` (so bằng mắt với 3). **0 file
+  `fsw-r/src/fsw_r/` bị sửa** (`git diff --stat` xác nhận), video toàn
+  thân (`mvp1_sign_7_elbow_invariant_fix.gif`) không đổi (`git status`
+  xác nhận). GIF thứ 8 (`mvp1_sign_8_hand_closeup.gif`) đã commit, xem lại
+  bằng mắt xác nhận đọc được: ngón trỏ duỗi thẳng tách biệt rõ 3 ngón còn
+  lại nắm — kèm 1 quan sát trung thực (GIF chỉ 1 frame do handshape tĩnh
+  suốt cả sign + Pillow tự gộp frame giống hệt nhau, không phải lỗi). Chi
+  tiết ở mục "Pha 12" phía trên.
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
-  4/5 qua `git stash`), `pytest` **27/27 pass** (tăng từ 5/5 khi
+  4/5 qua `git stash`), `pytest` **33/33 pass** (tăng từ 5/5 khi
   `fsw-r-viz` còn chỉ có Category 1 — đã qua Pha 4 (Head&Face merge, nhóm
-  khác) + Pha 5 (`test_render_pose_video.py`) từ lúc đó).
+  khác) + Pha 5 (`test_render_pose_video.py`) + Pha 12 (6 test
+  `test_render_hand_closeup.py` C1-C5, C6 là toàn bộ suite) từ lúc đó).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
   fill: joint pose giống hệt nhau ở mọi rotation/fill/hand_side, chỉ hướng
   ngón (rotation) hoặc mặt bàn tay/mặt phẳng cánh tay (fill) thay đổi.
@@ -2019,6 +2034,95 @@ không chỉ suy luận hình học trừu tượng ("khuỷu nằm giữa 2 đi
 hợp lý") — một bất biến sai, một khi đã có test khoá lại, còn NGUY HIỂM
 HƠN không có test nào, vì nó tạo cảm giác an toàn giả và activelly kéo
 việc hiệu chỉnh (ở đây là `POLE_DIRECTION_*`) theo hướng SAI.
+
+## Pha 12 — Video cận cảnh bàn tay (thấy rõ khớp ngón)
+
+Task nhỏ, chỉ trong `fsw-r-viz/` (không đụng `fsw-r/src/fsw_r/` — `git diff
+--stat` xác nhận 0 file). Không đổi dữ liệu, không đổi tham số 3D, không
+ảnh hưởng MPJPE.
+
+**Vấn đề (đo trên `M508x515S10000493x485S22a04500x500`):** video toàn thân
+(khung 512×512) không đọc được handshape — bàn tay chỉ chiếm 59×115px,
+khoảng cách nhỏ nhất giữa 2 khớp MCP kề nhau chỉ **8,4px**, trong khi
+`PoseVisualizer` vẽ nét dày `round(sqrt(512×512)/150)=3px` — 4 ngón dính
+thành 1 mảng. Tăng độ phân giải khung không giải quyết được vì công thức
+độ dày nét TỈ LỆ THUẬN với kích thước khung, tỉ lệ nét/khoảng-cách-ngón
+không đổi. **Không sửa video toàn thân** — nó vẫn đang làm đúng việc của
+nó (tư thế/quỹ đạo); thêm video THỨ HAI chuyên đọc handshape.
+
+**Chiến lược phóng đã chọn: neo cổ tay, phóng theo kích thước RIÊNG của
+bàn tay** (không phải bounding box toàn bộ quỹ đạo). Lý do: mục đích video
+cận cảnh là đọc handshape, không phải xem quỹ đạo (quỹ đạo đã có ở video
+toàn thân). Đo cả 2 cách trước khi chọn:
+
+| Chiến lược | Hệ số phóng | MCP sau phóng |
+|---|---|---|
+| (a) Fit bbox toàn chuỗi (181px cao, do bị quỹ đạo kéo giãn) | 2,3× | 19px |
+| (b) Neo cổ tay, phóng theo kích thước bàn tay (115px, không đổi mọi frame) | **3,6×** | **30px** |
+
+Đã đo xác nhận: `HAND_CLOSEUP_TARGET_FRACTION = 0,8` (bàn tay chiếm 80%
+chiều cao khung) áp cho chiều cao đo được (114,8px) ra đúng hệ số 3,57×,
+khớp gần như chính xác con số 3,6× đo độc lập trước đó bằng tay — xác nhận
+đây là hằng số đúng để đặt tên (không phải hệ số phóng tự nó, hệ số phóng
+là ĐẠI LƯỢNG SUY RA từ hằng số này + kích thước bàn tay thực đo được, không
+hardcode `3.6`). Kết quả sau phóng: MCP tối thiểu 30,0px (≥ 20px yêu cầu),
+bàn tay chiếm đúng 80% chiều cao khung (trong khoảng 70-90%).
+
+**`thickness`:** so sánh bằng mắt 2px vs 3px ở cùng mức phóng 3,6× (cả 2
+đều tách bạch 4 ngón rõ ràng ở khoảng cách MCP 30px) — chọn **2px**
+(`HAND_CLOSEUP_THICKNESS`) vì nét mảnh hơn phù hợp hơn với các đốt ngón
+ngắn (PIP-DIP của ngón cong lại còn ngắn hơn khoảng cách MCP nhiều).
+
+**Triển khai** (`fsw-r-viz/src/fsw_r_viz/render_hand_closeup.py`, file
+mới): `hand_closeup_pose(pose, hand)` — biến đổi THUẦN DỮ LIỆU (tách riêng
+khỏi phần ghi video, giống cách `frames_to_pose` tách khỏi
+`render_pose_video.py`, để test được không cần vidgear/ffmpeg): ép
+confidence = 0 mọi component trừ tay mục tiêu; mỗi frame neo lại theo CỔ
+TAY của chính frame đó rồi nhân hệ số phóng. **Neo dọc KHÔNG cố định** — tự
+tính từ khoảng trải dọc thật của bàn tay (đo qua mọi frame đang hoạt động,
+không chỉ frame 0) sao cho khoảng trải đó nằm giữa khung; với handshape mà
+ngón chủ yếu vươn về 1 phía so với cổ tay (trường hợp phổ biến), cách này
+tự động đặt cổ tay THẤP HƠN tâm khung, đúng yêu cầu brief ("neo cổ tay ở
+tâm khung, hoặc điểm thấp hơn tâm") — tính từ dữ liệu thật thay vì đoán
+thêm 1 hằng số nữa. Neo ngang CỐ ĐỊNH ở giữa khung (đúng C3).
+`render_hand_closeup()`/`fsw_to_hand_closeup_video()` bọc thêm phần
+ghi video/GIF (cùng logic fallback với `render_pose_video.py`, không sửa
+file đó).
+
+**Quan sát trung thực (không phải bug, ghi nhận để không ai hiểu nhầm sau
+này):** GIF cận cảnh của sign demo chuẩn chỉ có **1 frame** trong file dù
+input có 20 frame — vì sign này giữ NGUYÊN 1 handshape suốt cả câu (chỉ cổ
+tay di chuyển theo quỹ đạo), nên sau khi neo lại theo cổ tay mỗi frame,
+hình bàn tay tương đối giống hệt nhau ở MỌI frame (đã kiểm chứng bằng số:
+lệch ở chữ số thập phân thứ 4, nhiễu dấu phẩy động, không phải khác biệt
+thật). Pillow tự động gộp các frame GIF giống hệt nhau khi ghi (xác nhận
+bằng 1 test tái tạo tối giản riêng, không phải lỗi của pipeline này) — kết
+quả là file GIF chỉ lưu 1 frame. Đây là hành vi ĐÚNG cho sign cụ thể này
+(handshape tĩnh), không phải lỗi hiển thị.
+
+**Xem lại bằng mắt trước khi commit:** với `S10000` (Index), thấy rõ 1
+đường thẳng dài (ngón trỏ, duỗi thẳng, cao nhất trong khung) tách biệt hẳn
+với 3 đường ngắn hơn (giữa/áp út/út, nắm lại) + ngón cái tách riêng sang
+1 bên — đúng tiêu chí brief đề ra. **Phát hiện phụ, ghi nhận trung thực**:
+với handshape này, phần "gập" (PIP→DIP→TIP) của 3 ngón cong lại xảy ra gần
+như THẲNG THEO TRỤC Z (chiều sâu, hướng vào/ra khỏi camera) — nên trong
+hình chiếu 2D (chỉ x,y, giống hệt cách video toàn thân chiếu) chỗ gập
+KHÔNG hiện rõ thành 1 góc khuỷu nhìn thấy được, chỉ hiện ra là đoạn ngắn
+hơn. Tiêu chí chính (phân biệt ngón trỏ duỗi ↔ 3 ngón còn lại nắm) vẫn đạt
+— nhưng "thấy rõ CHỖ GẬP" theo đúng nghĩa đen (góc khuỷu) sẽ cần đổi góc
+camera của `PoseVisualizer`, việc đó ngoài phạm vi task này.
+
+**Kiểm chứng:** `mypy --strict` sạch (`fsw-r` không đổi gì nên vẫn 84 file
+sạch; `fsw-r-viz` 29 file, không thêm lỗi mới — vẫn 4 lỗi cũ không liên
+quan). `pytest` **fsw-r 1.441/1.441 pass nguyên** (0 file bị sửa nên chắc
+chắn không đổi), **fsw-r-viz 33/33 pass** (27 cũ + 6 test mới
+`test_render_hand_closeup.py` C1-C5, C6 là toàn bộ suite). `git diff
+--stat` xác nhận 0 file trong `fsw-r/src/fsw_r/` bị sửa.
+`reports/fk_accuracy.md` không đổi (hiển nhiên, vì `fsw-r` không bị đụng
+tới ở bất kỳ đâu). GIF thứ 8 (`mvp1_sign_8_hand_closeup.gif`) đã commit
+cùng file "mới nhất" chính tắc `mvp1_sign_hand_closeup.gif` (xác nhận
+byte-for-byte giống hệt), và `mvp1_sign_7_elbow_invariant_fix.gif` (video
+toàn thân) xác nhận KHÔNG đổi (`git status` không có diff trên file đó).
 
 ## Việc còn để ngỏ / chưa làm
 

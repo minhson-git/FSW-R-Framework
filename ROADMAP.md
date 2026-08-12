@@ -514,6 +514,53 @@ mắt (so sánh với cả GIF Pha 9 và Pha 10), và commit. Chi tiết đầy 
    diễn thuần hình học rồi tin ngay. Áp dụng cho mọi thành phần hình học
    thêm mới sau này (Category 5 `BodyPose`, MVP-2 hai tay...).
 
+### Video cận cảnh bàn tay (thấy rõ khớp ngón) — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 12" (tiếp Pha 11).
+Task nhỏ, chỉ trong `fsw-r-viz/` — 0 file `fsw-r/src/fsw_r/` bị sửa.
+
+**Việc đã làm:** video toàn thân không đọc được handshape (MCP cách nhau
+8,4px, dưới độ dày nét 3px của `PoseVisualizer` ở khung 512×512 — công
+thức độ dày tỉ lệ thuận với khung nên tăng độ phân giải không giúp gì).
+Thêm video THỨ HAI (`render_hand_closeup.py`, file mới) thay vì sửa video
+toàn thân (vẫn đang làm đúng việc show tư thế/quỹ đạo). Đo cả 2 chiến lược
+phóng trước khi chọn: (a) fit bbox toàn quỹ đạo cổ tay (2,3×, MCP→19px) so
+với (b) neo cổ tay + phóng theo kích thước RIÊNG của bàn tay (3,6×,
+MCP→30px) — chọn (b) vì mục đích là đọc handshape, không phải xem quỹ đạo.
+`HAND_CLOSEUP_TARGET_FRACTION=0,8` (hằng số có tên, không hardcode hệ số
+phóng) tái tạo đúng hệ số 3,6× đo độc lập. `HAND_CLOSEUP_THICKNESS=2` chọn
+sau khi so bằng mắt với mặc định 3px. Neo dọc tự tính từ khoảng trải thật
+của bàn tay (không phải 1 hằng số phần trăm khung đoán thêm) — tự động đặt
+cổ tay thấp hơn tâm khi ngón vươn 1 phía, đúng yêu cầu brief. 6 test bất
+biến mới (`test_render_hand_closeup.py`). GIF thứ 8
+(`mvp1_sign_8_hand_closeup.gif`) đã render, xem lại bằng mắt (index duỗi
+thẳng tách biệt rõ 3 ngón nắm lại, đúng tiêu chí), và commit — video toàn
+thân (`mvp1_sign_7_elbow_invariant_fix.gif`) xác nhận không đổi. Chi tiết
+đầy đủ ở `PROGRESS.md` mục "Pha 12".
+
+**Phát hiện phụ, ghi nhận trung thực (không sửa, ngoài phạm vi task):**
+chỗ "gập" của 3 ngón cong lại (PIP→DIP→TIP) chủ yếu xảy ra theo trục Z
+(chiều sâu), nên trong hình chiếu 2D (chỉ x,y, giống cách `PoseVisualizer`
+luôn chiếu) không hiện rõ thành 1 góc khuỷu nhìn thấy được — chỉ hiện ra
+là đoạn ngắn hơn ngón duỗi. Muốn thấy rõ GÓC GẬP theo đúng nghĩa đen cần
+đổi góc camera của renderer — việc mới, không nhỏ, ngoài phạm vi task này
+(xem "Việc còn lại" bên dưới).
+
+**Việc còn lại — 2 hạng mục ảnh chưa làm, VẪN CHƯA LÀM ở task này (nhắc
+lại từ mục "Khung hình demo dễ đọc hơn" phía trên, chưa có tiến triển
+mới):**
+- **Thêm `FACE_LANDMARKS` thật (468 điểm MediaPipe)** — đầu hiện chỉ có
+  mũi/tai/miệng/mắt tĩnh (`body_geometry.py`, không phải mesh mặt thật).
+  Cần thiết kế cách map từ `FaceExpressionPose` (Category 4, đã có, nhóm
+  khác phụ trách — blend-shape) sang 468 toạ độ tĩnh mà `PoseVisualizer`
+  hiểu được — việc mới, không nhỏ.
+- **Mở rộng sang 2 tay** (MVP-2, ~20,9% sign thật cần ≥2 track — xem mục
+  "MVP-2" ở trên) — video hiện chỉ có 1 tay (phải); cần logic phân biệt/
+  gán track cho tay trái mà `SignTimeline` MVP-1 chưa viết. Ảnh hưởng cả
+  video toàn thân LẪN video cận cảnh mới (cận cảnh hiện chỉ nhận 1 tham số
+  `hand`, gọi 2 lần cho 2 tay là đủ về mặt code, nhưng chưa có sign thật 2
+  tay nào để render thử).
+
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
 **Trạng thái:** xong ở tầng ký hiệu — `DynamicsSymbol` + `FSWModifierSymbol`
