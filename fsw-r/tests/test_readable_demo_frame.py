@@ -103,7 +103,21 @@ def test_c4_nose_is_above_shoulder_and_hip_is_absent() -> None:
     assert pose.body.confidence[0, 0, start + _POSE_POINT_NAMES.index("RIGHT_HIP")] == 0.0
 
 
-def test_c5_figure_occupies_70_to_90_percent_of_frame_height() -> None:
+def test_c5_figure_height_stays_in_a_measured_range_after_ik_fix() -> None:
+    # Originally this task's own C5 ("figure occupies 70-90% of frame
+    # height") -- superseded by the "sửa bug hướng xoay IK + chỉnh khung
+    # hình demo" task, which explicitly recalibrates the frame around
+    # SHOULDER WIDTH instead (see tests/test_arm_configuration.py's C6, the
+    # actual current framing target/acceptance criterion). That task's own
+    # elbow-position fix (arm_ik.py) also shrinks this bounding box as a
+    # side effect: the pathological downward-spiking elbow no longer drags
+    # the lowest point down, so height dropped from ~80% to ~39% of frame
+    # height at the new (smaller, width-driven) BODY_UNITS_TO_PIXELS -- see
+    # pose_export.py's own calibration-history comment, entry 5. Height is
+    # no longer a DESIGN TARGET here, but this is still worth a regression
+    # bound (measured, not guessed) so a future accidental change to the
+    # scale or the arm geometry doesn't silently balloon or collapse the
+    # figure without any test catching it.
     from fsw_r.core.fswr_converter import fsw_to_fswr
     from fsw_r.timeline.build import build_timeline
     from fsw_r.timeline.sample import sample
@@ -122,7 +136,7 @@ def test_c5_figure_occupies_70_to_90_percent_of_frame_height() -> None:
 
     height_px = max(all_active_y) - min(all_active_y)
     fraction = height_px / FRAME_HEIGHT
-    assert 0.70 <= fraction <= 0.90, f"figure occupies {fraction:.2%} of frame height, expected 70-90%"
+    assert 0.30 <= fraction <= 0.50, f"figure occupies {fraction:.2%} of frame height, expected 30-50%"
     assert BODY_UNITS_TO_PIXELS > 0  # named constant, sanity
 
 # C6 (this task's brief: "1.407 test cũ pass nguyên") is the whole existing

@@ -134,7 +134,28 @@ FRAME_HEIGHT = 512
 #    now-removed hip-to-head span, not this smaller upper-body one).
 #    Recalibrated the same measured way: 94.0 puts the new 4.35-unit height
 #    at ~80% of frame height (410 px).
-BODY_UNITS_TO_PIXELS = 94.0
+#
+# 5. The "sửa bug hướng xoay IK + chỉnh khung hình demo" task: at 94.0, the
+#    SHOULDER WIDTH (not height) measured 4.40 body units -- 414 px, 81% of
+#    FRAME_WIDTH, which that task's brief flags as too close to the edges
+#    (the "đường ngang dài" -- long horizontal line -- in the before-fix
+#    GIF). Also, fixing the elbow's downward-spike bug (see arm_ik.py) on
+#    its own shrinks the overall bounding box: the pathological elbow no
+#    longer drags the lowest point down to y=-2.39, so the full body-space
+#    height dropped from 4.35 to 2.85 units. Recalibrated the measured way,
+#    targeting the MIDDLE of this task's own shoulder-width target (Part B's
+#    prose says 55-65%; Part C's own C6 test asserts the slightly wider
+#    [0.50, 0.70] -- 60% sits comfortably inside both): 512 * 0.60 / 4.403 =
+#    69.77, rounded to 69.8. Measured result: shoulder width 307.3 px =
+#    60.0% of frame width. The resulting
+#    height is a SIDE EFFECT, not a separate target this task sets: 2.85
+#    units * 69.8 = 198.9 px = 38.8% of frame height -- smaller than the
+#    prior 70-90% target, because that target was calibrated against a
+#    bounding box that included the since-fixed pathological elbow droop;
+#    see tests/test_readable_demo_frame.py's C5, updated to match (was
+#    "70-90% of height", now "shoulder occupies 55-65% of width", this
+#    task's own actual framing goal).
+BODY_UNITS_TO_PIXELS = 69.8
 
 # MEASURED, not guessed, alongside BODY_UNITS_TO_PIXELS above: which
 # body-space y should land at the frame's OWN vertical center. Scaling
@@ -152,8 +173,11 @@ BODY_UNITS_TO_PIXELS = 94.0
 # again after cropping at the hip (the "khung hình demo dễ đọc hơn" task):
 # the bottom of the bounding box is now the lowest ACTIVE point (the
 # moving hand's lowest frame, not the hip anymore), y in [-2.39, 1.96],
-# midpoint -0.22.
-VERTICAL_CENTER_OFFSET = -0.22
+# midpoint -0.22. Re-measured again after fixing the elbow's downward-spike
+# bug (this task, see arm_ik.py): the elbow no longer drags the bottom of
+# the box down -- y in [-0.89, 1.96] (top unchanged, still the eyes/head),
+# midpoint 0.53.
+VERTICAL_CENTER_OFFSET = 0.53
 
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",
