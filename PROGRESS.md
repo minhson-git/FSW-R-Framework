@@ -1701,18 +1701,33 @@ annotation, không đổi runtime.
   `HAND_SCALE`, từng làm MPJPE lệch 48,72→48,74). 5 test bất biến mới
   (`test_hand_body_scale.py`), GIF thứ 4 (`mvp1_sign_4_unified_scale.gif`)
   đã commit. Chi tiết ở mục "Pha 8" phía trên.
+- **Khung hình demo dễ đọc hơn (Pha 9) đã xong** — cắt khung ở ngang hông
+  (không còn hình thang đặc vai-hông-hông do `PoseVisualizer` vẽ) + thêm 6
+  điểm mắt (đầu có hình dạng thật), **0 file `core/`, `timeline/`,
+  `validation/` bị sửa** (`git diff --stat` xác nhận), `reports/fk_accuracy.md`
+  **KHÔNG đổi**. Số điểm confidence > 0: 35 → 39. `BODY_UNITS_TO_PIXELS`
+  56,0 → 94,0, `VERTICAL_CENTER_OFFSET` -1,21 → -0,22 (đo lại bounding box
+  thật sau khi cắt hông). GIF thứ 5 (`mvp1_sign_5_readable_frame.gif`) đã
+  commit, kèm 1 quan sát trung thực (chỗ khuỷu tay chúc xuống lộ rõ hơn do
+  phóng to tỉ lệ, hình học 3D không đổi — không sửa vì ngoài phạm vi task).
+  Chi tiết ở mục "Pha 9" phía trên.
 - `fsw-r`: `mypy --strict` **sạch hoàn toàn** (`src/`+`tests/`, 87 file — lỗi
   cũ `[type-arg]` ở `test_head_symbol.py` đã sửa drive-by ở Pha 8), `pytest`
-  **1.407/1.407 pass** (1.264
+  **1.412/1.412 pass** (1.264
   trước Pha 4 + 67 test Pha 4 + 19 test Pha 5 + 31 test Pha 6 + 21 test
-  Pha 7 + 5 test Pha 8 (`test_hand_body_scale.py` B1-B5): `test_arm_ik.py`,
+  Pha 7 + 5 test Pha 8 (`test_hand_body_scale.py` B1-B5) + 5 test Pha 9
+  (`test_readable_demo_frame.py` C1-C5, C6 là toàn bộ suite còn lại, không
+  phải test riêng): `test_arm_ik.py`,
   `test_body_geometry.py`, `test_body_and_arm.py`
-  — đúng 2 test cũ buộc phải đổi (1 ở Pha 4, xem mục đó; 1 ở Pha 7 —
+  — đúng 2 test cũ buộc phải đổi ở Pha 8 trở về trước (1 ở Pha 4, xem mục
+  đó; 1 ở Pha 7 —
   `test_non_hand_components_stay_present_at_zero_confidence` khẳng định
   `POSE_LANDMARKS` luôn confidence 0, đúng ngược lại mục tiêu chính của
   Pha 7 — tách thành 2 test, giữ nguyên phần vẫn đúng (FACE/WORLD landmarks
   vẫn rỗng) — và `test_pixel_normalization_uses_named_constants` đổi điểm
-  kiểm tra theo `VERTICAL_CENTER_OFFSET` mới).
+  kiểm tra theo `VERTICAL_CENTER_OFFSET` mới), cộng đúng 2 test cũ khác bị
+  Pha 9 buộc phải đổi tiền đề (hông không còn confidence 1 — xem mục "Pha
+  9" phía trên).
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
   4/5 qua `git stash`), `pytest` **27/27 pass** (tăng từ 5/5 khi
@@ -1724,6 +1739,94 @@ annotation, không đổi runtime.
 - `demo.py` của `fsw-r` giờ có 3 phần: rotation sweep, FSW sign string 2 tay
   (AST→FSWR), và fill sweep — đều dựng instance qua `symbol_from_fsw(...)`
   với key FSW thật, không còn gọi thẳng constructor với int tự đặt.
+
+## Pha 9 — Khung hình demo dễ đọc hơn (cắt ngang hông + thêm mắt)
+
+Task nhỏ, thuần thẩm mỹ cho ảnh trong báo cáo (không đổi dữ liệu, không đổi
+tham số 3D, không ảnh hưởng MPJPE). Vấn đề khởi điểm: GIF demo
+(`mvp1_sign_4_unified_scale.gif`) khó đọc — `PoseVisualizer` vẽ thân
+(vai↔vai↔hông↔hông) thành 1 hình thang đặc chiếm ~2/3 khung hình (đúng
+topology `BODY_LIMBS` thật của MediaPipe, không phải bug), trong khi bàn
+tay chỉ là 1 cụm điểm nhỏ; đầu chỉ có 5 điểm (mũi, 2 tai, 2 khoé miệng) nên
+trông như 2 chấm, không có hình dạng đầu thật.
+
+**Phần A — cắt khung ở ngang hông.** Video ký hiệu thật chỉ quay nửa thân
+trên — hông nằm ngoài phạm vi không gian ký hiệu mà framework này mô
+hình hoá. `export/pose_export.py`'s `_pose_landmarks_for_frame()` không còn
+gán `LEFT_HIP`/`RIGHT_HIP` (index 23, 24) — 2 điểm này giờ giữ confidence 0
+mặc định, cùng cách xử lý với chân (25-32) và mắt trước Pha này.
+**Đã xác nhận bằng cách đọc thật source `PoseVisualizer._draw_frame()`**
+(không giả định): quy tắc vẽ cạnh là `sel = np.flatnonzero(vis[a] & vis[b])`
+— 1 cạnh `BODY_LIMBS` chỉ được vẽ nếu CẢ 2 đầu có confidence > 0, nên bỏ
+xuất hông tự động làm biến mất luôn 2 cạnh vai-hông/hông-hông (không cần
+logic riêng "đừng vẽ limb này"). Đã render lại thật để xác nhận bằng mắt
+(không chỉ tin vào việc đọc code) — hình thang đặc đã biến mất.
+`TORSO_LENGTH_MM`/`hip_position()` trong `body_geometry.py` **vẫn giữ
+nguyên định nghĩa** (chỉ không export ra `.pose` nữa) — có thể cần lại cho
+Category 5 (BodyPose) sau này.
+
+**Phần B — thêm mắt cho đầu có hình dạng.** Thêm 6 điểm
+`LEFT/RIGHT_EYE_INNER/EYE/EYE_OUTER` (`POSE_LANDMARKS` index 1-6) qua hàm
+mới `static_eye_landmarks()` trong `body_geometry.py`. Khác với
+`NOSE_FORWARD_OFFSET_MM`/`EAR_SIDE_OFFSET_MM`/`MOUTH_DROP_MM` có sẵn (mm
+phẳng, không neo theo chiều cao), **mọi offset mắt mới đều neo theo
+`ASSUMED_STATURE_MM`** (`export/anthropometry.py`) — vd
+`EYE_HEIGHT_ABOVE_HEAD_CENTER_MM = 0.05 * ASSUMED_STATURE_MM` — đúng yêu
+cầu của task này, đồng thời lộ ra 1 điểm KHÔNG nhất quán tồn tại từ trước
+(3 hằng số mũi/tai/miệng chưa neo) — ghi nhận trung thực, không sửa luôn
+(ngoài phạm vi task, "không đổi tham số 3D").
+
+**Phần C — hiệu chỉnh lại khung hình.** Đo lại bounding box thật của sign
+demo chuẩn (`M508x515S10000493x485S22a04500x500`) qua TOÀN BỘ frame đã
+sample (không chỉ frame 0), sau khi cắt hông: 4,40 × 4,35 đơn vị thân
+(giảm mạnh so với 7,77 chiều cao khi còn hông). `BODY_UNITS_TO_PIXELS` cũ
+(56,0, chỉnh cho Pha 8) giờ chỉ lấp ~48% chiều cao khung — dưới mục tiêu
+70-90%. Đã đo và tính lại: **`BODY_UNITS_TO_PIXELS = 94,0`** (mục tiêu
+~80%, đo thực tế ra 79,8%), **`VERTICAL_CENTER_OFFSET = -0,22`** (đổi từ
+-1,21 — điểm thấp nhất trong khung giờ là bàn tay lúc di chuyển thấp nhất,
+không còn là hông).
+
+**Số điểm confidence > 0:** 35 → **39** (bỏ 2 hông, thêm 6 mắt = +4 ròng).
+
+**Quan sát trung thực cần ghi lại (không phải bug mới, không sửa vì ngoài
+phạm vi "không đổi tham số 3D" của task này):** sau khi phóng to tỉ lệ
+(56→94 px/đơn vị) và bỏ "vật cản mắt" là hình thang hông, đoạn tay phải
+vai→khuỷu→cổ tay giờ lộ rõ 1 chỗ khuỷu tay chúc xuống dưới đường
+vai-cổ tay khá rõ — dễ thấy hơn hẳn so với các bản render trước. Đã kiểm
+tra trực tiếp bằng toạ độ pixel in ra: hình học BODY-SPACE không đổi
+(khuỷu tay lệch ~1,687 đơn vị thân dưới đường vai ở cả bản 68px/đơn vị cũ
+lẫn bản 94px/đơn vị mới — cùng độ lớn tuyệt đối, chỉ là phóng to tỉ lệ theo
+mọi thứ khác). Nguồn gốc là hằng số pole-vector có sẵn từ trước
+(`POLE_DIRECTION_RIGHT`/`POLE_DIRECTION_LEFT` trong `arm_ik.py`), việc này
+task hiện tại bị cấm đụng vào. Đánh giá: kết quả tổng thể vẫn là cải thiện
+rõ rệt về độ dễ đọc (không còn hình thang đặc, đầu giờ có hình dạng mắt/
+đầu thật) — đã quyết định commit thay vì dừng lại, nhưng ghi nhận ở đây
+theo đúng tinh thần minh bạch của dự án thay vì giấu đi.
+
+**Kiểm chứng:** `mypy --strict` sạch cả 2 package (`fsw-r`: 87 file,
+`fsw-r-viz` không thêm lỗi mới); `pytest` **1.407 test cũ pass nguyên,
+không sửa test nào ngoài 2 test bị chính mục tiêu task này làm sai tiền đề**
+(`test_c4_shoulder_is_above_hip_in_image_space` → đổi sang so sánh
+NOSE/SHOULDER thay vì SHOULDER/HIP, cùng bảo vệ lỗi lật trục y;
+`test_inactive_side_arm_points_stay_zero_confidence` → bỏ HIP khỏi danh
+sách "phải confidence 1") + 6 test mới (`test_readable_demo_frame.py`,
+C1-C6 theo đúng brief). `git diff --stat` xác nhận 0 file `core/`,
+`timeline/`, `validation/` bị sửa. `reports/fk_accuracy.md` không đổi (chạy
+lại xác nhận diff rỗng — 1 lần rerun ra chênh lệch ở chữ số thập phân thứ
+15-16 của `.json` do nhiễu dấu phẩy động không kết hợp giữa các lần chạy
+process riêng biệt, không phải hồi quy thật; đã revert file `.json` bằng
+`git checkout` thay vì commit diff giả). GIF thứ 5
+(`mvp1_sign_5_readable_frame.gif`) đã render, **xem lại bằng mắt** (frame
+đầu/giữa/cuối) trước khi commit, và đã commit cùng `demo/mvp1_sign.gif`
+(file "mới nhất" chính tắc, xác nhận byte-for-byte giống hệt bản đánh số).
+
+**Giả định chưa kiểm chứng mới thêm (vị trí mắt):** 5 tỉ lệ
+(`EYE_HEIGHT_ABOVE_HEAD_CENTER_MM`, `EYE_INNER/CENTER/OUTER_OFFSET_MM`,
+`EYE_FORWARD_OFFSET_MM`, đều là phần trăm của `ASSUMED_STATURE_MM`) là ước
+lượng riêng của tác giả, KHÔNG có nguồn nhân trắc học trích dẫn được (khác
+với các hằng số hình thân/tay trước đó có nguồn Drillis-Contini) — chỉ đảm
+bảo đúng thứ tự hình học (mắt trên mũi, dưới đỉnh đầu, đối xứng qua trục
+dọc), không đảm bảo đúng tỉ lệ giải phẫu thật.
 
 ## Việc còn để ngỏ / chưa làm
 
@@ -1754,9 +1857,31 @@ annotation, không đổi runtime.
   - `save_video()` (MP4 thật) chưa từng chạy thành công trên máy hiện tại
     (thiếu `vidgear` + ffmpeg thật) — mọi bằng chứng video hiện tại là GIF
     fallback, không phải MP4.
-  - `BODY_UNITS_TO_PIXELS`/`VERTICAL_CENTER_OFFSET` (Pha 7) hiệu chỉnh trên
-    ĐÚNG 1 sign cụ thể — có thể cần đo lại nếu hình dạng nhân vật (tỉ lệ
-    thân, tầm với cánh tay) thay đổi ở pha sau.
+  - `BODY_UNITS_TO_PIXELS`/`VERTICAL_CENTER_OFFSET` (Pha 7, hiệu chỉnh lại
+    ở Pha 9 sau khi cắt hông: 56,0→94,0 / -1,21→-0,22) hiệu chỉnh trên ĐÚNG
+    1 sign cụ thể — có thể cần đo lại nếu hình dạng nhân vật (tỉ lệ thân,
+    tầm với cánh tay) thay đổi ở pha sau.
+  - **Vị trí 6 điểm mắt (Pha 9)** là ước lượng riêng, KHÔNG có nguồn nhân
+    trắc học trích dẫn được (khác các hằng số thân/tay khác đã có nguồn
+    Drillis-Contini) — chỉ đảm bảo đúng thứ tự hình học, không đảm bảo tỉ
+    lệ giải phẫu thật. `NOSE_FORWARD_OFFSET_MM`/`EAR_SIDE_OFFSET_MM`/
+    `MOUTH_DROP_MM` (từ trước Pha 9) vẫn là mm phẳng, chưa neo theo
+    `ASSUMED_STATURE_MM` như các hằng số mắt mới — điểm không nhất quán đã
+    ghi nhận, chưa sửa (ngoài phạm vi Pha 9).
+  - **Ảnh demo (Pha 9) lộ rõ hơn 1 artifact hình học có sẵn từ trước**: chỗ
+    khuỷu tay phải chúc xuống dưới đường vai-cổ tay, do phóng to tỉ lệ px/
+    đơn vị (không phải hình học 3D thay đổi — đã kiểm chứng số pixel).
+    Nguồn là hằng số pole-vector trong `arm_ik.py`
+    (`POLE_DIRECTION_RIGHT`/`_LEFT`) — chưa điều tra/sửa, xem mục "Pha 9"
+    phía trên.
+  - **Category 4 (Head & Face) chưa nối vào đầu người trong video** — đầu
+    hiện chỉ có mũi/tai/miệng/mắt tĩnh (`body_geometry.py`), chưa dùng
+    `FACE_LANDMARKS` thật (468 điểm MediaPipe) hay `FaceExpressionPose`
+    (đã có ở Category 4, nhóm khác phụ trách) — việc map 468 điểm mesh mặt
+    từ blend-shape sang toạ độ tĩnh là việc mới, không nhỏ, chưa bắt đầu.
+  - **Chỉ có 1 tay (phải) trong video, chưa có tay trái** — MVP-1 hiện chỉ
+    hỗ trợ sign 1 tay; mở rộng sang cả 2 tay là việc của MVP-2 (~20,9% sign
+    thật cần ≥2 track, xem mục "Pha 3" phía dưới), chưa bắt đầu.
   - Vi phạm giới hạn giải phẫu vẫn CHƯA xử lý — số đo CHÍNH XÁC nhất hiện có
     là 224/261 (85,8%) từ Pha 6 (kiểm cả 8 khớp, không riêng PIP; xem lưu ý
     quan trọng về khả năng lệch định nghĩa CMC ngón cái ở mục "Pha 6"), thay

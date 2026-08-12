@@ -380,6 +380,44 @@ TO_STATURE=0,1197` phải khít 3 bất biến; sửa triệt để cần rederi
 (sẽ đổi hình dạng tương đối ⇒ đổi MPJPE), nằm cùng nhóm với "điều tra ngón
 cái" ở trên.
 
+### Khung hình demo dễ đọc hơn (cắt ngang hông + thêm mắt) — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 9" (tiếp Pha 8).
+Task nhỏ, thuần thẩm mỹ cho ảnh báo cáo — không đổi dữ liệu/tham số 3D,
+không ảnh hưởng MPJPE.
+
+**Việc đã làm:** `PoseVisualizer` vẽ thân (vai↔vai↔hông↔hông) thành 1 hình
+thang đặc chiếm phần lớn khung hình (đúng topology `BODY_LIMBS` thật, không
+phải bug) — che mất bàn tay là trọng tâm. Đã (1) ngừng xuất `LEFT_HIP`/
+`RIGHT_HIP` (giữ nguyên `hip_position()`/`TORSO_LENGTH_MM` trong
+`body_geometry.py`, chỉ không export ra `.pose`; xác nhận bằng cách đọc
+thật source `PoseVisualizer._draw_frame()` rằng cạnh chỉ vẽ khi CẢ 2 đầu
+có confidence > 0, rồi render lại để xác nhận bằng mắt), (2) hiệu chỉnh lại
+`BODY_UNITS_TO_PIXELS` (56,0→94,0) và `VERTICAL_CENTER_OFFSET`
+(-1,21→-0,22) theo bounding box đo thật sau khi cắt hông, (3) thêm 6 điểm
+mắt (`static_eye_landmarks()`) neo theo `ASSUMED_STATURE_MM` (khác các
+hằng số mũi/tai/miệng có sẵn, vẫn là mm phẳng chưa neo — điểm không nhất
+quán đã ghi nhận, chưa sửa). Số điểm confidence > 0: 35→39. GIF thứ 5
+(`mvp1_sign_5_readable_frame.gif`) đã render, xem lại bằng mắt, và commit.
+Chi tiết đầy đủ ở `PROGRESS.md` mục "Pha 9".
+
+**Quan sát trung thực (không sửa, ngoài phạm vi task):** phóng to tỉ lệ +
+bỏ hình thang hông làm lộ rõ hơn 1 chỗ khuỷu tay phải chúc xuống dưới
+đường vai-cổ tay — đã kiểm chứng đây là hình học 3D CŨ, không đổi (chỉ bị
+phóng to theo tỉ lệ cùng mọi thứ khác); nguồn là hằng số pole-vector có sẵn
+trong `arm_ik.py` (`POLE_DIRECTION_RIGHT`/`_LEFT`).
+
+**Việc còn lại — 2 hạng mục ảnh chưa làm ở task này, cố ý ghi TODO (không
+làm luôn vì mỗi việc không nhỏ):**
+- **Thêm `FACE_LANDMARKS` thật (468 điểm MediaPipe)** — đầu hiện chỉ có
+  mũi/tai/miệng/mắt tĩnh (`body_geometry.py`, không phải mesh mặt thật).
+  Cần thiết kế cách map từ `FaceExpressionPose` (Category 4, đã có, nhóm
+  khác phụ trách — blend-shape) sang 468 toạ độ tĩnh mà `PoseVisualizer`
+  hiểu được — việc mới, không nhỏ, ngoài phạm vi task cắt-hông/thêm-mắt.
+- **Mở rộng sang 2 tay** (MVP-2, ~20,9% sign thật cần ≥2 track — xem mục
+  "MVP-2" ở trên) — video hiện chỉ có 1 tay (phải); cần logic phân biệt/
+  gán track cho tay trái mà `SignTimeline` MVP-1 chưa viết.
+
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
 **Trạng thái:** xong ở tầng ký hiệu — `DynamicsSymbol` + `FSWModifierSymbol`
