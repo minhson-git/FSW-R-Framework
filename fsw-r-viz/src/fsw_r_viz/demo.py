@@ -39,6 +39,17 @@ supports, as a visual sanity-check:
    sai" task: reverted that wrong invariant/pole recalibration -- the
    elbow droops below the shoulder-wrist line again, correctly this time,
    forming a natural V, while keeping _6's frame-width fix).
+7. ../demo/mvp1_sign_8_hand_closeup.mp4 (or .gif) -- the "video cận cảnh
+   bàn tay" task: a SECOND video, not a replacement for #6 above. At
+   mvp1_sign.gif's own full-body scale, this sign's hand MCP joints sit
+   only ~8.4px apart, under PoseVisualizer's 3px line thickness -- the
+   fingers blend into one blob, unreadable as a handshape. This close-up
+   (see render_hand_closeup.py) crops to just the hand, re-centers every
+   frame on its own wrist, and magnifies ~3.6x by the hand's OWN measured
+   size (not the wrist's movement trajectory -- that inflates the zoom
+   less and isn't what this video is for), so individual fingers/joints
+   are readable. mvp1_sign_7 (#6 above) is UNCHANGED by this task -- it
+   still does its own job, showing posture/trajectory.
 
 Run with: python -m fsw_r_viz.demo
 """
@@ -65,6 +76,7 @@ from fsw_r_viz.plot_hand import render_symbols_grid
 from fsw_r_viz.plot_head import render_heads_grid
 from fsw_r_viz.plot_mesh_head import render_mesh_head_to_file
 from fsw_r_viz.plot_movement import render_movements_grid
+from fsw_r_viz.render_hand_closeup import fsw_to_hand_closeup_video
 from fsw_r_viz.render_pose_video import fsw_to_video
 from fsw_r_viz.render_timeline import render_timeline_to_pngs
 
@@ -263,6 +275,19 @@ def _render_pose_video_demo(demo_dir: Path) -> None:
     print(f"Saved: {written} (from FSW {fsw!r})")
 
 
+def _render_hand_closeup_demo(demo_dir: Path) -> None:
+    # SECOND video, alongside (not replacing) _render_pose_video_demo's
+    # full-body one -- see render_hand_closeup.py's own module docstring
+    # for why the full-body video's native scale can't show handshape
+    # (MCP joints ~8.4px apart, under PoseVisualizer's 3px line
+    # thickness). Same demo sign as the full-body video, so the two are
+    # directly comparable frame-for-frame.
+    fsw = "M508x515S10000493x485S22a04500x500"
+    video_path = demo_dir / "mvp1_sign_hand_closeup.mp4"
+    written = fsw_to_hand_closeup_video(fsw, video_path)
+    print(f"Saved: {written} (from FSW {fsw!r})")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -282,6 +307,7 @@ def main() -> None:
     _render_annotation_glyphs(output_dir)
     _render_timeline_demo(output_dir)
     _render_pose_video_demo(demo_dir)
+    _render_hand_closeup_demo(demo_dir)
 
 
 if __name__ == "__main__":
