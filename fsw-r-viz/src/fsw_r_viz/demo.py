@@ -29,7 +29,12 @@ supports, as a visual sanity-check:
    longer ~1.5x too small relative to the torso), then
    _5_readable_frame.gif (the "khung hình demo dễ đọc hơn" task: cropped
    at the hip so PoseVisualizer's closed shoulder-hip-hip trapezoid no
-   longer dominates the frame, plus eyes so the head has real shape).
+   longer dominates the frame, plus eyes so the head has real shape), then
+   _6_arm_ik_fix.gif (the "sửa bug hướng xoay IK + chỉnh khung hình demo"
+   task: the elbow no longer swings ~160px below both the shoulder and
+   wrist -- a bad POLE_DIRECTION_* calibration, not the rotation-sign bug
+   the task's own brief first suspected, see arm_ik.py's module docstring
+   -- and the shoulders no longer span 81% of the frame width).
 
 Run with: python -m fsw_r_viz.demo
 """
