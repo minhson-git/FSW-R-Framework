@@ -6,12 +6,13 @@ a later change can't silently flip pitch/yaw. Checks where the nose
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import NDArray
 
 from fsw_r.core.head_symbol import HEAD_ORIENTATION_BASES, HeadSymbol
 from fsw_r.core.registry import symbol_from_fsw
 
 
-def _nose(base_hex: int, rotation: int) -> np.ndarray:
+def _nose(base_hex: int, rotation: int) -> NDArray[np.float64]:
     orientation = HeadSymbol(base_hex, fill=0, rotation=rotation).get_head_orientation()
     return np.asarray(orientation.apply([0.0, 0.0, 1.0]), dtype=float)
 
