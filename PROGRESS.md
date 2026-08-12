@@ -1710,14 +1710,31 @@ annotation, không đổi runtime.
   thật sau khi cắt hông). GIF thứ 5 (`mvp1_sign_5_readable_frame.gif`) đã
   commit, kèm 1 quan sát trung thực (chỗ khuỷu tay chúc xuống lộ rõ hơn do
   phóng to tỉ lệ, hình học 3D không đổi — không sửa vì ngoài phạm vi task).
-  Chi tiết ở mục "Pha 9" phía trên.
-- `fsw-r`: `mypy --strict` **sạch hoàn toàn** (`src/`+`tests/`, 87 file — lỗi
+  Chi tiết ở mục "Pha 9" phía trên. **Quan sát này đã được XÁC NHẬN LÀ BUG
+  THẬT và SỬA ở Pha 10** (không phải chỉ "lộ rõ hơn do phóng to" như đánh
+  giá ban đầu — nguyên nhân gốc là hằng số pole-vector, xem mục "Pha 10").
+- **Sửa bug hướng xoay IK + chỉnh khung hình demo (Pha 10) đã xong** —
+  khuỷu tay không còn chúc xuống dưới cả vai lẫn cổ tay (~160px, "tam giác
+  nhọn chĩa xuống"), vai không còn chiếm 81% chiều rộng khung. **Chẩn đoán
+  gốc của brief (bug dấu trong phép xoay) đã kiểm chứng và bác bỏ bằng đại
+  số + số** — nguyên nhân thật là hằng số `POLE_DIRECTION_RIGHT`/`LEFT` có
+  thành phần "xuống" áp đảo, đã hiệu chỉnh lại bằng đo đạc (Y=0 chính xác).
+  **0 file `core/`, `timeline/`, `validation/` bị sửa** (`git diff --stat`
+  xác nhận), `reports/fk_accuracy.md` **KHÔNG đổi**. `BODY_UNITS_TO_PIXELS`
+  94,0 → 69,8 (nhắm vai 60% chiều rộng khung, đo được), `VERTICAL_CENTER_OFFSET`
+  -0,22 → 0,53. 6 test bất biến cấu hình cánh tay mới (`test_arm_configuration.py`,
+  29 case tham số hoá). GIF thứ 6 (`mvp1_sign_6_arm_ik_fix.gif`) đã commit,
+  xem lại bằng mắt xác nhận cải thiện rõ rệt. Chi tiết ở mục "Pha 10" phía
+  trên.
+- `fsw-r`: `mypy --strict` **sạch hoàn toàn** (`src/`+`tests/`, 84 file — lỗi
   cũ `[type-arg]` ở `test_head_symbol.py` đã sửa drive-by ở Pha 8), `pytest`
-  **1.412/1.412 pass** (1.264
+  **1.441/1.441 pass** (1.264
   trước Pha 4 + 67 test Pha 4 + 19 test Pha 5 + 31 test Pha 6 + 21 test
   Pha 7 + 5 test Pha 8 (`test_hand_body_scale.py` B1-B5) + 5 test Pha 9
   (`test_readable_demo_frame.py` C1-C5, C6 là toàn bộ suite còn lại, không
-  phải test riêng): `test_arm_ik.py`,
+  phải test riêng) + 29 test Pha 10 (`test_arm_configuration.py` C1-C4, C6
+  tham số hoá; C5/C7 trỏ tới coverage có sẵn, không test riêng):
+  `test_arm_ik.py`,
   `test_body_geometry.py`, `test_body_and_arm.py`
   — đúng 2 test cũ buộc phải đổi ở Pha 8 trở về trước (1 ở Pha 4, xem mục
   đó; 1 ở Pha 7 —
@@ -1727,7 +1744,9 @@ annotation, không đổi runtime.
   vẫn rỗng) — và `test_pixel_normalization_uses_named_constants` đổi điểm
   kiểm tra theo `VERTICAL_CENTER_OFFSET` mới), cộng đúng 2 test cũ khác bị
   Pha 9 buộc phải đổi tiền đề (hông không còn confidence 1 — xem mục "Pha
-  9" phía trên).
+  9" phía trên), cộng đúng 1 test cũ bị Pha 10 buộc phải đổi mục tiêu
+  (`test_readable_demo_frame.py`'s C5 — khung hình đổi mục tiêu từ chiều
+  cao 70-90% sang chiều rộng vai, xem mục "Pha 10" phía trên).
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
   4/5 qua `git stash`), `pytest` **27/27 pass** (tăng từ 5/5 khi
@@ -1828,6 +1847,94 @@ với các hằng số hình thân/tay trước đó có nguồn Drillis-Contini
 bảo đúng thứ tự hình học (mắt trên mũi, dưới đỉnh đầu, đối xứng qua trục
 dọc), không đảm bảo đúng tỉ lệ giải phẫu thật.
 
+## Pha 10 — Sửa bug hướng xoay IK + chỉnh khung hình demo
+
+Task nhỏ, chỉ trong `export/` (không đổi dữ liệu, không ảnh hưởng MPJPE).
+Vấn đề khởi điểm: GIF `mvp1_sign_5_readable_frame.gif` (Pha 9) nhìn TỆ HƠN
+bản trước — một đường ngang chạy gần hết chiều rộng khung (vai chiếm 81%
+chiều rộng), và một tam giác nhọn chĩa xuống dưới (khuỷu tay thấp hơn CẢ
+vai lẫn cổ tay ~160px, về mặt giải phẫu là cánh tay gập ngược). Bỏ hông
+(Pha 9) không tạo ra lỗi mới — nó chỉ LỘ RA 2 lỗi có sẵn từ trước (Pha 7)
+mà trước đó bị hình thang hông che khuất.
+
+**Phần A — điều tra chẩn đoán của brief trước khi sửa bất cứ gì.** Brief
+giả thuyết: bước xoay `Rotation.from_rotvec(cross(aim, bend) * angle)
+.apply(aim)` có bug dấu (xoay SAI HƯỚNG, ra xa `bend_direction` thay vì về
+phía nó), và đề xuất công thức trực tiếp `cos(angle)*aim +
+sin(angle)*bend_direction` thay thế. **Đã kiểm chứng bằng đại số (công
+thức Rodrigues) VÀ bằng số (5 cặp `aim`/`bend_direction` trực giao ngẫu
+nhiên) trước khi đổi bất cứ gì**: code cũ (dùng `Rotation.from_rotvec`)
+**ĐÃ CHO RA ĐÚNG** kết quả `cos(angle)*aim + sin(angle)*bend_direction` —
+không hề có bug dấu. Đổi sang công thức trực tiếp (bỏ phụ thuộc
+`scipy.spatial.transform.Rotation` cho hàm này) nhưng đã xác nhận riêng:
+thay đổi này MỘT MÌNH không đổi số nào (elbow ra y hệt trước/sau).
+
+**Nguyên nhân THẬT** (đo bằng số trên toàn bộ 20 frame thật của sign demo
+chuẩn + 4 cấu hình biên tổng hợp — cổ tay ngang vai, cao hơn, thấp hơn, và
+dang xa sang ngang — không đoán): `POLE_DIRECTION_RIGHT`/`LEFT` cũ = `(∓0.3,
+-1.0, 1.0)` có thành phần Y (xuống) áp đảo. `_bend_direction` tính thành
+phần của pole VUÔNG GÓC với `aim` (Gram-Schmidt) — với hình học không gian
+ký hiệu của project này, `aim` rất thường gần NGANG (cổ tay vươn về giữa
+thân trong khi vai nằm xa ở bên hông — xem `body_geometry.shoulder_position()`),
+nên phần "xuống" của pole gần như không bị loại bỏ. Cộng với góc gập lớn
+(cổ tay thường gần vai hơn nhiều so với tầm với tối đa, buộc gập sâu), phần
+dư "xuống" đó áp đảo `bend_direction` và kéo khuỷu tay xuống rất sâu, vượt
+qua cả vai lẫn cổ tay — đúng là "tam giác nhọn chĩa xuống" trong ảnh.
+
+**Sửa: hiệu chỉnh lại hằng số pole, đo lại chứ không đoán.**
+`POLE_DIRECTION_RIGHT`/`LEFT` giờ có thành phần xuống (Y) = **0 chính xác**
+— một pole vector CỐ ĐỊNH trong world-space với bất kỳ độ lệch "xuống" nào
+đều không thể đồng thời thoả "khuỷu nằm giữa vai và cổ tay" cho cấu hình cổ
+tay NGANG VAI (khi đó ràng buộc thu hẹp về đúng "khuỷu.y == vai.y", không
+còn dư địa xuống) VÀ cho cấu hình cổ tay THẤP hơn vai (có dư địa). Đo trên
+20 frame thật: độ lệch xuống dù nhỏ (Y=-0.05) đã vi phạm bất biến (margin
+chỉ 0,008, gần như bằng 0); Y=0 thoả với dư địa thoải mái (margin tệ nhất
+0,126/0,15). Giả định cũ "khuỷu tay hướng ra sau VÀ xuống" (ước lượng riêng
+của Pha 7, chưa có nguồn nhân trắc học) hoá ra KHÔNG đúng với hình học cụ
+thể của project này một khi đo thật — đã sửa lại thay vì giữ nguyên kèm
+ghi chú.
+
+**Phần B — chỉnh lại khung hình theo chiều rộng vai.** Vai đo được chiếm
+81% chiều rộng khung (quá sát mép) ở `BODY_UNITS_TO_PIXELS=94,0` (Pha 9,
+hiệu chỉnh theo CHIỀU CAO, chưa từng kiểm tra chiều rộng). Đo lại, nhắm
+giữa khoảng mục tiêu (55-65% theo Phần B của brief, [50,70]% theo test C6):
+chọn 60% → `BODY_UNITS_TO_PIXELS = 69,8` (512×0,60/4,403). Hệ quả PHỤ (không
+phải mục tiêu riêng của task): việc sửa khuỷu tay ở Phần A cũng tự thu nhỏ
+bounding box theo chiều cao (không còn khuỷu kéo điểm thấp nhất xuống far),
+nên chiều cao đo được giảm từ 4,35 xuống 2,85 đơn vị thân — ở scale mới chỉ
+còn ~39% chiều cao khung (so với mục tiêu 70-90% của Pha 9, giờ đã lỗi thời
+vì mục tiêu khung hình đổi từ "chiều cao" sang "chiều rộng vai").
+`VERTICAL_CENTER_OFFSET` đo lại theo bounding box mới: -0,22 → **0,53**.
+
+**Phần C — 6 test bất biến cấu hình cánh tay mới, đúng loại test brief
+trước còn thiếu.** File mới `test_arm_configuration.py`: C1 (khuỷu nằm
+trong khoảng dọc vai-cổ tay, ε=0,15, 4 cấu hình × 2 bên = 8 case), C2
+(khuỷu nghiêng đúng phía pole, tích vô hướng dương, 8 case), C3 (độ dài
+xương giữ nguyên, 8 case), C4 (đối xứng gương 2 tay, 4 case), C5 (3 trường
+hợp biên — đã có sẵn ở `test_arm_ik.py`, không nhân bản, chỉ trỏ tới), C6
+(vai chiếm 50-70% chiều rộng khung). C7 là toàn bộ suite còn lại.
+
+**1 test cũ (không phải nhiều) bị sửa vì CHÍNH MỤC TIÊU của task này đổi
+nó, không phải vì test đó đang khoá hành vi sai:**
+`test_readable_demo_frame.py`'s `test_c5_figure_occupies_70_to_90_percent_of_frame_height`
+(Pha 9's C5) → đổi tên thành `test_c5_figure_height_stays_in_a_measured_range_after_ik_fix`,
+cận mới `[0,30, 0,50]` (đo được ~38,8%) — mục tiêu khung hình của Pha 10 là
+CHIỀU RỘNG VAI (test C6 mới), không phải chiều cao; chiều cao giờ chỉ là hệ
+quả phụ được test lại cho có "khoá hồi quy", không còn là mục tiêu thiết
+kế. Ghi chú đầy đủ lý do ngay trong comment của test.
+
+**Kiểm chứng:** `mypy --strict` sạch (`fsw-r`: 84 file), `pytest`
+**1.441/1.441 pass** (1.412 cũ + 29 test mới trong `test_arm_configuration.py`).
+`git diff --stat` xác nhận 0 file `core/`, `timeline/`, `validation/` bị
+sửa. `reports/fk_accuracy.md` không đổi (MPJPE=48,72, chạy lại xác nhận —
+task này không đụng `bone_lengths.py`/`forward_kinematics.py`). Grep xác
+nhận không có `scipy.optimize`, không vòng lặp iterative trong `arm_ik.py`.
+GIF thứ 6 (`mvp1_sign_6_arm_ik_fix.gif`) đã render, **xem lại bằng mắt**
+(frame đầu/giữa/cuối, so sánh trực tiếp với GIF trước-sửa) — xác nhận tam
+giác nhọn chĩa xuống đã biến mất ở MỌI frame kiểm tra, thay bằng chuỗi
+vai→khuỷu→cổ tay gần thẳng/dốc thoải (đúng hình dạng chấp nhận được theo
+brief) — và đã commit cùng `demo/mvp1_sign.gif`.
+
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)
@@ -1858,22 +1965,24 @@ dọc), không đảm bảo đúng tỉ lệ giải phẫu thật.
     (thiếu `vidgear` + ffmpeg thật) — mọi bằng chứng video hiện tại là GIF
     fallback, không phải MP4.
   - `BODY_UNITS_TO_PIXELS`/`VERTICAL_CENTER_OFFSET` (Pha 7, hiệu chỉnh lại
-    ở Pha 9 sau khi cắt hông: 56,0→94,0 / -1,21→-0,22) hiệu chỉnh trên ĐÚNG
-    1 sign cụ thể — có thể cần đo lại nếu hình dạng nhân vật (tỉ lệ thân,
-    tầm với cánh tay) thay đổi ở pha sau.
+    ở Pha 9 sau khi cắt hông: 56,0→94,0 / -1,21→-0,22, rồi lại ở Pha 10 sau
+    khi sửa bug khuỷu tay + đổi mục tiêu sang chiều rộng vai: 94,0→69,8 /
+    -0,22→0,53) hiệu chỉnh trên ĐÚNG 1 sign cụ thể — có thể cần đo lại nếu
+    hình dạng nhân vật (tỉ lệ thân, tầm với cánh tay) thay đổi ở pha sau.
   - **Vị trí 6 điểm mắt (Pha 9)** là ước lượng riêng, KHÔNG có nguồn nhân
     trắc học trích dẫn được (khác các hằng số thân/tay khác đã có nguồn
     Drillis-Contini) — chỉ đảm bảo đúng thứ tự hình học, không đảm bảo tỉ
     lệ giải phẫu thật. `NOSE_FORWARD_OFFSET_MM`/`EAR_SIDE_OFFSET_MM`/
     `MOUTH_DROP_MM` (từ trước Pha 9) vẫn là mm phẳng, chưa neo theo
     `ASSUMED_STATURE_MM` như các hằng số mắt mới — điểm không nhất quán đã
-    ghi nhận, chưa sửa (ngoài phạm vi Pha 9).
-  - **Ảnh demo (Pha 9) lộ rõ hơn 1 artifact hình học có sẵn từ trước**: chỗ
-    khuỷu tay phải chúc xuống dưới đường vai-cổ tay, do phóng to tỉ lệ px/
-    đơn vị (không phải hình học 3D thay đổi — đã kiểm chứng số pixel).
-    Nguồn là hằng số pole-vector trong `arm_ik.py`
-    (`POLE_DIRECTION_RIGHT`/`_LEFT`) — chưa điều tra/sửa, xem mục "Pha 9"
-    phía trên.
+    ghi nhận, chưa sửa (ngoài phạm vi Pha 9/10).
+  - ~~Ảnh demo (Pha 9) lộ rõ hơn 1 artifact hình học~~ — **ĐÃ SỬA ở Pha 10**:
+    hoá ra không chỉ là "lộ rõ hơn do phóng to" như đánh giá ban đầu của
+    Pha 9, mà là bug thật ở hằng số `POLE_DIRECTION_RIGHT`/`_LEFT` (thành
+    phần "xuống" áp đảo) — đã hiệu chỉnh lại bằng đo đạc, xem mục "Pha 10"
+    phía trên. Bài học tự ghi nhận: Pha 9 đã đánh giá sai mức độ nghiêm
+    trọng của quan sát này (coi là "artifact nhỏ, ngoài phạm vi" thay vì
+    "bug thật cần sửa") — xem `ROADMAP.md`'s ghi chú bài học tương ứng.
   - **Category 4 (Head & Face) chưa nối vào đầu người trong video** — đầu
     hiện chỉ có mũi/tai/miệng/mắt tĩnh (`body_geometry.py`), chưa dùng
     `FACE_LANDMARKS` thật (468 điểm MediaPipe) hay `FaceExpressionPose`

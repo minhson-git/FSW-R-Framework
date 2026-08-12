@@ -401,11 +401,14 @@ quán đã ghi nhận, chưa sửa). Số điểm confidence > 0: 35→39. GIF t
 (`mvp1_sign_5_readable_frame.gif`) đã render, xem lại bằng mắt, và commit.
 Chi tiết đầy đủ ở `PROGRESS.md` mục "Pha 9".
 
-**Quan sát trung thực (không sửa, ngoài phạm vi task):** phóng to tỉ lệ +
-bỏ hình thang hông làm lộ rõ hơn 1 chỗ khuỷu tay phải chúc xuống dưới
-đường vai-cổ tay — đã kiểm chứng đây là hình học 3D CŨ, không đổi (chỉ bị
-phóng to theo tỉ lệ cùng mọi thứ khác); nguồn là hằng số pole-vector có sẵn
-trong `arm_ik.py` (`POLE_DIRECTION_RIGHT`/`_LEFT`).
+**Quan sát trung thực (lúc đó không sửa, đánh giá "ngoài phạm vi task"):**
+phóng to tỉ lệ + bỏ hình thang hông làm lộ rõ hơn 1 chỗ khuỷu tay phải
+chúc xuống dưới đường vai-cổ tay — nguồn là hằng số pole-vector có sẵn
+trong `arm_ik.py` (`POLE_DIRECTION_RIGHT`/`_LEFT`). **ĐÃ SỬA ở task tiếp
+theo ("Sửa bug hướng xoay IK + chỉnh khung hình demo" ở dưới)** — hoá ra
+đây không chỉ là hình học cũ bị phóng to như đánh giá ban đầu, mà là 1 bug
+thật (hằng số pole sai tỉ lệ) từng bị hình thang hông che khuất trước đó.
+Xem mục ngay dưới đây để biết chi tiết + bài học rút ra.
 
 **Việc còn lại — 2 hạng mục ảnh chưa làm ở task này, cố ý ghi TODO (không
 làm luôn vì mỗi việc không nhỏ):**
@@ -417,6 +420,46 @@ làm luôn vì mỗi việc không nhỏ):**
 - **Mở rộng sang 2 tay** (MVP-2, ~20,9% sign thật cần ≥2 track — xem mục
   "MVP-2" ở trên) — video hiện chỉ có 1 tay (phải); cần logic phân biệt/
   gán track cho tay trái mà `SignTimeline` MVP-1 chưa viết.
+
+### Sửa bug hướng xoay IK + chỉnh khung hình demo — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 10" (tiếp Pha 9).
+Task nhỏ, chỉ trong `export/` — không đổi dữ liệu, không ảnh hưởng MPJPE.
+
+**Việc đã làm:** khuỷu tay phải (elbow) từng chúc xuống ~160px dưới CẢ vai
+lẫn cổ tay ("tam giác nhọn chĩa xuống", về giải phẫu là cánh tay gập
+ngược), và vai chiếm 81% chiều rộng khung. Đã điều tra chẩn đoán ban đầu
+của brief (nghi ngờ bug DẤU trong bước xoay `Rotation.from_rotvec`) bằng
+đại số (công thức Rodrigues) + kiểm chứng bằng số TRƯỚC KHI sửa bất cứ
+gì — **xác nhận KHÔNG có bug dấu**, code cũ đã cho ra đúng kết quả. Nguyên
+nhân thật: hằng số `POLE_DIRECTION_RIGHT`/`LEFT` có thành phần "xuống"
+(Y) áp đảo, kết hợp với hình học đặc thù của project (cổ tay thường vươn
+gần giữa thân trong khi vai nằm xa ở bên hông → góc gập lớn) khiến khuỷu
+tay bị kéo xuống rất sâu. Đã hiệu chỉnh lại bằng đo đạc trên toàn bộ frame
+thật của sign demo + 4 cấu hình biên (không đoán): Y=0 chính xác. Đồng
+thời hiệu chỉnh lại `BODY_UNITS_TO_PIXELS` (94,0→69,8) theo chiều RỘNG VAI
+(60%, trong khoảng 55-65%/50-70% brief yêu cầu) thay vì chiều cao như Pha
+9. 6 test bất biến cấu hình cánh tay mới (`test_arm_configuration.py`, 29
+case tham số hoá qua 4 cấu hình × 2 bên). GIF thứ 6
+(`mvp1_sign_6_arm_ik_fix.gif`) đã render, xem lại bằng mắt (so sánh trực
+tiếp với GIF trước-sửa), và commit. Chi tiết đầy đủ ở `PROGRESS.md` mục
+"Pha 10".
+
+**Bài học rút ra, ghi rõ theo đúng yêu cầu của task này:** toàn bộ 1.412
+test đã có trước task này (bao gồm cả `test_arm_ik.py`'s C1/C2 riêng cho
+`arm_ik.py`) đều PASS với khuỷu tay gập ngược — vì không test nào kiểm
+tra CẤU HÌNH HỢP LÝ của kết quả IK, chỉ kiểm tra độ dài xương (bất biến
+đúng ĐỘ LỚN) và tính đối xứng (bất biến đúng TƯƠNG QUAN 2 bên), cả 2 đều
+giữ nguyên dù khuỷu tay ở bất kỳ đâu trên "vòng tròn" các vị trí hợp lệ về
+mặt độ dài xương. **Độ dài xương + đối xứng là điều kiện CẦN nhưng không
+ĐỦ để bắt lỗi cấu hình hình học** — cần thêm lớp test riêng kiểm tra vị
+trí THỰC TẾ của điểm hình học mới (nằm trong khoảng hợp lý so với các điểm
+lân cận, nghiêng đúng hướng mong đợi...), không chỉ các bất biến "nội tại"
+(độ dài, đối xứng) không phụ thuộc vị trí tuyệt đối. Áp dụng cho mọi thành
+phần hình học thêm mới sau này (vd nếu có Category 5 `BodyPose` thật thay
+thân tĩnh, hay mở rộng 2 tay ở MVP-2): viết test bất biến CẤU HÌNH (vị trí
+tương đối so với điểm neo, hướng nghiêng...) NGAY TỪ ĐẦU, không chờ tới
+khi phát hiện bằng mắt sau khi đã commit.
 
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
