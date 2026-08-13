@@ -42,6 +42,7 @@ from numpy.typing import NDArray
 from pose_format import Pose
 from pose_format.numpy import NumPyPoseBody
 from pose_format.pose_visualizer import PoseVisualizer
+from scipy.spatial.transform import Rotation
 
 from fsw_r.core.fswr_converter import fsw_to_fswr
 from fsw_r.export.pose_export import FRAME_HEIGHT, FRAME_WIDTH, frames_to_pose
@@ -71,6 +72,36 @@ HAND_CLOSEUP_TARGET_FRACTION = 0.8
 # fingers (see PROGRESS.md's own note for this task).
 HAND_CLOSEUP_THICKNESS = 2
 
+# "Góc nhìn 3/4 cho video cận cảnh bàn tay" task, Part 0/A1: PoseVisualizer
+# projects orthogonally onto the XY plane -- Z is used ONLY for painter's-
+# algorithm draw order, never for position (see pose_export.py's own
+# docstring). A joint that flexes mostly in Z (e.g. MCP flexion swinging a
+# fingertip toward the palm, which this project's own Group 12 finger
+# articulation does -- measured on the standard demo sign,
+# ``M508x515S10000493x485S22100500x500``: the middle fingertip moves
+# X=0.000 Y=-0.458 Z=-0.207 body-space units between frames 7 and 13) is
+# nearly invisible head-on -- the arc a flexing finger sweeps gets flattened
+# into what looks like a straight shortening, not a bend.
+#
+# MEASURED trade-off (not guessed), rotating the hand about Y before the
+# existing wrist-anchor/scale step (see hand_closeup_pose() -- this turns
+# part of Z into visible X, revealing the arc):
+#
+#   angle | visible flex amplitude | finger separation (px)
+#   0 deg (current)  | 0.354 | 0.158
+#   30 deg           | 0.395 | 0.148
+#   45 deg           | 0.430 | 0.137
+#   60 deg           | 0.461 | 0.124
+#   90 deg (edge-on) | 0.489 | 0.109
+#
+# 60 was chosen: +30% visible-flex over 0 deg for only -22% finger
+# separation: 90 deg buys another +6% flex for another -12% separation --
+# a much worse trade past 60. This is a VISUAL judgment call, not a derived
+# optimum -- see PROGRESS.md's entry for this task for the actual GIF
+# comparison this was chosen from (rendered both 0 and this angle, viewed
+# both, not picked from the table alone).
+HAND_CLOSEUP_VIEW_ANGLE_DEG = 60.0
+
 _HAND_COMPONENT_BY_TRACK: dict[TrackName, str] = {
     TrackName.RIGHT_HAND: "RIGHT_HAND_LANDMARKS",
     TrackName.LEFT_HAND: "LEFT_HAND_LANDMARKS",
@@ -91,7 +122,7 @@ def _hand_component_range(pose: Pose, component_name: str) -> tuple[int, int]:
     raise ValueError(f"Pose header has no component named {component_name!r}")
 
 
-def hand_closeup_pose(pose: Pose, hand: TrackName) -> Pose:
+def hand_closeup_pose(pose: Pose, hand: TrackName, view_angle_deg: float = 0.0) -> Pose:
     """Pure data transform (no video encoding) -- builds the close-up
     ``Pose`` for ONE hand (``hand`` -- RIGHT or LEFT) cropped out of
     ``pose``. Split out from ``render_hand_closeup`` below so this
@@ -106,23 +137,41 @@ def hand_closeup_pose(pose: Pose, hand: TrackName) -> Pose:
     hand draws. Within the target hand's own points: each frame is
     re-centered on that frame's WRIST (so the hand holds still in the
     output frame instead of drifting along its body-space movement path --
-    the full-body video already shows that path) and magnified by a
-    single scale factor derived from ``HAND_CLOSEUP_TARGET_FRACTION`` and
-    the hand's OWN measured bounding box (not the trajectory's -- see
-    module docstring's "Zoom strategy").
+    the full-body video already shows that path), ROTATED about Y by
+    ``view_angle_deg`` (this task's brief, "Góc nhìn 3/4" -- see
+    ``HAND_CLOSEUP_VIEW_ANGLE_DEG``'s own comment for why: flexion that
+    moves mostly in Z is invisible to PoseVisualizer's orthogonal XY
+    projection, and rotating about Y turns part of that Z motion into
+    visible X), and magnified by a single scale factor derived from
+    ``HAND_CLOSEUP_TARGET_FRACTION`` and the hand's OWN measured bounding
+    box (not the trajectory's -- see module docstring's "Zoom strategy").
+    ``view_angle_deg`` DEFAULTS TO 0 (a no-op/identity rotation) --
+    deliberately, so every caller written before the "Góc nhìn 3/4" task
+    (including that task's OWN pre-existing tests and demo.py's
+    ``_render_hand_closeup_demo``/``_render_finger_movement_demo``, which
+    call this without an angle) keeps reproducing the exact pre-rotation
+    output with zero code changes -- see this task's brief B1. Pass
+    ``HAND_CLOSEUP_VIEW_ANGLE_DEG`` explicitly to get the 3/4 view.
+
+    ROTATION HAPPENS BEFORE the bounding-box measurement/scale/anchor
+    steps below, not after (this task's brief, Part A2, explicit ordering
+    requirement) -- computing the zoom factor from the UN-rotated extent
+    would size the hand for a bounding box that doesn't match what
+    actually gets drawn once rotated.
 
     The vertical anchor point is NOT fixed at frame center: it is
     computed so the hand's own vertical extent (relative to the wrist,
-    measured across every frame the hand is active in, not just frame 0)
-    is centered in the output frame -- for a handshape where the fingers
-    curl/point mostly one way from the wrist (the common case), this
-    naturally places the wrist BELOW center, leaving the fingers room to
-    extend into the frame without being clipped, exactly what this task's
-    brief's Part B1 asks for ("neo WRIST về tâm khung, hoặc điểm thấp hơn
-    tâm") -- computed from the real content instead of a second guessed
-    constant. The horizontal anchor IS fixed at frame center (this task's
-    C3): the standard demo sign's hand happens to be roughly symmetric
-    left-right around the wrist, so this does not need the same
+    measured across every frame the hand is active in, not just frame 0,
+    AFTER rotation) is centered in the output frame -- for a handshape
+    where the fingers curl/point mostly one way from the wrist (the
+    common case), this naturally places the wrist BELOW center, leaving
+    the fingers room to extend into the frame without being clipped,
+    exactly what the "video cận cảnh bàn tay" task's brief Part B1 asked
+    for ("neo WRIST về tâm khung, hoặc điểm thấp hơn tâm") -- computed
+    from the real (rotated) content instead of a second guessed constant.
+    The horizontal anchor IS fixed at frame center (that task's C3): the
+    standard demo sign's hand happens to stay roughly symmetric left-right
+    around the wrist even after rotation, so this does not need the same
     data-driven treatment to stay on-frame.
 
     Raises ``ValueError`` if ``hand`` is never active (confidence 0 in
@@ -132,6 +181,7 @@ def hand_closeup_pose(pose: Pose, hand: TrackName) -> Pose:
     component_name = _HAND_COMPONENT_BY_TRACK[hand]
     start, count = _hand_component_range(pose, component_name)
     wrist_local_index = pose.header.get_point_index(component_name, "WRIST") - start
+    view_rotation = Rotation.from_euler("y", view_angle_deg, degrees=True)
 
     data: NDArray[np.float64] = np.array(pose.body.data, dtype=np.float64, copy=True)
     confidence: NDArray[np.float64] = np.array(pose.body.confidence, dtype=np.float64, copy=True)
@@ -141,40 +191,42 @@ def hand_closeup_pose(pose: Pose, hand: TrackName) -> Pose:
     if not active_frames:
         raise ValueError(f"{hand} is never active (confidence 0 in every frame) -- nothing to render a close-up of")
 
+    # Rotate each active frame's wrist-relative points FIRST (Part A2's
+    # ordering requirement), then reuse these same rotated vectors for
+    # both the extent measurement below and the final placement -- one
+    # rotation per point, not two.
+    rotated_rel_by_frame: dict[int, NDArray[np.float64]] = {}
+    for frame_index in active_frames:
+        points = data[frame_index, 0, start:start + count, :]
+        wrist = points[wrist_local_index]
+        rotated_rel_by_frame[frame_index] = view_rotation.apply(points - wrist)
+
     # MEASURE the hand's own VERTICAL extent relative to its own wrist,
     # across EVERY active frame (not just frame 0 -- this project's own
-    # "measure, don't assume" rule, see PROGRESS.md), so a hypothetical
-    # frame-varying handshape would still be sized/centered to fit every
-    # frame, not just the first. Height only, not width: this task's own
-    # C1 targets frame HEIGHT, and the standard demo sign's hand is
-    # noticeably taller than wide (114.8 x 59px) -- height is the binding
-    # dimension for this sign, and the horizontal anchor is fixed at frame
-    # center regardless (see this function's own docstring).
-    all_rel_y = []
-    for frame_index in active_frames:
-        points = data[frame_index, 0, start:start + count, :2]
-        wrist = points[wrist_local_index]
-        rel_y_this_frame = points[:, 1] - wrist[1]
-        all_rel_y.append(rel_y_this_frame)
-    rel_y = np.concatenate(all_rel_y)
+    # "measure, don't assume" rule, see PROGRESS.md), AFTER rotation, so a
+    # hypothetical frame-varying handshape would still be sized/centered
+    # to fit every frame, not just the first. Height only, not width:
+    # this task's own C1 targets frame HEIGHT, and the standard demo
+    # sign's hand stays taller than wide even after rotation -- height is
+    # the binding dimension for this sign, and the horizontal anchor is
+    # fixed at frame center regardless (see this function's own
+    # docstring).
+    all_rel_y = np.concatenate([rotated_rel_by_frame[f][:, 1] for f in active_frames])
 
-    height_extent = float(rel_y.max() - rel_y.min())
+    height_extent = float(all_rel_y.max() - all_rel_y.min())
     if height_extent <= 0:
         raise ValueError(f"{hand}'s bounding box has zero height -- cannot derive a zoom factor")
     scale = (HAND_CLOSEUP_TARGET_FRACTION * FRAME_HEIGHT) / height_extent
 
     anchor_x = FRAME_WIDTH / 2.0
-    anchor_y = FRAME_HEIGHT / 2.0 - scale * float(rel_y.min() + rel_y.max()) / 2.0
+    anchor_y = FRAME_HEIGHT / 2.0 - scale * float(all_rel_y.min() + all_rel_y.max()) / 2.0
 
     # Zero out every point outside the target hand's own slice -- "close-
     # up of ONE hand", not "full body, coincidentally zoomed."
     confidence[:, :, :] = 0.0
 
     for frame_index in active_frames:
-        points = data[frame_index, 0, start:start + count, :]
-        wrist = points[wrist_local_index]
-        rel = points - wrist
-        transformed = rel * scale
+        transformed = rotated_rel_by_frame[frame_index] * scale
         transformed[:, 0] += anchor_x
         transformed[:, 1] += anchor_y
         # z is left anchor-free (relative-depth-only, see PoseVisualizer's
@@ -187,11 +239,16 @@ def hand_closeup_pose(pose: Pose, hand: TrackName) -> Pose:
     return Pose(header=pose.header, body=closeup_body)
 
 
-def render_hand_closeup(pose: Pose, path: Path, hand: TrackName) -> Path:
+def render_hand_closeup(pose: Pose, path: Path, hand: TrackName, view_angle_deg: float = 0.0) -> Path:
     """Writes a close-up video/GIF of ONE hand (``hand`` -- RIGHT or LEFT)
     cropped out of ``pose`` -- see ``hand_closeup_pose`` above for the
-    actual data transform this wraps with video/GIF encoding."""
-    closeup_pose = hand_closeup_pose(pose, hand)
+    actual data transform this wraps with video/GIF encoding.
+    ``view_angle_deg`` defaults to 0 (the original Pha 12 straight-on
+    view, unchanged) for the same backward-compatibility reason as
+    ``hand_closeup_pose`` -- pass ``HAND_CLOSEUP_VIEW_ANGLE_DEG``
+    explicitly for the 3/4 view (see ``demo.py``'s
+    ``_render_finger_movement_3q_demo``)."""
+    closeup_pose = hand_closeup_pose(pose, hand, view_angle_deg)
     visualizer = PoseVisualizer(closeup_pose, thickness=HAND_CLOSEUP_THICKNESS)
     try:
         visualizer.save_video(str(path), visualizer.draw())
@@ -207,14 +264,23 @@ def render_hand_closeup(pose: Pose, path: Path, hand: TrackName) -> Path:
         return gif_path
 
 
-def fsw_to_hand_closeup_video(fsw: str, path: Path, hand: TrackName = TrackName.RIGHT_HAND) -> Path:
+def fsw_to_hand_closeup_video(
+    fsw: str,
+    path: Path,
+    hand: TrackName = TrackName.RIGHT_HAND,
+    view_angle_deg: float = 0.0,
+) -> Path:
     """End-to-end: a real FSW sign string straight to a hand-close-up
     video (or GIF fallback) file. ``hand`` defaults to RIGHT_HAND, matching
     MVP-1's own single-hand scope (``timeline/sample.py``) and
-    ``render_pose_video.fsw_to_video``'s implicit convention. Returns the
-    path actually written."""
+    ``render_pose_video.fsw_to_video``'s implicit convention.
+    ``view_angle_deg`` defaults to 0.0 (the original straight-on view,
+    unchanged -- same backward-compatibility reason as
+    ``hand_closeup_pose``); pass ``HAND_CLOSEUP_VIEW_ANGLE_DEG`` for the
+    3/4 view that reveals joint flexion moving mostly in Z, invisible
+    head-on. Returns the path actually written."""
     positioned = fsw_to_fswr(fsw)
     timeline = build_timeline(positioned)
     frames = sample(timeline)
     pose = frames_to_pose(frames)
-    return render_hand_closeup(pose, path, hand)
+    return render_hand_closeup(pose, path, hand, view_angle_deg)

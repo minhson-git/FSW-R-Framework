@@ -87,7 +87,7 @@ from fsw_r_viz.plot_hand import render_symbols_grid
 from fsw_r_viz.plot_head import render_heads_grid
 from fsw_r_viz.plot_mesh_head import render_mesh_head_to_file
 from fsw_r_viz.plot_movement import render_movements_grid
-from fsw_r_viz.render_hand_closeup import fsw_to_hand_closeup_video
+from fsw_r_viz.render_hand_closeup import HAND_CLOSEUP_VIEW_ANGLE_DEG, fsw_to_hand_closeup_video
 from fsw_r_viz.render_pose_video import fsw_to_video
 from fsw_r_viz.render_timeline import render_timeline_to_pngs
 
@@ -295,7 +295,13 @@ def _render_hand_closeup_demo(demo_dir: Path) -> None:
     # directly comparable frame-for-frame.
     fsw = "M508x515S10000493x485S22a04500x500"
     video_path = demo_dir / "mvp1_sign_hand_closeup.mp4"
-    written = fsw_to_hand_closeup_video(fsw, video_path)
+    # view_angle_deg=0.0 explicit (matches fsw_to_hand_closeup_video's own
+    # default too) -- "Góc nhìn 3/4" task's own constraint ("không đổi
+    # video cận cảnh 0° hiện có"): this canonical file must keep
+    # reproducing the original Pha 12 straight-on view. Spelled out here
+    # so a future change to that function's default can't silently affect
+    # this specific file.
+    written = fsw_to_hand_closeup_video(fsw, video_path, view_angle_deg=0.0)
     print(f"Saved: {written} (from FSW {fsw!r})")
 
 
@@ -311,8 +317,35 @@ def _render_finger_movement_demo(demo_dir: Path) -> None:
     # actually visible.
     fsw = "M508x515S10000493x485S22100500x500"
     video_path = demo_dir / "mvp1_sign_9_finger_movement.mp4"
-    written = fsw_to_hand_closeup_video(fsw, video_path)
+    # view_angle_deg=0.0 explicit -- same reasoning as
+    # _render_hand_closeup_demo above ("không đổi video cận cảnh 0° hiện
+    # có"). The 3/4-view companions for THIS sign are rendered separately
+    # by _render_finger_movement_3q_demo below, as distinct new files.
+    written = fsw_to_hand_closeup_video(fsw, video_path, view_angle_deg=0.0)
     print(f"Saved: {written} (from FSW {fsw!r})")
+
+
+def _render_finger_movement_3q_demo(demo_dir: Path) -> None:
+    # "Góc nhìn 3/4 cho video cận cảnh bàn tay" task, Part A3 -- the SAME
+    # Group 12 sign as _render_finger_movement_demo above, rendered at
+    # BOTH view angles side by side: the flexion this sign's finger
+    # articulation produces moves mostly in Z (see
+    # HAND_CLOSEUP_VIEW_ANGLE_DEG's own comment), invisible in the
+    # straight-on (0 deg) view -- the front file here is a second,
+    # separately-named copy of that same straight-on render (not just a
+    # re-use of mvp1_sign_9_finger_movement.gif) so the two comparison
+    # files live under one shared naming scheme (_10_closeup_front /
+    # _10_closeup_3q) for the report.
+    fsw = "M508x515S10000493x485S22100500x500"
+    front_path = demo_dir / "mvp1_sign_10_closeup_front.mp4"
+    front_written = fsw_to_hand_closeup_video(fsw, front_path, view_angle_deg=0.0)
+    print(f"Saved: {front_written} (from FSW {fsw!r}, view_angle_deg=0.0)")
+
+    three_quarter_path = demo_dir / "mvp1_sign_10_closeup_3q.mp4"
+    three_quarter_written = fsw_to_hand_closeup_video(
+        fsw, three_quarter_path, view_angle_deg=HAND_CLOSEUP_VIEW_ANGLE_DEG
+    )
+    print(f"Saved: {three_quarter_written} (from FSW {fsw!r}, view_angle_deg={HAND_CLOSEUP_VIEW_ANGLE_DEG})")
 
 
 def main() -> None:
@@ -336,6 +369,7 @@ def main() -> None:
     _render_pose_video_demo(demo_dir)
     _render_hand_closeup_demo(demo_dir)
     _render_finger_movement_demo(demo_dir)
+    _render_finger_movement_3q_demo(demo_dir)
 
 
 if __name__ == "__main__":
