@@ -87,7 +87,11 @@ from fsw_r_viz.plot_hand import render_symbols_grid
 from fsw_r_viz.plot_head import render_heads_grid
 from fsw_r_viz.plot_mesh_head import render_mesh_head_to_file
 from fsw_r_viz.plot_movement import render_movements_grid
-from fsw_r_viz.render_hand_closeup import HAND_CLOSEUP_VIEW_ANGLE_DEG, fsw_to_hand_closeup_video
+from fsw_r_viz.render_hand_closeup import (
+    HAND_CLOSEUP_VIEW_ANGLE_DEG,
+    fsw_to_hand_closeup_video,
+    fsw_to_two_hand_closeup_video,
+)
 from fsw_r_viz.render_pose_video import fsw_to_video
 from fsw_r_viz.render_timeline import render_timeline_to_pngs
 
@@ -365,6 +369,22 @@ def _render_thumb_calibration_3q_demo(demo_dir: Path) -> None:
     print(f"Saved: {written} (from FSW {fsw!r}, view_angle_deg={HAND_CLOSEUP_VIEW_ANGLE_DEG}, thumb FITTED)")
 
 
+def _render_two_hand_closeup_demo(demo_dir: Path) -> None:
+    # MVP-2 readability (PROGRESS.md Pha 18): a two-handed sign (RIGHT Index +
+    # LEFT Middle-Ring-Baby -- two clearly different handshapes) rendered as a
+    # SIDE-BY-SIDE close-up. At full-body scale the two hands collapse into
+    # overlapping blobs (see mvp1_sign_* full-body videos); this crops both
+    # hands, re-centers each on its own wrist, and magnifies each into its own
+    # half of the frame (subject's right on the viewer's left) so BOTH
+    # handshapes are readable at once. Uses the same 3/4 view angle as the
+    # single-hand close-up (reveals Z-flexion and shrinks a wide handshape's
+    # projected width so both hands zoom larger).
+    fsw = "M500x500S10010480x480S1cd1a520x520"
+    path = demo_dir / "mvp2_two_hand_closeup.mp4"
+    written = fsw_to_two_hand_closeup_video(fsw, path)
+    print(f"Saved: {written} (from FSW {fsw!r}, view_angle_deg={HAND_CLOSEUP_VIEW_ANGLE_DEG})")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -388,6 +408,7 @@ def main() -> None:
     _render_finger_movement_demo(demo_dir)
     _render_finger_movement_3q_demo(demo_dir)
     _render_thumb_calibration_3q_demo(demo_dir)
+    _render_two_hand_closeup_demo(demo_dir)
 
 
 if __name__ == "__main__":

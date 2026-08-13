@@ -26,6 +26,7 @@ from fsw_r_viz.render_hand_closeup import (
     HAND_CLOSEUP_TARGET_FRACTION,
     _hand_component_range,
     hand_closeup_pose,
+    two_hand_closeup_pose,
 )
 
 # Same standard MVP-1 demo sign used throughout this project's demo/test
@@ -116,13 +117,14 @@ def test_c3_wrist_sits_near_the_horizontal_center() -> None:
 
 
 def test_c4_full_body_video_data_is_unchanged() -> None:
-    # This task touches ONLY fsw-r-viz's new render_hand_closeup.py -- the
-    # full-body Pose fsw_r.export.pose_export.frames_to_pose produces
-    # (what render_pose_video.py's body video draws) must be byte-for-byte
-    # what it already was on the "sửa lại bất biến IK sai" baseline
-    # (commit b54854d): shoulder.y=241, elbow.y=358, wrist.y=236, shoulder
-    # width 60% of frame -- see this task's own PROGRESS.md entry for the
-    # full before/after table this reproduces.
+    # The close-up module (this file's subject) must NOT alter the full-body
+    # Pose fsw_r.export.pose_export.frames_to_pose produces -- it only crops a
+    # COPY. The baseline values were recalibrated in Pha 17 (signbox->body
+    # position scale reconciliation, PROGRESS.md): that changed where the HAND
+    # is anchored, hence the wrist (236->231) and the IK-derived elbow
+    # (358->353); the SHOULDER (241) and shoulder width (60% of frame) come
+    # from body_geometry and are untouched by Pha 17. This test still guards
+    # its real invariant -- the close-up transform leaves the body pose alone.
     pose = _demo_pose()
 
     def y_of(name: str) -> float:
@@ -134,8 +136,8 @@ def test_c4_full_body_video_data_is_unchanged() -> None:
         return float(pose.body.data[0, 0, index, 0])
 
     assert y_of("RIGHT_SHOULDER") == pytest.approx(241, abs=1.0)
-    assert y_of("RIGHT_ELBOW") == pytest.approx(358, abs=1.0)
-    assert y_of("RIGHT_WRIST") == pytest.approx(236, abs=1.0)
+    assert y_of("RIGHT_ELBOW") == pytest.approx(353, abs=1.0)
+    assert y_of("RIGHT_WRIST") == pytest.approx(231, abs=1.0)
 
     shoulder_width_fraction = abs(x_of("LEFT_SHOULDER") - x_of("RIGHT_SHOULDER")) / FRAME_WIDTH
     assert shoulder_width_fraction == pytest.approx(0.60, abs=0.01)
@@ -156,3 +158,68 @@ def test_c5_works_for_both_hands(hand: TrackName) -> None:
 
 # C6 (this task's brief: "1.441 test cũ pass nguyên") is the whole
 # existing suite, not a new test here.
+
+
+# --- Two-hand side-by-side close-up (Pha 18) ---
+
+# A real MVP-2 two-handed sign: RIGHT Index + LEFT Middle-Ring-Baby, two
+# clearly different handshapes so "both are readable" is a meaningful check.
+_TWO_HAND_SIGN = "M500x500S10010480x480S1cd1a520x520"
+
+
+def _two_hand_pose() -> Pose:
+    return frames_to_pose(sample(build_timeline(fsw_to_fswr(_TWO_HAND_SIGN))))
+
+
+def _hand_x_range(pose: Pose, component_name: str) -> tuple[float, float]:
+    start, count = _hand_component_range(pose, component_name)
+    conf = pose.body.confidence[0, 0, start : start + count]
+    xs = pose.body.data[0, 0, start : start + count, 0][conf > 0]
+    return float(xs.min()), float(xs.max())
+
+
+def test_two_hand_closeup_draws_both_hands() -> None:
+    closeup = two_hand_closeup_pose(_two_hand_pose())
+    for component_name in ("RIGHT_HAND_LANDMARKS", "LEFT_HAND_LANDMARKS"):
+        start, count = _hand_component_range(closeup, component_name)
+        assert closeup.body.confidence[:, 0, start : start + count].sum() > 0, f"{component_name} not drawn"
+
+
+def test_two_hand_closeup_hands_do_not_overlap() -> None:
+    # The whole point: the full-body view collapsed the two hands into one
+    # blob; here they must sit in separate halves with a real gap between them.
+    closeup = two_hand_closeup_pose(_two_hand_pose())
+    _right_min, right_max = _hand_x_range(closeup, "RIGHT_HAND_LANDMARKS")
+    left_min, _left_max = _hand_x_range(closeup, "LEFT_HAND_LANDMARKS")
+    assert right_max < left_min, f"hands overlap: right reaches {right_max:.0f}, left starts {left_min:.0f}"
+
+
+def test_two_hand_closeup_puts_right_hand_on_viewers_left() -> None:
+    # Subject's RIGHT hand -> viewer's left half, matching pose_export's
+    # selfie-mirror convention.
+    closeup = two_hand_closeup_pose(_two_hand_pose())
+    right_min, right_max = _hand_x_range(closeup, "RIGHT_HAND_LANDMARKS")
+    left_min, left_max = _hand_x_range(closeup, "LEFT_HAND_LANDMARKS")
+    assert (right_min + right_max) / 2 < FRAME_WIDTH / 2 < (left_min + left_max) / 2
+
+
+def test_two_hand_closeup_works_with_a_single_active_hand() -> None:
+    # A one-handed pose must still render (the one hand, in its half), not
+    # crash -- two_hand_closeup_pose only draws hands that are active.
+    closeup = two_hand_closeup_pose(_left_hand_pose())
+    start, count = _hand_component_range(closeup, "LEFT_HAND_LANDMARKS")
+    assert closeup.body.confidence[:, 0, start : start + count].sum() > 0
+
+
+def test_two_hand_closeup_raises_when_no_hand_is_active() -> None:
+    pose = _demo_pose()
+    blanked = Pose(
+        header=pose.header,
+        body=type(pose.body)(
+            fps=pose.body.fps,
+            data=np.array(pose.body.data),
+            confidence=np.zeros_like(np.array(pose.body.confidence)),
+        ),
+    )
+    with pytest.raises(ValueError, match="neither hand is active"):
+        two_hand_closeup_pose(blanked)

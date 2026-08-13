@@ -264,6 +264,132 @@ def render_hand_closeup(pose: Pose, path: Path, hand: TrackName, view_angle_deg:
         return gif_path
 
 
+# Two-hand close-up: each hand gets HALF the output frame, centered in its
+# half, so BOTH handshapes are readable at once (the full-body video collapses
+# them into overlapping blobs -- see PROGRESS.md's Pha 17/18). The subject's
+# RIGHT hand is drawn on the VIEWER's left and the LEFT hand on the viewer's
+# right, the same selfie-mirror convention pose_export.py uses (subject right
+# -> negative body x -> left of screen). Fraction 0.8 (not 1.0) leaves a margin
+# so a wide handshape doesn't touch the frame edge or the centre seam.
+TWO_HAND_CLOSEUP_TARGET_FRACTION = 0.8
+_TWO_HAND_ANCHOR_X_FRACTION: dict[TrackName, float] = {
+    TrackName.RIGHT_HAND: 0.25,  # viewer's left
+    TrackName.LEFT_HAND: 0.75,  # viewer's right
+}
+
+
+def two_hand_closeup_pose(pose: Pose, view_angle_deg: float = HAND_CLOSEUP_VIEW_ANGLE_DEG) -> Pose:
+    """Like ``hand_closeup_pose`` but shows BOTH hands at once, side by side --
+    each cropped out, re-centered on its own wrist, rotated about Y by
+    ``view_angle_deg`` (see ``HAND_CLOSEUP_VIEW_ANGLE_DEG``), and magnified so
+    it fills its half of the frame. Both hands share ONE scale -- the smaller
+    of their two fit factors -- so they're the same size and directly
+    comparable (a two-handed sign's two handshapes read at a glance instead of
+    overlapping into one blob at full-body scale).
+
+    Only hands that are actually active (non-zero confidence in some frame) are
+    drawn; a one-handed sign therefore shows a single hand in its own half.
+    Raises ``ValueError`` if NEITHER hand is ever active (nothing to render).
+
+    A pure data transform (no encoding), split out for direct testing, same as
+    ``hand_closeup_pose``.
+    """
+    view_rotation = Rotation.from_euler("y", view_angle_deg, degrees=True)
+    data: NDArray[np.float64] = np.array(pose.body.data, dtype=np.float64, copy=True)
+    confidence: NDArray[np.float64] = np.array(pose.body.confidence, dtype=np.float64, copy=True)
+    frame_count = data.shape[0]
+
+    # Per active hand: its point slice, active frames, and rotated
+    # wrist-relative points (rotated FIRST, like hand_closeup_pose, so the fit
+    # is measured on what actually gets drawn).
+    hands: dict[TrackName, tuple[int, int, list[int], dict[int, NDArray[np.float64]]]] = {}
+    for hand, component_name in _HAND_COMPONENT_BY_TRACK.items():
+        start, count = _hand_component_range(pose, component_name)
+        wrist_local_index = pose.header.get_point_index(component_name, "WRIST") - start
+        active_frames = [f for f in range(frame_count) if confidence[f, 0, start : start + count].sum() > 0]
+        if not active_frames:
+            continue
+        rotated_rel = {
+            f: view_rotation.apply(data[f, 0, start : start + count, :] - data[f, 0, start + wrist_local_index, :])
+            for f in active_frames
+        }
+        hands[hand] = (start, count, active_frames, rotated_rel)
+
+    if not hands:
+        raise ValueError("neither hand is active in any frame -- nothing to render a two-hand close-up of")
+
+    # One shared scale so both hands are the same size: the SMALLEST factor
+    # that still fits each hand's own height in TARGET_FRACTION of the frame
+    # height AND its width in TARGET_FRACTION of a half-frame width.
+    half_width = FRAME_WIDTH / 2.0
+    scale = float("inf")
+    for _start, _count, active_frames, rotated_rel in hands.values():
+        rel_y = np.concatenate([rotated_rel[f][:, 1] for f in active_frames])
+        rel_x = np.concatenate([rotated_rel[f][:, 0] for f in active_frames])
+        height_extent = float(rel_y.max() - rel_y.min())
+        width_extent = float(rel_x.max() - rel_x.min())
+        if height_extent > 0:
+            scale = min(scale, TWO_HAND_CLOSEUP_TARGET_FRACTION * FRAME_HEIGHT / height_extent)
+        if width_extent > 0:
+            scale = min(scale, TWO_HAND_CLOSEUP_TARGET_FRACTION * half_width / width_extent)
+    if not np.isfinite(scale):
+        raise ValueError("both hands have zero extent -- cannot derive a zoom factor")
+
+    confidence[:, :, :] = 0.0
+    for hand, (start, count, active_frames, rotated_rel) in hands.items():
+        # Center the hand's OWN x/y extent on its half-frame centre (not its
+        # wrist -- unlike the single-hand close-up, which fixes the wrist at
+        # frame centre): a handshape whose fingers reach mostly to one side of
+        # the wrist would otherwise sit lopsided in its half and spill across
+        # the centre seam into the other hand. Centering the extent keeps each
+        # hand tidily inside its own half (width <= 0.8 x half, so it fits with
+        # margin).
+        half_center_x = FRAME_WIDTH * _TWO_HAND_ANCHOR_X_FRACTION[hand]
+        rel_x = np.concatenate([rotated_rel[f][:, 0] for f in active_frames])
+        rel_y = np.concatenate([rotated_rel[f][:, 1] for f in active_frames])
+        anchor_x = half_center_x - scale * float(rel_x.min() + rel_x.max()) / 2.0
+        anchor_y = FRAME_HEIGHT / 2.0 - scale * float(rel_y.min() + rel_y.max()) / 2.0
+        for f in active_frames:
+            transformed = rotated_rel[f] * scale
+            transformed[:, 0] += anchor_x
+            transformed[:, 1] += anchor_y
+            data[f, 0, start : start + count, :] = transformed
+            confidence[f, 0, start : start + count] = pose.body.confidence[f, 0, start : start + count]
+
+    closeup_body = NumPyPoseBody(fps=pose.body.fps, data=data, confidence=confidence)
+    return Pose(header=pose.header, body=closeup_body)
+
+
+def render_two_hand_closeup(pose: Pose, path: Path, view_angle_deg: float = HAND_CLOSEUP_VIEW_ANGLE_DEG) -> Path:
+    """Writes a side-by-side close-up video/GIF of BOTH hands cropped out of
+    ``pose`` -- see ``two_hand_closeup_pose`` for the transform. Same
+    video/GIF-fallback wrapping as ``render_hand_closeup``."""
+    closeup_pose = two_hand_closeup_pose(pose, view_angle_deg)
+    visualizer = PoseVisualizer(closeup_pose, thickness=HAND_CLOSEUP_THICKNESS)
+    try:
+        visualizer.save_video(str(path), visualizer.draw())
+        return path
+    except Exception as e:  # noqa: BLE001 -- same deliberately-broad fallback as render_pose_video.py
+        gif_path = path.with_suffix(".gif")
+        print(
+            f"WARNING: save_video() failed ({type(e).__name__}: {e}) -- "
+            f"this environment is missing 'vidgear' and/or a real ffmpeg "
+            f"binary. Falling back to save_gif() at {gif_path} instead."
+        )
+        visualizer.save_gif(str(gif_path), visualizer.draw())
+        return gif_path
+
+
+def fsw_to_two_hand_closeup_video(fsw: str, path: Path, view_angle_deg: float = HAND_CLOSEUP_VIEW_ANGLE_DEG) -> Path:
+    """End-to-end: a real FSW sign straight to a side-by-side two-hand
+    close-up video (or GIF fallback). Returns the path actually written."""
+    positioned = fsw_to_fswr(fsw)
+    timeline = build_timeline(positioned)
+    frames = sample(timeline)
+    pose = frames_to_pose(frames)
+    return render_two_hand_closeup(pose, path, view_angle_deg)
+
+
 def fsw_to_hand_closeup_video(
     fsw: str,
     path: Path,

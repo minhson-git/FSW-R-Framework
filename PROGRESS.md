@@ -2630,13 +2630,49 @@ signbox) — cập nhật docstring cho rõ.
   test MVP-1/MVP-2/pixel khác pass nguyên — không có test nào khoá vị trí
   tuyệt đối khác). `mypy --strict` sạch.
 
-### CÒN LẠI — lớp 2 (độ RÕ hình dạng), CHƯA làm
+### Lớp 2 (độ RÕ hình dạng 2 tay) — làm ở Pha 18 phía dưới
 
-Đây mới sửa **định vị** (hết đè khi sign đặt tay xa). Phần "chưa rõ hình dạng
-gì" vẫn còn: ở tỷ lệ full-body mỗi bàn tay nhỏ + nét vẽ dày cố định → nhoè
-vào nét thân. Đúng vấn đề Pha 12/14 đã giải cho **1 tay** (close-up crop+phóng
-to) nhưng chưa có cho **2 tay**. Hướng: close-up khung cả 2 tay, hoặc nét mảnh
-hơn/phóng to vùng tay. Xem ROADMAP.md.
+## Pha 18 — Close-up 2 tay cạnh nhau (lớp 2 của "2 tay đè nhau")
+
+Tiếp Pha 17 (định vị). Vấn đề còn lại của "chưa rõ hình dạng gì": ở tỷ lệ
+full-body mỗi bàn tay nhỏ + nét `PoseVisualizer` dày cố định → 2 tay nhoè
+vào nhau và vào nét thân. Đây đúng bài Pha 12/14 đã giải cho **1 tay**
+(close-up: crop 1 tay, neo cổ tay, phóng to) — Pha 18 mở rộng cho **2 tay**.
+
+### Cách làm (`fsw-r-viz/render_hand_closeup.py`, thêm hàm — không đụng 1 tay)
+
+`two_hand_closeup_pose(pose, view_angle_deg=60°)`: crop **cả 2** component
+tay, mỗi tay xoay quanh Y (lộ gập-Z), phóng to vào **NỬA khung riêng** —
+tay PHẢI của người ký → nửa TRÁI màn hình (quy ước gương selfie như
+`pose_export`), tay TRÁI → nửa phải. **Neo tâm bao-hình (không phải cổ tay)
+vào tâm mỗi nửa** để tay có ngón lệch một bên không tràn sang nửa kia. Scale
+**dùng chung** (nhỏ hơn trong 2 hệ số vừa-khít) → 2 tay cùng cỡ, so sánh được.
+
+**Vì sao default 60° (khác 1-tay default 0°):** đo được — tay rộng (vd
+Middle-Ring-Baby, rộng 134px) ở góc 0° ăn hết bề ngang nửa khung, ép scale
+chung xuống 1.52 (cả 2 tay nhỏ); ở 60° xoay bớt bề ngang chiếu → scale chung
+lên 2.90. Hàm two-hand là MỚI (không ràng buộc back-compat) nên chọn default
+tốt hơn. Đo tách biệt sau khi neo-tâm: RIGHT x∈[62,194], LEFT x∈[282,486],
+**cách nhau 88px, không chồng**.
+
+### Kiểm chứng
+
+- **Kiểm chứng trực quan:** GIF `demo/mvp2_two_hand_closeup.gif` (RIGHT Index
+  + LEFT Middle-Ring-Baby) — **thấy rõ 2 handshape khác nhau cạnh nhau**,
+  từng ngón phân biệt (trước: 1 khối nhoè ở full-body).
+- `fsw-r-viz` `pytest` **47/47** (42 cũ + 5 test Pha 18: vẽ cả 2 tay, không
+  chồng, tay phải ở nửa trái, 1-tay vẫn chạy, raise khi 0 tay). `mypy` sạch.
+  **Đường close-up 1 tay (Pha 12/14) không đụng** — thêm hàm mới, không sửa
+  hàm cũ.
+
+### Sửa kèm: 1 test bị Pha 17 làm hỏng (miss của tôi)
+
+Pha 17 đổi `anchor()` → dịch vị trí tay → đổi pixel cổ tay/khuỷu trong pose
+full-body. Test `fsw-r-viz/test_render_hand_closeup.py::test_c4_...` khoá
+giá trị đó (elbow 358→**353**, wrist 236→**231**; vai 241 và bề rộng vai 60%
+KHÔNG đổi vì từ `body_geometry`). **Lúc nghiệm thu Pha 17 tôi chỉ chạy pytest
+`fsw-r`, quên `fsw-r-viz`** nên sót — đã sửa giá trị test ở pha này và ghi
+nhận để không lặp lại (giờ chạy full suite CẢ HAI package).
 
 ## Việc còn để ngỏ / chưa làm
 
