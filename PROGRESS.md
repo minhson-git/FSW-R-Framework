@@ -1772,6 +1772,36 @@ annotation, không đổi runtime.
   lại nắm — kèm 1 quan sát trung thực (GIF chỉ 1 frame do handshape tĩnh
   suốt cả sign + Pillow tự gộp frame giống hệt nhau, không phải lỗi). Chi
   tiết ở mục "Pha 12" phía trên.
+- **Chuyển động khớp ngón tay — Group 12 (Pha 13) đã xong** — trước task
+  này, `joint_pose` giống hệt nhau ở MỌI keyframe của mọi sign chuyển
+  động (bàn tay cứng bị kéo dọc quỹ đạo, không thấy khớp dù đã phóng to ở
+  Pha 12). Sửa đúng ngữ nghĩa ISWA (Group 12 = khớp ngón cử động, cổ tay
+  đứng yên — trước đó `movement_paths.py` mô hình SAI thành cả bàn tay lắc
+  qua lại). Tra tên thật 5/20 base dẫn đầu (76,1% token) trên signbank.org
+  TRƯỚC khi thiết kế: `0x221` Hinge Up Down Large (38,2%), `0x225` Hinge
+  Alternating Large (16,0%), `0x216` Squeeze Large Single (8,9%), `0x21b`
+  Flick Large Single (7,9%), `0x222` Hinge Up Down Small (5,1%) — số valid
+  fills/rotations mỗi trang khớp chính xác bảng đo sẵn của brief. Kiểu mới
+  `FingerArticulation` (`core/types.py`) + `data/finger_articulations.json`
+  (20 entry, AUTHORED, `_meta` ghi rõ 5 base có tên thật/15 base mặc định)
+  + `core/finger_articulation.py`'s `articulate_joint_pose()` (công thức
+  sin, clamp bằng `JOINT_LIMITS` — dùng, không sửa `validation/`). **Được
+  phép sửa `core/` và `timeline/` (task này, khác các task trước)** —
+  `timeline/build.py` giờ tính lại `joint_pose` theo từng keyframe khi có
+  Group 12; `sample.py` không cần sửa gì (nội suy tuyến tính có sẵn tự
+  biến chuỗi keyframe dao động thành chuyển động mượt). Đo được: chênh
+  lệch góc lớn nhất qua các frame vượt xa 15° cho cả 5 base dẫn đầu
+  (28,3°-59,6°); clamp xác nhận hoạt động đúng trên 1 base có base data
+  vốn đã vi phạm giới hạn từ Pha 6. **0 file `validation/` bị sửa**
+  (`git diff --stat` xác nhận, chỉ import `JOINT_LIMITS`),
+  `reports/fk_accuracy.md` **KHÔNG đổi**. GIF thứ 9
+  (`mvp1_sign_9_finger_movement.gif`) đã commit — xem lại bằng mắt phát
+  hiện lần xem đầu chọn nhầm frame preview (bị "phách" trùng pha), đã tự
+  bắt lỗi bằng số trước khi kết luận, chọn lại đúng cặp frame thấy rõ ngón
+  trỏ duỗi/nắm. Chi tiết ở mục "Pha 13" phía trên.
+- `fsw-r`: `mypy --strict` sạch (86 file), `pytest` **1.475/1.475 pass**
+  (1.441 cũ nguyên vẹn + 34 test Pha 13 `test_finger_articulation.py`
+  D1-D6, D7/D8 kiểm bằng quy trình riêng không phải test).
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
   4/5 qua `git stash`), `pytest` **33/33 pass** (tăng từ 5/5 khi
@@ -2123,6 +2153,132 @@ tới ở bất kỳ đâu). GIF thứ 8 (`mvp1_sign_8_hand_closeup.gif`) đã c
 cùng file "mới nhất" chính tắc `mvp1_sign_hand_closeup.gif` (xác nhận
 byte-for-byte giống hệt), và `mvp1_sign_7_elbow_invariant_fix.gif` (video
 toàn thân) xác nhận KHÔNG đổi (`git status` không có diff trên file đó).
+
+## Pha 13 — Chuyển động khớp ngón tay (Group 12 — Finger Movement)
+
+Khác các task gần đây: task này **được phép sửa `core/` và `timeline/`** —
+đây là tính năng thật, không phải sửa lỗi tầng ngoài. Đã dùng
+`validation/anatomical_limits.py` (không sửa file đó, chỉ import
+`JOINT_LIMITS`).
+
+**Vấn đề (Phần 0):** đo trên `M508x515S10000493x485S22a04500x500`, `joint_pose`
+giống hệt nhau ở cả 24 keyframe của MỌI sign chuyển động trước task này —
+bàn tay là 1 hình cứng bị kéo dọc quỹ đạo. Mắt người nhận ra khớp qua
+CHUYỂN ĐỘNG TƯƠNG ĐỐI giữa các đốt, không phải qua kích thước — nên dù đã
+phóng to ở Pha 12, người xem vẫn không "thấy khớp". Đây đúng thiết kế
+MVP-1 (không phải bug), nhưng là giới hạn cần vượt.
+
+**Bug ngữ nghĩa phát hiện thêm:** `core/movement_paths.py` mô hình hoá
+Group 12 ("Finger Movement") thành CẢ BÀN TAY lắc qua lại trong không
+gian — sai theo ISWA thật: Group 12 nghĩa là CÁC KHỚP NGÓN cử động, cổ tay
+đứng yên. Sửa chỗ này vừa cho ra chuyển động, vừa đúng ngữ nghĩa hơn —
+không phải hack thẩm mỹ.
+
+**Phần A1 — tên 5 base symbol dẫn đầu (76,1% token Group 12 thật), tra
+TRƯỚC KHI viết code, qua `signbank.org/iswa/{hex}/{hex}_bs.html`:**
+
+| base | tên ISWA thật | %token | valid fills/rot (đo được, khớp brief) |
+|---|---|---|---|
+| `0x221` | **Hinge Movement, Up Down Large** | 38,2% | 1-5 / 1-8 |
+| `0x225` | **Hinge Movement, Up Down Alternating Large** | 16,0% | 1-4 / 1-8 |
+| `0x216` | **Squeeze Large Single** | 8,9% | 1 / 1 |
+| `0x21b` | **Flick Large Single** | 7,9% | 1 / 1 |
+| `0x222` | **Hinge Movement, Up Down Small** | 5,1% | 1-5 / 1-8 |
+
+Mỗi trang đã tự xác nhận số valid fills/rotations khớp chính xác với bảng
+đo sẵn của brief (kể cả `0x221` đã có cross-check độc lập trong
+`test_movement_symbol.py`'s `TOP_20_MOST_FREQUENT_BASES` từ trước) — xác
+nhận đúng symbol, không nhầm hex.
+
+**Đọc tên → thiết kế `FingerArticulation` (AUTHORED, ghi rõ trong
+`data/finger_articulations.json`'s `_meta`):**
+- "Hinge" = khớp gập kiểu bản lề → áp cho khớp **MCP** (khớp gốc, "hinge"
+  đúng nghĩa). Tên không nêu ngón cụ thể → áp cho **cả 4 ngón không phải
+  cái** (index/middle/ring/pinky) cùng lúc — lựa chọn AUTHORED, ghi rõ
+  giả định "có thể ISWA thật ra phụ thuộc vào ngón nào đang duỗi trong
+  handshape đi kèm, bảng này không mã hoá điều đó."
+- "Large"/"Small" → 2 mức biên độ project tự đặt: 30°/15°.
+- "Alternating" (chỉ `0x225`) → `phase_offset = π/2`, lệch pha các ngón
+  theo thứ tự chuẩn (thumb, index, middle, ring, pinky) — tạo hiệu ứng
+  "sóng lăn tăn" qua 4 ngón thay vì cùng lúc. Giá trị π/2 cụ thể là lựa
+  chọn riêng, ISWA không nêu số lệch pha.
+- "Squeeze" (không nói "up down") → nắm CẢ ngón lại, áp cho **MCP+PIP**
+  (khác Hinge chỉ MCP), `cycles=1` ("Single" = 1 lần nắm-thả, không lặp).
+- "Flick" → cử động 1 ngón, sắc gọn ở khớp xa → áp riêng cho **ngón trỏ**,
+  khớp **PIP+DIP** (không phải MCP), biên độ 35° (lớn hơn Hinge/Squeeze),
+  `cycles=1`.
+- 15 base còn lại: **mặc định chung** (4 ngón, MCP, 20°, 2 chu kỳ,
+  đồng pha) — KHÔNG tra tên riêng, ghi rõ trong `_meta`'s `default_bases`.
+
+**Thiết kế kỹ thuật:**
+- `core/types.py`: `FingerArticulation` mới (`fingers`, `joints`,
+  `amplitude_deg`, `cycles`, `phase_offset`), cạnh `MotionPath`.
+- `core/finger_articulation.py` mới: `articulate_joint_pose(base_pose,
+  articulation, t)` — công thức `amplitude_deg * sin(2π·cycles·t + phase)`
+  cộng vào flexion gốc, **clamp bằng `JOINT_LIMITS`** (dữ liệu, import từ
+  `validation/`, không gọi `validate_pose()`, không sửa `validation/`).
+  Ngón nào/khớp nào KHÔNG có trong `articulation.fingers`/`joints` giữ
+  nguyên góc gốc.
+- `core/renderable_symbol.py`: `FSWMotionRenderable` thêm abstract
+  `get_finger_articulation() -> FingerArticulation | None` — bắt buộc với
+  MỌI Category 2 symbol (như `get_wrist_orientation()` đã có sẵn), trả
+  `None` cho 4/5 path_type còn lại. Không tạo contract riêng
+  (`FSWFingerArticulationRenderable`) — `MotionPath` vẫn là mô tả bắt
+  buộc duy nhất, `FingerArticulation` là chi tiết PHỤ đặc thù 1 path_type.
+- `core/movement_paths.py`: `PathType.FINGER`'s `_canonical_shape()` giờ
+  trả về **1 điểm cố định, giống hệt CONTACT** (cổ tay không di chuyển) —
+  bỏ công thức lắc cũ. Cập nhật mục UNVERIFIED ASSUMPTIONS.
+- `timeline/build.py`: khi `motion_symbol.get_finger_articulation()`
+  không `None`, MỖI keyframe tính lại `joint_pose` tại đúng `time` của nó
+  (thay vì dùng chung 1 `joint_pose` tĩnh) — đây là thay đổi DUY NHẤT.
+  `sample.py` **không sửa gì** — phép nội suy tuyến tính có sẵn giữa các
+  keyframe dày đặc (đã dùng cho CURVED/CIRCLE) tự động biến chuỗi keyframe
+  dao động thành 1 chuyển động mượt khi lấy mẫu 25fps.
+
+**Kết quả đo:**
+- Chênh lệch góc lớn nhất giữa 2 frame bất kỳ, cả 5 base dẫn đầu, đều vượt
+  xa 15° yêu cầu: `0x221`=56,7°, `0x225`=59,2°, `0x216`=59,6°, `0x21b`=42,8°,
+  `0x222`=28,3°.
+- Clamp hoạt động đúng: ví dụ `0x216` (Squeeze, áp cả MCP+PIP), ring PIP
+  có base 127° (đã VI PHẠM giới hạn 120° sẵn trong `hand_joint_poses.json`
+  — phát hiện cũ từ Pha 6, không phải lỗi mới) — sau dao động bị clamp
+  đúng về đúng biên `[97,2, 120,0]`, không vượt 120° dù công thức chưa
+  clamp cho ra tới 157°.
+- Cổ tay đứng yên tuyệt đối (position giống hệt từng bit) qua mọi frame
+  khi `PathType.FINGER` — xác nhận bằng số, không chỉ bằng mắt.
+
+**Xem GIF bằng mắt trước khi commit — 1 lần chọn sai frame preview, tự bắt
+lại bằng số trước khi kết luận:** lần xem đầu (frame 0/2/7 của GIF cận
+cảnh) tình cờ rơi gần trùng pha (do `cycles=2` qua 20 frame lấy mẫu tạo ra
+hiệu ứng "phách" — beat aliasing — với đúng khoảng cách 5 frame giữa các
+lần xem), nhìn như KHÔNG có chuyển động gì. Đã KHÔNG kết luận vội — in ra
+số `index.mcp` từng frame (0→47→58→57→47→30→13→2→2→13→30→...) xác nhận dao
+động có thật, chọn lại đúng cặp frame 7 (duỗi, mcp≈2°) và 13 (nắm, mcp≈58°)
+để xem lại — thấy rõ ngón trỏ (đường xanh dương) đổi từ dài (duỗi) sang
+ngắn hẳn (nắm lại ngang 3 ngón kia) và ngược lại. GIF thứ 9
+(`mvp1_sign_9_finger_movement.gif`, sign Index + `0x221`, qua pipeline
+cận cảnh Pha 12) đã commit.
+
+**Kiểm chứng:** `mypy --strict` sạch (`fsw-r` 86 file, `fsw-r-viz` không
+đổi/không lỗi mới). `pytest` **fsw-r 1.475/1.475 pass** (1.441 cũ nguyên
+vẹn + 34 test mới `test_finger_articulation.py` D1-D6), `fsw-r-viz`
+33/33 pass. `git diff --stat` xác nhận 0 file `validation/` bị sửa (chỉ
+dùng `JOINT_LIMITS`), 0 file `hand_joint_poses.json` bị đụng.
+`reports/fk_accuracy.md` không đổi (MPJPE=48,72, chạy lại xác nhận — task
+này không đụng FK).
+
+**Giả định chưa kiểm chứng (bổ sung):** TOÀN BỘ giá trị `FingerArticulation`
+(cả 20 base, kể cả 5 base đã tra tên thật) là AUTHORED — không có dataset
+nào ánh xạ tên ISWA finger-movement sang góc khớp số. Cụ thể:
+- Ngón nào tham gia cho 3 base tên không nêu ngón cụ thể (`0x221`/`0x222`/
+  `0x225`) — chọn cả 4 ngón, có thể ISWA thật phụ thuộc handshape đi kèm.
+- `phase_offset=π/2` cho "Alternating" — số cụ thể tự chọn, ISWA không nêu.
+- "Flick" nhắm vào ngón trỏ, khớp PIP+DIP (không phải MCP) — cách hiểu
+  riêng, chưa đối chiếu nguồn nào theo từng ngón.
+- 2 mức biên độ (Large=30°, Small=15°) và mặc định 15 base còn lại (20°) —
+  minh hoạ, chưa hiệu chỉnh theo chuyển động thật.
+- 15 base không nghiên cứu riêng (`default_bases` trong `_meta`) — dùng
+  chung 1 placeholder, không phải đọc tên thật của chính chúng.
 
 ## Việc còn để ngỏ / chưa làm
 

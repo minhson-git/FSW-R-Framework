@@ -561,6 +561,58 @@ mới):**
   `hand`, gọi 2 lần cho 2 tay là đủ về mặt code, nhưng chưa có sign thật 2
   tay nào để render thử).
 
+### Chuyển động khớp ngón tay (Group 12 — Finger Movement) — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 13" (tiếp Pha 12).
+**Khác các task gần đây: task này ĐƯỢC PHÉP sửa `core/` và `timeline/`**
+— tính năng thật, không phải sửa lỗi tầng ngoài.
+
+**Việc đã làm:** trước task này, `joint_pose` giống hệt nhau ở MỌI
+keyframe của bất kỳ sign chuyển động nào — bàn tay là hình cứng bị kéo
+dọc quỹ đạo, khớp ngón hoàn toàn đứng yên (đúng thiết kế MVP-1, không
+phải bug, nhưng là giới hạn). Đồng thời phát hiện + sửa 1 bug ngữ nghĩa
+có sẵn: `core/movement_paths.py` mô hình ISWA Group 12 ("Finger Movement")
+thành CẢ BÀN TAY lắc qua lại trong không gian — sai; Group 12 nghĩa là
+CÁC KHỚP NGÓN cử động, cổ tay đứng yên. Đã tra tên thật 5/20 base dẫn đầu
+(76,1% token Group 12, corpus SignBank+) trên signbank.org TRƯỚC khi thiết
+kế bảng dữ liệu (0x221 Hinge Up Down Large 38,2%, 0x225 Hinge Alternating
+Large 16,0%, 0x216 Squeeze Large Single 8,9%, 0x21b Flick Large Single
+7,9%, 0x222 Hinge Up Down Small 5,1%) — số valid fills/rotations mỗi
+trang khớp chính xác bảng đo sẵn của brief, xác nhận đúng symbol.
+
+Kiểu mới `FingerArticulation` (`core/types.py`, cạnh `MotionPath`) +
+`data/finger_articulations.json` (20 entry, AUTHORED — không có dataset
+nào ánh xạ tên ISWA finger-movement sang góc khớp số, giống
+`dynamics_modifiers.json`/`body_poses.json`) + `core/finger_articulation.py`'s
+`articulate_joint_pose()` (công thức `amplitude_deg·sin(2π·cycles·t+phase)`,
+clamp bằng `JOINT_LIMITS` — IMPORT từ `validation/anatomical_limits.py`,
+không sửa file đó). `FSWMotionRenderable` thêm
+`get_finger_articulation() -> FingerArticulation | None` (bắt buộc mọi
+Category 2 symbol, `None` cho 4/5 path_type còn lại — không tạo contract
+riêng). `core/movement_paths.py`'s `PathType.FINGER` giờ trả 1 điểm cố
+định (giống CONTACT) thay vì công thức lắc cũ. `timeline/build.py`: khi
+có `FingerArticulation`, mỗi keyframe tính lại `joint_pose` theo đúng
+`time` của nó — thay đổi DUY NHẤT; `sample.py` không cần sửa gì (nội suy
+tuyến tính có sẵn giữa keyframe dày đặc tự biến chuỗi dao động thành
+chuyển động mượt). 34 test mới (`test_finger_articulation.py`, D1-D6).
+GIF thứ 9 (`mvp1_sign_9_finger_movement.gif`, Index + 0x221, qua pipeline
+cận cảnh Pha 12) đã render, xem lại bằng mắt (sau khi tự bắt lỗi 1 lần
+chọn nhầm frame preview bị "phách" trùng pha — xác nhận lại bằng số trước
+khi kết luận), và commit. Chi tiết đầy đủ ở `PROGRESS.md` mục "Pha 13".
+
+**Việc còn lại — nguồn chuyển động thứ hai cho khớp ngón, thuộc MVP-2,
+CHƯA làm ở task này:** **nội suy handshape giữa hai ký hiệu tay cùng bên**
+trong 1 sign — khi 1 sign có ≥2 symbol Category 1 (Hand) trên cùng 1 tay
+(~12,8% sign thật theo số liệu corpus đã có sẵn — chưa tự đo lại độc lập
+trong task này, chỉ ghi nhận làm việc tiếp theo), handshape đổi
+theo thời gian (vd từ nắm sang duỗi) chính là 1 dạng chuyển động khớp
+ngón THẬT SỰ — khác hẳn Group 12 (dao động quanh 1 handshape neo, biên độ
+nhỏ) ở chỗ đây là chuyển tiếp HẲN giữa 2 tư thế tay khác nhau, biên độ
+lớn hơn nhiều và không tuần hoàn. `SignTimeline` MVP-1 hiện chỉ hỗ trợ
+đúng 1 symbol tay/sign (xem `timeline/build.py`'s `UnsupportedSignError`)
+nên chưa thể làm — cần logic MVP-2 (gán/phân biệt nhiều symbol tay trên
+cùng track) làm nền trước.
+
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 
 **Trạng thái:** xong ở tầng ký hiệu — `DynamicsSymbol` + `FSWModifierSymbol`
