@@ -44,13 +44,24 @@ class MovementSymbol(FSWMotionRenderable):
         ``fill`` correlates far better (fill=1 is ~53x more common when
         the hand is LEFT -- consistent with the SignWriting convention
         that fill code 0/1/2 = ISWA fill 1/2/3 = right/left/both), but
-        with real noise (LEFT still uses fill=0 72% of the time). That's
-        not reliable enough to hard-code as a rule yet -- cross-checking
-        against Lessons in SignWriting chapter 6 is needed first. Returning
-        ``None`` here is the honest answer: guessing wrong ~28% of the time
-        would be worse than admitting this isn't decided yet. (No
-        ``HandSide.BOTH`` member has been added for this either -- there's
-        nothing to assign it to while this returns ``None``.)
+        with real noise (LEFT still uses fill=0 72% of the time).
+
+        **That cross-check against Lessons in SignWriting is now done (MVP-2).**
+        The arrowhead fill IS the cited performing-hand rule (dark = right,
+        light = left, superposed = both; ``fill % 3`` collapses the "flipped"
+        arrowhead variants -- see ``timeline/classify.tracks_for_movement``).
+        The ~28% "noise" is not the rule being wrong: it is one-handed signs,
+        where the arrowhead has no second hand to distinguish and defaults to
+        dark, so the fill is only meaningful in TWO-handed signs -- which is
+        exactly where ``tracks_for_movement`` uses it and where the ambiguity
+        actually exists.
+
+        This property still returns ``None``, deliberately: a *single*
+        performing hand isn't a well-defined attribute of a movement symbol in
+        isolation (fill=2 means BOTH), and one-handed signs don't consult it
+        at all. Track routing -- the place that actually needs it, and only in
+        the two-handed case -- lives in ``tracks_for_movement`` (which returns
+        a *tuple* of tracks, so "both" needs no ``HandSide.BOTH`` member).
         """
         return None
 

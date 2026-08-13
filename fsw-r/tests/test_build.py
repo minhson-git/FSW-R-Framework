@@ -11,15 +11,32 @@ from fsw_r.timeline.sample import sample
 from fsw_r.timeline.types import TrackName
 
 
-def test_two_hand_symbols_is_unsupported() -> None:
-    # E3
+def test_two_hand_symbols_build_two_tracks() -> None:
+    # MVP-2: a RIGHT + LEFT sign (was UnsupportedSignError at MVP-1) now
+    # builds one track per hand. S10010 rotation=0 -> RIGHT; S1061a
+    # rotation=a -> LEFT.
     positioned = fsw_to_fswr("M500x500S10010480x480S1061a520x520")
-    with pytest.raises(UnsupportedSignError, match="exactly 1 hand"):
+    timeline = build_timeline(positioned)
+    assert {t.name for t in timeline.tracks} == {TrackName.RIGHT_HAND, TrackName.LEFT_HAND}
+    assert len(timeline.tracks) == 2
+
+
+def test_two_same_side_hand_symbols_is_unsupported() -> None:
+    # MVP-2: two RIGHT postures ("one hand, two postures") is still ambiguous.
+    positioned = fsw_to_fswr("M500x500S10010480x480S10010520x520")
+    with pytest.raises(UnsupportedSignError, match="at most one posture per hand"):
         build_timeline(positioned)
 
 
-def test_two_movement_symbols_is_unsupported() -> None:
-    # E3
+def test_three_hand_symbols_is_unsupported() -> None:
+    positioned = fsw_to_fswr("M500x500S10010480x480S1001a500x500S10010520x520")
+    with pytest.raises(UnsupportedSignError, match="1 or 2 hand"):
+        build_timeline(positioned)
+
+
+def test_two_movements_on_the_same_hand_is_unsupported() -> None:
+    # MVP-2: one hand, two movements ("one hand, two moments") stays out of
+    # scope -- both movements route to the single RIGHT track.
     positioned = fsw_to_fswr("M500x500S10010480x480S22a10500x500S26510520x520")
     with pytest.raises(UnsupportedSignError, match="at most 1 movement"):
         build_timeline(positioned)
@@ -65,7 +82,7 @@ def test_category_5_symbol_is_unsupported() -> None:
 def test_zero_hand_symbols_is_unsupported() -> None:
     # E3 -- a movement symbol with no hand at all.
     positioned = fsw_to_fswr("M500x500S22a10500x500")
-    with pytest.raises(UnsupportedSignError, match="exactly 1 hand"):
+    with pytest.raises(UnsupportedSignError, match="1 or 2 hand"):
         build_timeline(positioned)
 
 
@@ -128,3 +145,47 @@ def test_real_fsw_signs_build_end_to_end(fsw: str) -> None:
     assert len(timeline.tracks[0].keyframes) >= 1
     frames = sample(timeline)
     assert len(frames) == round(DEFAULT_SIGN_DURATION * 25)
+
+
+# --- MVP-2: two hands + fill-based movement routing ---
+
+_TWO_HANDS = "M500x500S10010480x480S1001a500x500"  # RIGHT Index + LEFT Index
+
+
+def _keyframes_by_track(fsw: str) -> dict[TrackName, int]:
+    timeline = build_timeline(fsw_to_fswr(fsw))
+    return {track.name: len(track.keyframes) for track in timeline.tracks}
+
+
+def test_movement_fill0_routes_to_right_hand_only() -> None:
+    # Arrowhead fill 0 = dark = RIGHT hand: only the right track gets the
+    # movement's dense keyframes; the left stays a single static keyframe.
+    counts = _keyframes_by_track(_TWO_HANDS + "S22a00510x510")
+    assert counts[TrackName.RIGHT_HAND] > 1
+    assert counts[TrackName.LEFT_HAND] == 1
+
+
+def test_movement_fill1_routes_to_left_hand_only() -> None:
+    # Arrowhead fill 1 = light = LEFT hand.
+    counts = _keyframes_by_track(_TWO_HANDS + "S22a10510x510")
+    assert counts[TrackName.LEFT_HAND] > 1
+    assert counts[TrackName.RIGHT_HAND] == 1
+
+
+def test_movement_fill2_superposed_moves_both_hands() -> None:
+    # Arrowhead fill 2 = superposed = BOTH hands: the same movement is
+    # applied to both tracks (the "both" case the user chose over a
+    # HandSide.BOTH member).
+    counts = _keyframes_by_track(_TWO_HANDS + "S22a20510x510")
+    assert counts[TrackName.RIGHT_HAND] > 1
+    assert counts[TrackName.LEFT_HAND] > 1
+
+
+def test_two_hand_sign_samples_end_to_end() -> None:
+    timeline = build_timeline(fsw_to_fswr(_TWO_HANDS + "S22a20510x510"))
+    assert len(timeline.tracks) == 2
+    frames = sample(timeline)
+    assert len(frames) == round(DEFAULT_SIGN_DURATION * 25)
+    # Every sampled frame carries both hand tracks.
+    for frame in frames:
+        assert set(frame.tracks) == {TrackName.RIGHT_HAND, TrackName.LEFT_HAND}

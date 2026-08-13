@@ -247,8 +247,12 @@ suy, không phải ở logic phân biệt còn chưa viết.
 **Việc còn lại (không phải làm sai, mà là ngoài phạm vi MVP-1 có chủ đích):**
 - Tầng validate giải phẫu (giới hạn góc khớp thật) — chưa có, xem phát hiện
   PIP flexion > 110° ở 119/261 (45,6%) symbol trong `PROGRESS.md`.
-- MVP-2 (sign có nhiều symbol tay/chuyển động hơn, ~20,9% sign) — cần logic
-  phân biệt/gán track chưa viết ở MVP-1.
+- ✅ **MVP-2 (sign 2 tay, ~20,9%) — ĐÃ XONG (PROGRESS.md Pha 16).**
+  `SignTimeline` dựng 1-2 track; chuyển động gán cho tay theo quy tắc
+  arrowhead-fill CITED (`fill%3` = phải/trái/cả-hai — Lessons in SignWriting
+  + SignWriter Studio Arrow Chooser, cài ở `timeline/classify.
+  tracks_for_movement`). Còn ngoài phạm vi: 2 tư thế cùng-tay, >1 chuyển
+  động/tay, và độ RÕ render khi 2 tay gần nhau (việc render riêng).
 - `DEFAULT_SIGN_DURATION` (0,8s) là hằng số giữ chỗ, chưa có nguồn dữ liệu
   thời gian thật (Category 3 Dynamics dự kiến bù việc này).
 - `SIGNBOX_TO_BODY_SCALE` và phép ánh xạ toạ độ signbox → không gian cơ thể
@@ -323,7 +327,7 @@ overfit)**; thumb per-finger **80,29 → 63,93**. **Không** đụng
 `hand_joint_poses.json` hay góc khớp. Chi tiết + 4 số + baseline ở
 `PROGRESS.md` mục "Pha 15", báo cáo `reports/fk_calibration.md` +
 `reports/calibration_split.json`. **Hướng tiếp theo (theo brief, vì cải
-thiện ≥5%): sang MVP-2 (2 tay)** — xem mục "MVP-2" phía trên. Phần CÒN LẠI
+thiện ≥5%): sang MVP-2 (2 tay) — ĐÃ LÀM (Pha 16).** Phần CÒN LẠI
 của điều tra ngón cái (đối chiếu định nghĩa `thumb.cmc` của dataset với định
 nghĩa lâm sàng CMC — nguồn nghi ngờ của 224/261 vi phạm giải phẫu) vẫn nằm
 ở tầng GÓC KHỚP, tách biệt với hình học tái dựng vừa fit, và vẫn để ngỏ.

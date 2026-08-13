@@ -1818,12 +1818,16 @@ annotation, không đổi runtime.
   bằng mắt: ở 0° ngón trỏ chỉ ngắn đi, ở 60° CÙNG 2 frame cho thấy ngón
   trỏ đổi hướng rõ ràng (thẳng đứng → chéo lên-phải) — đúng là cung gập,
   không phải co ngắn. Chi tiết ở mục "Pha 14" phía trên.
-- `fsw-r`: `mypy --strict` sạch (92 file — +1 `scripts/
-  calibrate_hand_geometry.py` ở Pha 15), `pytest` **1.475/1.475 pass**
-  (1.441 cũ nguyên vẹn + 34 test Pha 13 `test_finger_articulation.py`
-  D1-D6, D7/D8 kiểm bằng quy trình riêng không phải test; Pha 14 không đụng
-  `fsw-r`; Pha 15 hiệu chỉnh 2 hằng số ngón cái — 1.475 giữ nguyên, không
-  test nào khoá hằng số cũ).
+- `fsw-r`: `mypy --strict` sạch (92 file), `pytest` **1.481/1.481 pass**
+  (1.475 sau Pha 15 + 6 test MVP-2 ở Pha 16 `test_build.py`; 2 test MVP-1
+  buộc đổi nghĩa đã cập nhật — xem Pha 16).
+- **MVP-2 (sign 2 tay) đã xong (Pha 16)** — `SignTimeline` giờ dựng 1 HOẶC 2
+  track tay; chuyển động gán cho tay theo **quy tắc arrowhead-fill CITED**
+  (fill%3 = phải/trái/cả-hai, đối chiếu Lessons in SignWriting + Arrow
+  Chooser). Coverage 6,2%→~20,9% sign. Đường 1-tay giữ nguyên byte-for-byte.
+  Sửa `timeline/build.py`+`classify.py` (bản chất là feature timeline) + 1
+  docstring `core/movement_symbol.py`; `hand_joint_poses.json` không đụng.
+  Chi tiết ở mục "Pha 16".
 - **Hiệu chỉnh hình học ngón cái (Pha 15) đã xong** — 2 hằng số ngón cái
   không nguồn (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) giờ **FITTED**
   vào ground truth trên tập **held-out 70/30 phân tầng** (seed 42): test
@@ -2515,6 +2519,76 @@ bị sửa trong `src/`; **0 file `core/`, `timeline/`, `validation/`**;
 `hand_joint_poses.json` **không đổi 1 byte** (đã xác nhận). Script mới +
 báo cáo mới nằm ở `scripts/`, `reports/`.
 
+## Pha 16 — MVP-2: sign 2 tay + gán chuyển động theo quy tắc CITED
+
+Mở rộng `SignTimeline` từ MVP-1 (1 tay, 6,2% sign) sang **1 HOẶC 2 tay**
+(~20,9% sign). Điểm chặn của MVP-1 là câu hỏi "chuyển động thuộc tay nào" —
+`MovementSymbol.hand_side=None`, docs cũ ghi "cần đối chiếu Lessons in
+SignWriting ch.6". **Đối chiếu đó giờ đã làm** (đúng lựa chọn của chủ dự án:
+giải quy tắc ngôn ngữ trước khi code, không đoán).
+
+### Quy tắc hand_side Category 2 (đã GIẢI + có trích dẫn)
+
+SignWriting mã hoá tay thực hiện trong **kiểu đầu mũi tên (arrowhead) của
+chuyển động**:
+- **đầu mũi tên TỐI = tay PHẢI**, **SÁNG = tay TRÁI**, **"Superposed" = CẢ HAI**.
+
+SignWriter Studio "Arrow Chooser" liệt kê 6 kiểu đầu mũi tên đúng thứ tự
+ISWA fill: Right(0), Left(1), Superposed(2), Right-Flipped(3),
+Left-Flipped(4), Superposed-Flipped(5) — "flipped" chỉ lật hình mũi tên, giữ
+nguyên tay theo tên. Nên **`fill % 3`**: 0→phải, 1→trái, 2→cả-hai. Nguồn:
+Sutton *Lessons in SignWriting* (dark/light = right/left); signwriting.org
+Arrow Chooser (thứ tự 6 kiểu). Cài ở `timeline/classify.tracks_for_movement`.
+
+**Giải thích "nhiễu 27%" corpus** (tay trái vẫn dùng fill=0 tới 72%): phép
+đo cũ chạy trên sign **1 tay** — nơi mũi tên không cần phân biệt tay (không
+có tay thứ 2), nên mặc định dùng đầu tối. Fill chỉ mang tín hiệu ở sign **2
+tay** — đúng nơi `tracks_for_movement` dùng nó. Nhiễu đến từ miền 1-tay,
+không phản bác quy tắc. *(Caveat trung thực: chưa đo lại riêng tập 2-tay —
+cần dataset signbank-plus không có local; quy tắc dựa trên tài liệu chính
+thức + đo corpus sẵn có, nhất quán 3 nguồn.)*
+
+### Thay đổi (tối thiểu, giữ MVP-1 nguyên vẹn)
+
+- **`timeline/classify.py`**: thêm `tracks_for_movement(movement) -> tuple[
+  TrackName, ...]` (quy tắc cited ở trên). "Cả hai" trả tuple 2 track →
+  KHÔNG cần thêm `HandSide.BOTH` (đúng lựa chọn của chủ dự án: áp lên cả 2
+  track).
+- **`timeline/build.py`**: chấp nhận 1-2 posture (2 posture phải khác side);
+  route mỗi chuyển động theo quy tắc; tách helper `_build_keyframes` (dùng
+  chung cho mỗi track). **Đường 1-tay giữ nguyên byte-for-byte** — fill KHÔNG
+  được đọc khi chỉ 1 tay.
+- **`core/movement_symbol.py`**: chỉ cập nhật docstring (ghi rõ cross-check
+  đã xong, trỏ tới `tracks_for_movement`) — `hand_side` vẫn trả `None` (một
+  tay đơn không phải thuộc tính của symbol đứng riêng; fill=2 là "cả hai").
+  KHÔNG đổi hành vi.
+- **Downstream đã sẵn**: `sample.py` + `export/pose_export.py` vốn đã duyệt
+  mọi track (track thiếu → confidence 0), nên không phải sửa.
+
+### Phạm vi CÒN ngoài MVP-2 (vẫn raise, có chủ đích)
+
+- 2 posture **cùng side** ("một tay, hai tư thế") — mơ hồ chưa giải.
+- **>1 chuyển động trên CÙNG một tay** ("một tay, hai thời điểm" vs chuỗi) —
+  đúng thứ MVP-1 né; giữ tính xác định.
+- >2 tay, hay category khác 1/2.
+
+### Kiểm chứng
+
+- `pytest` **1.481/1.481** (1.475 cũ + 6 test MVP-2; **2 test MVP-1 buộc đổi
+  nghĩa** đã cập nhật: sign RIGHT+LEFT trước đây raise "exactly 1 hand" nay
+  dựng 2 track; message 0-tay đổi "exactly 1 hand"→"1 or 2 hand"). Test mới:
+  fill 0→phải / 1→trái / 2→cả-hai, reject 2 cùng-side, reject 2 chuyển
+  động/tay, end-to-end 2 tay qua `sample()`.
+- `mypy --strict` sạch. **Kiểm chứng trực quan**: render 1 sign 2 tay qua
+  `export` → cả 2 tay + 2 cánh tay hiện ra đúng (độ rõ khi 2 tay gần nhau là
+  việc render, cùng loại đã xử lý cho 1 tay ở Pha 9-14).
+- Đường 1-tay: mọi test MVP-1 tĩnh/động/real-sign pass nguyên.
+
+**Lưu ý ràng buộc:** khác 2 task trước (cấm đụng `timeline/`), MVP-2 **bản
+chất là feature của `timeline/`** nên có sửa `timeline/build.py` +
+`classify.py` (thêm hỗ trợ, không phá MVP-1) và 1 docstring ở
+`core/movement_symbol.py`. `hand_joint_poses.json` không đụng.
+
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)
@@ -2575,9 +2649,10 @@ báo cáo mới nằm ở `scripts/`, `reports/`.
     `FACE_LANDMARKS` thật (468 điểm MediaPipe) hay `FaceExpressionPose`
     (đã có ở Category 4, nhóm khác phụ trách) — việc map 468 điểm mesh mặt
     từ blend-shape sang toạ độ tĩnh là việc mới, không nhỏ, chưa bắt đầu.
-  - **Chỉ có 1 tay (phải) trong video, chưa có tay trái** — MVP-1 hiện chỉ
-    hỗ trợ sign 1 tay; mở rộng sang cả 2 tay là việc của MVP-2 (~20,9% sign
-    thật cần ≥2 track, xem mục "Pha 3" phía dưới), chưa bắt đầu.
+  - ~~**Chỉ có 1 tay (phải), chưa có tay trái** — MVP-2~~ **ĐÃ XONG (Pha
+    16):** `SignTimeline` dựng 1-2 track, chuyển động gán theo quy tắc
+    arrowhead-fill cited. Coverage 6,2%→~20,9%. (Độ rõ render khi 2 tay gần
+    nhau — như Pha 9-14 làm cho 1 tay — vẫn là việc render riêng.)
   - Vi phạm giới hạn giải phẫu vẫn CHƯA xử lý — số đo CHÍNH XÁC nhất hiện có
     là 224/261 (85,8%) từ Pha 6 (kiểm cả 8 khớp, không riêng PIP; xem lưu ý
     quan trọng về khả năng lệch định nghĩa CMC ngón cái ở mục "Pha 6"), thay
