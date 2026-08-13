@@ -79,3 +79,29 @@ class MotionPath:
     amplitude: float
     repeat: int  # 1 / 2 / 3
     is_hit: bool
+
+
+@dataclass(frozen=True)
+class FingerArticulation:
+    """How the FINGER joints move over time, for a Group 12 (Finger
+    Movement, ``PathType.FINGER``) symbol -- see this task's brief
+    ("Chuyển động khớp ngón tay"), Part 0/B1. UNLIKE ``MotionPath``: the
+    WRIST does not translate at all for Group 12 (see
+    ``core/movement_paths.py``'s ``sample_trajectory()``, which now
+    returns a fixed point for ``PathType.FINGER``, same treatment as
+    ``PathType.CONTACT``) -- the movement is entirely in the JOINT ANGLES,
+    applied by ``core/finger_articulation.py``'s ``articulate_joint_pose()``
+    and wired into keyframe generation by ``timeline/build.py``.
+
+    Every field is AUTHORED (a human reading of the base symbol's real
+    ISWA name from signbank.org), not measured -- see
+    ``data/finger_articulations.json``'s own ``_meta`` and PROGRESS.md's
+    "giả định chưa kiểm chứng" list. No dataset maps ISWA finger-movement
+    symbols to numeric joint-angle amplitudes.
+    """
+
+    fingers: frozenset[str]  # which fingers participate: 'thumb'/'index'/'middle'/'ring'/'pinky'
+    joints: frozenset[str]  # which joints oscillate: 'mcp'/'pip'/'dip' (thumb has no pip/dip -- see finger_articulation.py)
+    amplitude_deg: float  # peak deviation from the base flexion angle, in degrees (0 = no motion)
+    cycles: float  # number of full oscillation cycles across the WHOLE sign duration
+    phase_offset: float  # radians of phase shift PER FINGER, in canonical order -- 0 = every finger moves in sync

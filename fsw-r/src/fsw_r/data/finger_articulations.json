@@ -1,0 +1,351 @@
+{
+  "_meta": {
+    "names_source": "signbank.org ISWA 2010 reference -- iswa/{hex}/{hex}_bs.html, one page per base symbol (0x221, 0x225, 0x216, 0x21b, 0x222 fetched individually) -- authoritative ISWA names, for the 5 bases covering 76.1% of real Group 12 token usage. The other 15 bases' real names were NOT looked up (out of this task's stated scope) -- their 'name' field is null, see 'default_bases' below.",
+    "values_source": "AUTHORED, not measured, for ALL 20 entries including the 5 with real names -- fingers/joints/amplitude_deg/cycles/phase_offset are a human reading of each name (or, for the 15 defaulted bases, a generic placeholder) mapped onto FingerArticulation's fields. No dataset maps ISWA finger-movement symbols to numeric joint-angle amplitudes.",
+    "default_bases": [
+      "217",
+      "218",
+      "219",
+      "21a",
+      "21c",
+      "21d",
+      "21e",
+      "21f",
+      "220",
+      "223",
+      "224",
+      "226",
+      "227",
+      "228",
+      "229"
+    ],
+    "unverified_assumptions": [
+      "which finger(s) participate for the 3 base symbols whose real name does not specify one ('Hinge Movement, Up Down Large/Small/Alternating Large' -- 0x221/0x222/0x225): AUTHORED as all 4 non-thumb fingers together; ISWA may intend this to depend on which fingers the SIGN's own Category 1 hand symbol has extended, which this table does not encode",
+      "'Alternating' (0x225) phase_offset is a fixed pi/2 stagger per finger in canonical order -- an arbitrary but documented choice, not an ISWA-specified numeric value",
+      "'Flick' (0x21b) targeting the index finger specifically, and at PIP+DIP rather than MCP, is this project's own reading of what a single-finger 'flick' snap looks like -- not confirmed against any per-finger ISWA source",
+      "amplitude_deg's two researched tiers (Large=30, Small=15) and the 15 defaulted bases' amplitude (20) are illustrative authored placeholders, not calibrated against any real sign's finger movement",
+      "the 15 defaulted bases (see 'default_bases' above) were not individually researched at all -- they share one generic placeholder, not a reading of their own real ISWA names"
+    ],
+    "count": 20,
+    "generated_by": "scripts/gen_finger_articulations.py"
+  },
+  "216": {
+    "symbol_id": "02-12-001",
+    "name": "Squeeze Large Single",
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp",
+      "pip"
+    ],
+    "amplitude_deg": 30.0,
+    "cycles": 1.0,
+    "phase_offset": 0.0
+  },
+  "217": {
+    "symbol_id": "02-12-002",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "218": {
+    "symbol_id": "02-12-003",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "219": {
+    "symbol_id": "02-12-004",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "21a": {
+    "symbol_id": "02-12-005",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "21b": {
+    "symbol_id": "02-12-006",
+    "name": "Flick Large Single",
+    "fingers": [
+      "index"
+    ],
+    "joints": [
+      "dip",
+      "pip"
+    ],
+    "amplitude_deg": 35.0,
+    "cycles": 1.0,
+    "phase_offset": 0.0
+  },
+  "21c": {
+    "symbol_id": "02-12-007",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "21d": {
+    "symbol_id": "02-12-008",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "21e": {
+    "symbol_id": "02-12-009",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "21f": {
+    "symbol_id": "02-12-010",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "220": {
+    "symbol_id": "02-12-011",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "221": {
+    "symbol_id": "02-12-012",
+    "name": "Hinge Movement, Up Down Large",
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 30.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "222": {
+    "symbol_id": "02-12-013",
+    "name": "Hinge Movement, Up Down Small",
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 15.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "223": {
+    "symbol_id": "02-12-014",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "224": {
+    "symbol_id": "02-12-015",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "225": {
+    "symbol_id": "02-12-016",
+    "name": "Hinge Movement, Up Down Alternating Large",
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 30.0,
+    "cycles": 2.0,
+    "phase_offset": 1.5707963267948966
+  },
+  "226": {
+    "symbol_id": "02-12-017",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "227": {
+    "symbol_id": "02-12-018",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "228": {
+    "symbol_id": "02-12-019",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  },
+  "229": {
+    "symbol_id": "02-12-020",
+    "name": null,
+    "fingers": [
+      "index",
+      "middle",
+      "pinky",
+      "ring"
+    ],
+    "joints": [
+      "mcp"
+    ],
+    "amplitude_deg": 20.0,
+    "cycles": 2.0,
+    "phase_offset": 0.0
+  }
+}

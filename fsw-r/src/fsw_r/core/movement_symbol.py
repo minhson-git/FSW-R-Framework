@@ -11,9 +11,9 @@ from numpy.typing import NDArray
 from scipy.spatial.transform import Rotation
 
 from fsw_r.core.movement_paths import sample_trajectory
-from fsw_r.core.pose_table import MOVEMENT_PATH_TABLE
+from fsw_r.core.pose_table import FINGER_ARTICULATION_TABLE, MOVEMENT_PATH_TABLE
 from fsw_r.core.renderable_symbol import FSWMotionRenderable
-from fsw_r.core.types import HandSide, MotionPath
+from fsw_r.core.types import FingerArticulation, HandSide, MotionPath
 
 
 class MovementSymbol(FSWMotionRenderable):
@@ -56,6 +56,17 @@ class MovementSymbol(FSWMotionRenderable):
 
     def get_motion_path(self) -> MotionPath:
         return MOVEMENT_PATH_TABLE[self.base_hex]
+
+    def get_finger_articulation(self) -> FingerArticulation | None:
+        """``FINGER_ARTICULATION_TABLE`` only has entries for Group 12
+        (``PathType.FINGER``, 20 base symbols, 0x216-0x229) -- ``None``
+        for every other Category 2 symbol, same "table membership IS the
+        category/group check" pattern ``HAND_POSE_TABLE``/
+        ``MOVEMENT_PATH_TABLE`` already use elsewhere in this module (no
+        separate ``if path_type == FINGER`` branch needed here)."""
+        if self.base_hex not in FINGER_ARTICULATION_TABLE:
+            return None
+        return FINGER_ARTICULATION_TABLE[self.base_hex]
 
     def get_wrist_orientation(self) -> Rotation:
         """Reuses the same generic fill/rotation -> quaternion formula

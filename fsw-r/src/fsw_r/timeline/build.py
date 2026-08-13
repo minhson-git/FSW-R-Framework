@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from fsw_r.core.finger_articulation import articulate_joint_pose
 from fsw_r.core.fswr_converter import PositionedSymbol
 from fsw_r.core.hand_symbol import HandSymbol
 from fsw_r.core.movement_paths import sample_trajectory
@@ -107,6 +108,17 @@ def build_timeline(positioned_symbols: tuple[PositionedSymbol, ...]) -> SignTime
         # needs real inference (spatial distance + fill, see ROADMAP.md).
         path = motion_symbol.get_motion_path()
         trajectory = sample_trajectory(path, motion_symbol.rotation)
+        # This task's own addition ("Chuyển động khớp ngón tay"): a Group
+        # 12 (Finger Movement) symbol has a FingerArticulation -- None for
+        # every other Category 2 symbol (see MovementSymbol.
+        # get_finger_articulation()'s own docstring). When present, EACH
+        # keyframe's joint_pose is re-derived at that keyframe's own time
+        # instead of reusing the same static joint_pose for all of them --
+        # this is the ONLY thing that changes: position is still the
+        # trajectory's own points (a fixed point for PathType.FINGER, see
+        # core/movement_paths.py -- the wrist does not move), computed
+        # exactly the same way as any other Category 2 symbol below.
+        articulation = motion_symbol.get_finger_articulation()
         # D3/D4: the brief's literal spec is 2 keyframes (repeat+1 when
         # MotionPath.repeat > 1) taken from the trajectory's endpoints.
         # Deliberately generalized here to one keyframe PER point
@@ -119,12 +131,18 @@ def build_timeline(positioned_symbols: tuple[PositionedSymbol, ...]) -> SignTime
         # intermediate points are collinear, so this is behaviorally
         # identical to the 2-keyframe case; it only matters for
         # CURVED/CIRCLE. Positions are the trajectory's own points (offset
-        # by the hand's anchor and scaled), never invented separately.
+        # by the hand's anchor and scaled), never invented separately. The
+        # same dense-keyframes-plus-linear-interpolation reasoning is
+        # exactly why a FINGER articulation's sinusoidal oscillation
+        # (evaluated once per keyframe here) survives sample.py's linear
+        # interpolation as a visibly smooth wiggle instead of a flattened
+        # straight ramp between two extremes -- no changes to sample.py
+        # needed.
         times = np.linspace(0.0, 1.0, len(trajectory))
         keyframes = tuple(
             Keyframe(
                 time=float(t),
-                joint_pose=joint_pose,
+                joint_pose=articulate_joint_pose(joint_pose, articulation, float(t)) if articulation is not None else joint_pose,
                 wrist=wrist,
                 position=base_position + point * SIGNBOX_TO_BODY_SCALE,
             )

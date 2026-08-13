@@ -16,9 +16,21 @@ formula.
 ** UNVERIFIED ASSUMPTIONS ** (flagged here, in ``_meta`` of the generated
 JSON, and in PROGRESS.md's Phase 2 entry -- not silently treated as fact):
 - The canonical (un-rotated, un-planed) shape for each ``PathType`` below
-  is this project's own approximation (straight line, circular arc,
-  small sinusoidal wiggle for FINGER, ...), not derived from any ISWA
-  measurement or spec.
+  is this project's own approximation (straight line, circular arc, ...),
+  not derived from any ISWA measurement or spec.
+- **FINGER, corrected by this project's "Chuyển động khớp ngón tay" task:**
+  FINGER used to be modeled here as the WRIST wiggling side-to-side in
+  place ("small sinusoidal wiggle") -- semantically wrong: ISWA Group 12
+  ("Finger Movement") means the FINGER JOINTS move, not the wrist/hand as
+  a whole. FINGER's canonical shape is now a single fixed point, same
+  degenerate treatment as CONTACT (the wrist genuinely does not move at
+  all for Group 12) -- the actual joint-angle oscillation lives in
+  ``core/finger_articulation.py``'s ``FingerArticulation``/
+  ``articulate_joint_pose()``, wired into keyframe generation by
+  ``timeline/build.py``, not here. See PROGRESS.md's entry for that task
+  for the measured diagnosis and the corpus data (Group 12 = 16.8% of
+  real signs, 5 base symbols cover 76.1% of its token usage) that
+  motivated fixing this instead of just tuning the old wiggle's amplitude.
 - ``rotation`` is applied about Z using the exact same formula as
   Category 1's compass sweep (``(rotation % 8) * 45``) -- reused for
   consistency with the rest of the codebase, NOT independently verified
@@ -57,12 +69,15 @@ def _canonical_shape(path: MotionPath, samples: int) -> _Samples:
         # along, just where the contact happens.
         return np.tile(np.array([0.0, path.amplitude, 0.0]), (samples, 1))
     if path.path_type == PathType.FINGER:
-        # Local oscillation, no net translation -- approximated as a small
-        # side-to-side wiggle around a fixed point.
-        x = 0.15 * path.amplitude * np.sin(2 * np.pi * 2 * t)
-        y = np.full_like(t, path.amplitude)
-        z = np.zeros_like(t)
-        return np.column_stack([x, y, z])
+        # Group 12 (Finger Movement): the WRIST does not translate at all
+        # -- the movement is joint-angle oscillation on the fingers
+        # themselves (see core/finger_articulation.py's
+        # articulate_joint_pose(), wired in by timeline/build.py).
+        # Degenerate trajectory, same treatment as CONTACT: a single
+        # point, repeated -- see module docstring's "UNVERIFIED
+        # ASSUMPTIONS" for why this replaced the previous (semantically
+        # wrong) side-to-side wrist wiggle.
+        return np.tile(np.array([0.0, path.amplitude, 0.0]), (samples, 1))
     if path.path_type == PathType.STRAIGHT:
         y = t * path.amplitude
         return np.column_stack([np.zeros_like(t), y, np.zeros_like(t)])

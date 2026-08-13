@@ -37,7 +37,7 @@ from scipy.spatial.transform import Rotation
 from fsw_r.core.body_types import BodyPose
 from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.core.fsw_base_symbol import FSWBaseSymbol
-from fsw_r.core.types import HandJointPose, MotionPath
+from fsw_r.core.types import FingerArticulation, HandJointPose, MotionPath
 
 
 class FSWRenderableSymbol(FSWBaseSymbol, ABC):
@@ -74,6 +74,21 @@ class FSWMotionRenderable(FSWRenderableSymbol, ABC):
         """Orientation the movement is performed in (reuses Category 1's
         fill/rotation formula, unverified for Movement -- see
         ``MovementSymbol.get_wrist_orientation``)."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_finger_articulation(self) -> FingerArticulation | None:
+        """How the finger JOINTS move over time, for a Group 12 (Finger
+        Movement, ``PathType.FINGER``) symbol -- ``None`` for every other
+        path type (this project's own "khớp ngón" task, see
+        ``core/finger_articulation.py``). Declared as its own abstract
+        method (required on every ``FSWMotionRenderable``, not just Group
+        12's) rather than a separate contract class: ``MotionPath`` itself
+        stays the one required per-symbol trajectory description for ALL
+        of Category 2, and ``FingerArticulation`` is the (usually absent)
+        EXTRA per-symbol detail specific to one ``path_type`` -- same
+        shape as ``get_wrist_orientation()`` already being one required
+        method shared across all of Category 2 regardless of path_type."""
         raise NotImplementedError
 
 

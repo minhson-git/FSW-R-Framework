@@ -33,7 +33,16 @@ from scipy.spatial.transform import Rotation
 
 from fsw_r.core.body_types import BodyPart, BodyPose
 from fsw_r.core.dynamics_types import DynamicsModifier
-from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, MotionPath, MovementPlane, PathType, ThumbPose
+from fsw_r.core.types import (
+    FingerArticulation,
+    FingerPose,
+    HandJointPose,
+    JointAngle,
+    MotionPath,
+    MovementPlane,
+    PathType,
+    ThumbPose,
+)
 
 PoseT = TypeVar("PoseT")
 
@@ -248,4 +257,43 @@ def _parse_dynamics_modifier(key: str, entry: dict[str, object]) -> DynamicsModi
 
 DYNAMICS_MODIFIER_TABLE: PoseTable[DynamicsModifier] = PoseTable(
     "dynamics_modifiers.json", _parse_dynamics_modifier, expected_count=EXPECTED_DYNAMICS_COUNT
+)
+
+
+EXPECTED_FINGER_ARTICULATION_COUNT = 20
+
+_FINGER_ARTICULATION_FIELDS = ("fingers", "joints", "amplitude_deg", "cycles", "phase_offset")
+_VALID_FINGER_NAMES = frozenset({"thumb", "index", "middle", "ring", "pinky"})
+_VALID_JOINT_NAMES = frozenset({"mcp", "pip", "dip"})
+
+
+def _parse_finger_articulation(key: str, entry: dict[str, object]) -> FingerArticulation:
+    """See ``scripts/gen_finger_articulations.py``/``core/finger_articulation.py``
+    for where these values come from -- every field is AUTHORED, read from
+    the symbol's real ISWA name where one was researched (5 of 20 bases,
+    see that script's own ``_RESEARCHED`` table) or a shared generic
+    default otherwise (the other 15, see that script's ``default_bases``)."""
+    label = _entry_label(key, entry)
+    for field in _FINGER_ARTICULATION_FIELDS:
+        if field not in entry:
+            raise ValueError(f"{label}: missing '{field}' in finger_articulations.json")
+
+    fingers_raw = entry["fingers"]
+    if not isinstance(fingers_raw, list) or not set(fingers_raw) <= _VALID_FINGER_NAMES:
+        raise ValueError(f"{label}: 'fingers' in finger_articulations.json must be a list of valid finger names")
+    joints_raw = entry["joints"]
+    if not isinstance(joints_raw, list) or not set(joints_raw) <= _VALID_JOINT_NAMES:
+        raise ValueError(f"{label}: 'joints' in finger_articulations.json must be a list of valid joint names")
+
+    return FingerArticulation(
+        fingers=frozenset(fingers_raw),
+        joints=frozenset(joints_raw),
+        amplitude_deg=entry["amplitude_deg"],  # type: ignore[arg-type]
+        cycles=entry["cycles"],  # type: ignore[arg-type]
+        phase_offset=entry["phase_offset"],  # type: ignore[arg-type]
+    )
+
+
+FINGER_ARTICULATION_TABLE: PoseTable[FingerArticulation] = PoseTable(
+    "finger_articulations.json", _parse_finger_articulation, expected_count=EXPECTED_FINGER_ARTICULATION_COUNT
 )
