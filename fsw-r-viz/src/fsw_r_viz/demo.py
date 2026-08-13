@@ -50,6 +50,17 @@ supports, as a visual sanity-check:
    less and isn't what this video is for), so individual fingers/joints
    are readable. mvp1_sign_7 (#6 above) is UNCHANGED by this task -- it
    still does its own job, showing posture/trajectory.
+8. ../demo/mvp1_sign_9_finger_movement.mp4 (or .gif) -- the "Chuyển động
+   khớp ngón tay" (Group 12) task: a DIFFERENT sign from #6/#7 above (Index
+   handshape + 0x221 "Hinge Movement, Up Down Large", the leading Group 12
+   base symbol, 38.2% of real Group 12 token usage), rendered through the
+   same hand-close-up pipeline as #7. Before this task, EVERY moving
+   sign's joint_pose was byte-identical across all keyframes (a rigid hand
+   dragged along a trajectory) -- Group 12 signs now oscillate the
+   relevant finger joints over time (see core/finger_articulation.py in
+   fsw-r), which #6/#7's own sign (Straight Wall Plane movement, not Group
+   12) still does NOT do, by design (D2 -- no regression for non-Group-12
+   signs).
 
 Run with: python -m fsw_r_viz.demo
 """
@@ -288,6 +299,22 @@ def _render_hand_closeup_demo(demo_dir: Path) -> None:
     print(f"Saved: {written} (from FSW {fsw!r})")
 
 
+def _render_finger_movement_demo(demo_dir: Path) -> None:
+    # "Chuyển động khớp ngón tay" task -- a Group 12 (Finger Movement)
+    # sign, DIFFERENT from _render_pose_video_demo's/_render_hand_closeup_
+    # demo's own sign (Straight Wall Plane movement, not Group 12 -- see
+    # this file's own module docstring, point 8). Index handshape + 0x221
+    # ("Hinge Movement, Up Down Large", the leading Group 12 base symbol,
+    # 38.2% of real Group 12 token usage -- see PROGRESS.md's entry for
+    # this task). Rendered through the same hand-close-up pipeline as
+    # mvp1_sign_hand_closeup, since that's what makes finger articulation
+    # actually visible.
+    fsw = "M508x515S10000493x485S22100500x500"
+    video_path = demo_dir / "mvp1_sign_9_finger_movement.mp4"
+    written = fsw_to_hand_closeup_video(fsw, video_path)
+    print(f"Saved: {written} (from FSW {fsw!r})")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -308,6 +335,7 @@ def main() -> None:
     _render_timeline_demo(output_dir)
     _render_pose_video_demo(demo_dir)
     _render_hand_closeup_demo(demo_dir)
+    _render_finger_movement_demo(demo_dir)
 
 
 if __name__ == "__main__":
