@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Mapping
 
 import numpy as np
+from numpy.typing import NDArray
 
 # Base mouth half-width in the face-local frame (head circle radius = 1).
 _BASE_HALF_WIDTH = 0.45
@@ -24,7 +25,7 @@ def _avg(blendshapes: Mapping[str, float], left: str, right: str) -> float:
     return (blendshapes.get(left, 0.0) + blendshapes.get(right, 0.0)) / 2.0
 
 
-def mouth_outline(blendshapes: Mapping[str, float]) -> tuple[np.ndarray, np.ndarray]:
+def mouth_outline(blendshapes: Mapping[str, float]) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Return (xs, ys) of a closed mouth outline (upper lip left->right, then
     lower lip right->left) in the face-local frame, centered on the mouth."""
     smile = _avg(blendshapes, "mouthSmileLeft", "mouthSmileRight")
