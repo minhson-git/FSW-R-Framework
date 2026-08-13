@@ -252,7 +252,14 @@ suy, không phải ở logic phân biệt còn chưa viết.
   arrowhead-fill CITED (`fill%3` = phải/trái/cả-hai — Lessons in SignWriting
   + SignWriter Studio Arrow Chooser, cài ở `timeline/classify.
   tracks_for_movement`). Còn ngoài phạm vi: 2 tư thế cùng-tay, >1 chuyển
-  động/tay, và độ RÕ render khi 2 tay gần nhau (việc render riêng).
+  động/tay.
+- ✅ **Hoà giải thang signbox↔thân (Pha 17) — ĐÃ XONG (lớp 1 của "2 tay đè
+  nhau").** `anchor()` ánh xạ signbox tới nửa-rộng-vai thay vì ±1 chuẩn hoá
+  → 2 tay tách đúng vị trí. **CÒN lớp 2: độ RÕ hình dạng 2 tay ở tỷ lệ
+  full-body** (mỗi tay nhỏ + nét dày → nhoè). Đây là việc RENDER (`fsw-r-viz`),
+  cùng loại Pha 12/14 đã làm cho 1 tay (close-up crop+phóng to) — cần mở
+  rộng cho 2 tay (khung cả 2 tay, hoặc nét mảnh/phóng to vùng tay). **Đây là
+  ứng viên hàng đầu cho việc tiếp theo.**
 - `DEFAULT_SIGN_DURATION` (0,8s) là hằng số giữ chỗ, chưa có nguồn dữ liệu
   thời gian thật (Category 3 Dynamics dự kiến bù việc này).
 - `SIGNBOX_TO_BODY_SCALE` và phép ánh xạ toạ độ signbox → không gian cơ thể

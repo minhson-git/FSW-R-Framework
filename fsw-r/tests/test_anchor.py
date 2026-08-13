@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from fsw_r.timeline.anchor import anchor
+from fsw_r.timeline.anchor import SIGNBOX_BODY_HALF_EXTENT, anchor
 
 
 def test_smaller_y_gives_a_higher_position() -> None:
@@ -18,11 +18,14 @@ def test_smaller_y_gives_a_higher_position() -> None:
     assert higher_on_page[1] > lower_on_page[1]
 
 
-def test_anchor_normalization() -> None:
-    # E2
+def test_anchor_maps_signbox_edge_to_body_shoulder_extent() -> None:
+    # E2 -- signbox centre -> body centre; the edge of the signbox's
+    # normalized half-range maps to SIGNBOX_BODY_HALF_EXTENT (~the body's
+    # shoulder half-width), so two hands land at their real separation
+    # instead of collapsing to a central box (see anchor.py's comment).
     assert anchor(500, 500) == pytest.approx([0.0, 0.0, 0.0])
-    assert anchor(750, 500) == pytest.approx([1.0, 0.0, 0.0])
-    assert anchor(500, 250) == pytest.approx([0.0, 1.0, 0.0])
+    assert anchor(750, 500) == pytest.approx([SIGNBOX_BODY_HALF_EXTENT, 0.0, 0.0])
+    assert anchor(500, 250) == pytest.approx([0.0, SIGNBOX_BODY_HALF_EXTENT, 0.0])
 
 
 def test_anchor_x_axis_direction() -> None:

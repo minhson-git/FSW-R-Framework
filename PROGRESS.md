@@ -1828,6 +1828,11 @@ annotation, không đổi runtime.
   Sửa `timeline/build.py`+`classify.py` (bản chất là feature timeline) + 1
   docstring `core/movement_symbol.py`; `hand_joint_poses.json` không đụng.
   Chi tiết ở mục "Pha 16".
+- **Hoà giải thang signbox↔thân (Pha 17) đã xong** — `anchor()` từng chuẩn
+  hoá signbox về ±1 trong khi thân ở ±2.2 (Pha 7/8), lệch chưa hoà giải làm
+  2 tay MVP-2 đè nhau. Giờ signbox ánh xạ tới nửa-rộng-vai → 2 tay tách đúng
+  theo vị trí sign đặt. **Lớp 2 (độ rõ hình dạng 2 tay ở tỷ lệ full-body)
+  chưa làm** — xem Pha 17. `pytest` 1.481 (1 test anchor cập nhật giá trị).
 - **Hiệu chỉnh hình học ngón cái (Pha 15) đã xong** — 2 hằng số ngón cái
   không nguồn (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) giờ **FITTED**
   vào ground truth trên tập **held-out 70/30 phân tầng** (seed 42): test
@@ -2588,6 +2593,50 @@ thức + đo corpus sẵn có, nhất quán 3 nguồn.)*
 chất là feature của `timeline/`** nên có sửa `timeline/build.py` +
 `classify.py` (thêm hỗ trợ, không phá MVP-1) và 1 docstring ở
 `core/movement_symbol.py`. `hand_joint_poses.json` không đụng.
+
+## Pha 17 — Hoà giải thang signbox↔thân người (lớp 1 của "2 tay đè nhau")
+
+**Phát hiện khi xem video MVP-2:** 2 tay bị đè lên nhau. Chẩn đoán (đo, không
+đoán): `anchor()` chuẩn hoá signbox về **±1**, trong khi thân người (từ Pha
+7/8, suy từ `ASSUMED_STATURE_MM`) có vai ở **±2.2** — **hai thang độc lập,
+chưa bao giờ hoà giải**, lệch ~2.2×. Đo trực tiếp: 2 cổ tay ở body-x ±0.16
+(cách 0.32) trong khi 2 vai cách 4.4 → tay nén về hộp trung tâm bé, cánh tay
+với chéo từ vai rộng vào cổ tay giữa. **MVP-1 (1 tay ở giữa) giấu được; MVP-2
+(2 tay) phơi ra.**
+
+### Sửa (lớp 1 — định vị)
+
+`anchor()` giờ nhân toạ độ chuẩn hoá với `SIGNBOX_BODY_HALF_EXTENT = 2.20` =
+**nửa-rộng-vai** (`SHOULDER_WIDTH_MM × HAND_MM_TO_BODY_UNITS / 2`, từ
+`body_geometry`) — nên cạnh signbox ánh xạ tới đường vai, và **2 tay đặt xa
+nhau trong sign giờ render tách biệt**. Isotropic (cùng scale u/v, giữ tỉ lệ
+sign). Giữ là **hằng số có comment** (không import `body_geometry`) để
+`timeline/` tự-chứa — `export/` tiêu thụ `timeline/`, không ngược lại; theo
+đúng tiền lệ `pose_export.BODY_UNITS_TO_PIXELS` (hằng số hiệu chỉnh, verify
+bằng render). Nếu thang thân đổi thì re-derive.
+
+Thang chuyển động (`SIGNBOX_TO_BODY_SCALE=0.1`) giữ nguyên, tách riêng làm
+**cỡ cử chỉ CỤC BỘ** (một wiggle quanh vị trí tay, không phải dịch chuyển cả
+signbox) — cập nhật docstring cho rõ.
+
+### Kiểm chứng
+
+- Render sign 2 tay đặt xa (signbox 380/620): **thấy rõ 2 bàn tay tách biệt**
+  (trước: xúm vào tâm). Đo: cổ tay ±0.35 (sign sát) → ±1.06 (sign xa), tách
+  đúng theo vị trí sign đặt. Không clip khung (bounding box vẫn do thân
+  ±2.2/hông/torso chi phối).
+- `pytest` **1.481/1.481** (chỉ `test_anchor_normalization` cập nhật giá trị
+  →`SIGNBOX_BODY_HALF_EXTENT`; 2 test anchor còn lại là quan hệ, bền; mọi
+  test MVP-1/MVP-2/pixel khác pass nguyên — không có test nào khoá vị trí
+  tuyệt đối khác). `mypy --strict` sạch.
+
+### CÒN LẠI — lớp 2 (độ RÕ hình dạng), CHƯA làm
+
+Đây mới sửa **định vị** (hết đè khi sign đặt tay xa). Phần "chưa rõ hình dạng
+gì" vẫn còn: ở tỷ lệ full-body mỗi bàn tay nhỏ + nét vẽ dày cố định → nhoè
+vào nét thân. Đúng vấn đề Pha 12/14 đã giải cho **1 tay** (close-up crop+phóng
+to) nhưng chưa có cho **2 tay**. Hướng: close-up khung cả 2 tay, hoặc nét mảnh
+hơn/phóng to vùng tay. Xem ROADMAP.md.
 
 ## Việc còn để ngỏ / chưa làm
 
