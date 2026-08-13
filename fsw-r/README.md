@@ -1,202 +1,251 @@
 # fsw-r
 
-Renders ISWA/FSW (SignWriting) hand symbols in 3D by adding a joint-pose layer
-on top of real FSW symbol-key parsing.
+Turns a real FSW (SignWriting/ISWA) sign string into an animated 3D pose
+sequence, exportable as a real `.pose` file (the [`pose-format`](https://github.com/sign-language-processing/pose)
+library's standard format). No matplotlib, no video encoding, no
+visualization dependency of any kind lives in this package — see the
+sibling `../fsw-r-viz` for that layer.
 
-## FSW -> AST -> FSWR: a real parser, then a converter
+See `../ROADMAP.md` (phase-by-phase plan, what's left) and `../PROGRESS.md`
+(full decision log, including mistakes found and fixed) for complete
+context. This README is a map of the current architecture, not a history.
 
-Three stages, each its own module:
-
-```
-FSW sign string  --[fsw_ast.py, real signwriting.formats.fsw_to_sign()]-->  AST (FSWSignAST)
-AST              --[fswr_converter.py + registry.py]---------------------> FSWR objects (PositionedSymbol)
-```
-
-1. **`core/fsw_ast.py`** parses a *full* FSW sign string (box marker +
-   position + one or more positioned symbols, e.g.
-   `"M500x500S10010480x480S1061a520x520"` -- a two-handed sign) by calling
-   the real reference parser: `signwriting.formats.fsw_to_sign.fsw_to_sign`,
-   from the [`signwriting`](https://pypi.org/project/signwriting/) PyPI
-   package (the installable Python port of
-   [sutton-signwriting/core](https://github.com/sutton-signwriting/core)).
-   This is an actual import and call, not a re-implementation -- the AST
-   (`FSWSignAST`) is this project's typed wrapper around that library's
-   return value, nothing more.
-2. **`core/fsw_symbol_key.py`** decodes one already-extracted symbol key
-   (e.g. `"S10010"`, one AST node) into `base_hex`/`fill`/`rotation` --
-   `base_hex` flows through unchanged from the key; `category`/`group`/
-   `base_symbol_number` are derived properties (`core/iswa_data.py`), never
-   stored or reconstructed by hand. The key-slicing technique
-   (`base = key[:4]`, etc.) mirrors what the reference library itself does
-   internally in `signwriting.utils.mirror.mirror_symbol` -- there's no
-   public library function for this specific decomposition, so this module
-   does it the same way the reference implementation does. This parser only
-   validates the full ISWA range (`0x100`-`0x38b`, all 7 categories) -- it
-   does NOT block by category; a real Category 2 (Movement) key parses
-   fine here, see `core/registry.py` for where "is this category actually
-   supported" is decided instead. The *group*/*category* boundaries are
-   ISWA facts sourced from that project's `src/fsw/fsw-structure.js`
-   (`group` array, 30 entries; `category` array, 7 entries) -- the Hands
-   group boundaries cross-checked against the 14 base symbols listed at
-   [signwriting.org's Group 1 page](https://www.signwriting.org/lessons/iswa/group01/),
-   whose own links confirm base_symbol_number 1 = "Index" and 7 = "Index Bent".
-3. **`core/registry.py`** + **`core/fswr_converter.py`** are the "AST -> FSWR"
-   converter: `registry.build_symbol()` dispatches by
-   `category_of(base_hex)` through `_CATEGORY_SYMBOL` (currently
-   `{1: HandSymbol}` -- adding a category is one more dict entry, see
-   "Adding a new category" below) and constructs the concrete
-   `FSWRenderableSymbol`; `fswr_converter.ast_to_fswr()` runs that over
-   every node in an `FSWSignAST`, pairing each resulting object with its
-   page position (`PositionedSymbol`). `fswr_converter.fsw_to_fswr(fsw)`
-   chains all three stages for the common case of starting from a raw
-   string. `registry.symbol_from_fsw(key)` remains as a convenience for the
-   single-symbol case.
-
-**What's still our own model, not derived from any published spec:** ISWA/FSW
-is a 2D notation -- there is no authoritative source for a 3D wrist
-quaternion or per-joint flexion angles. `get_wrist_orientation()` and the
-`_default_joint_pose()` templates are this project's own principled
-interpretation (documented inline), not something "mocked until the real
-version is dropped in" -- there is no other "real" version of that part to
-integrate.
-
-## Architecture
+## Four layers, one-directional
 
 ```
-FSWBaseSymbol                     base_hex/fill/rotation
-                                   category/group/base_symbol_number/symbol_id (derived properties)
-                                   + hand_side (abstract -- per-category, see below)
-                                   + get_wrist_orientation() (abstract)
+core/        FSW string -> AST -> FSWR symbol objects (pose/quaternion/
+             trajectory per ISWA category) -- category-agnostic dispatch
     |
-FSWRenderableSymbol (abstract)    + get_joint_pose() contract
+timeline/    FSWR symbols -> SignTimeline (a real time axis) -> sampled
+             PoseFrame sequence (MVP-1 scope, see below)
     |
-HandSymbol (Category 1, all 261 base symbols)
-                                   get_joint_pose() looks itself up in pose_table.py by base_hex
-                                   hand_side: rotation-based (see below)
+export/      PoseFrame sequence -> forward kinematics (hand) + two-bone
+             IK (arm) + static torso/head -> a real pose-format Pose
+    |
+validation/  Pose vs. ground truth -> MPJPE / anatomical-limit reports
+             (used by scripts/eval_*.py, not wired into the render path)
 ```
 
-(A future `MovementSymbol` for Category 2 would sit alongside `HandSymbol`
-here, with its own `hand_side` rule -- see below for why it can't reuse
-Category 1's.)
+Each layer only depends on the one above it; `core/` has zero knowledge of
+`timeline/`, `timeline/` has zero knowledge of `export/`, etc. Adding a
+capability to one layer never requires touching the others' internals —
+see each section below for what's currently pluggable.
 
-`HandMeshRenderer3D` depends only on `FSWRenderableSymbol` and `HandRigProvider`
-(both abstract) -- it never imports a specific category or symbol class, so
-adding new ones never touches the renderer (it does have one defensive
-branch: it raises a clear error if `symbol.hand_side` is `None`, since that
-means the category doesn't tell you which hand to render).
+## `core/`: FSW string -> FSWR symbol objects
 
-### `rotation` encodes hand_side, not just an angle -- but only for Category 1
+```
+FSW sign string --[fsw_ast.py, real signwriting.formats.fsw_to_sign()]--> AST
+AST             --[fswr_converter.py + registry.py]--------------------> FSWR objects
+```
 
-ISWA `rotation` is a hex digit 0-f (16 values). For **Category 1 (Hands)**,
-it is split into two halves of 8:
+1. **`fsw_ast.py`** parses a *full* FSW sign string (box marker + one or
+   more positioned symbols, e.g. `"M508x515S10000493x485S22a04500x500"`) by
+   calling the real reference parser,
+   [`signwriting.formats.fsw_to_sign.fsw_to_sign`](https://pypi.org/project/signwriting/) —
+   an actual import and call, not a re-implementation.
+2. **`fsw_symbol_key.py`** decodes one symbol key (e.g. `"S10000"`) into
+   `base_hex`/`fill`/`rotation`. `category`/`group`/`base_symbol_number` are
+   derived properties (`iswa_data.py`), never stored or reconstructed by
+   hand — `base_hex` is the one key that flows through the whole pipeline
+   unchanged (see `PROGRESS.md`'s "base_hex làm khoá duy nhất" entry for why
+   that mattered).
+3. **`registry.py`** + **`fswr_converter.py`**: `registry.build_symbol()`
+   dispatches by `category_of(base_hex)` through `_CATEGORY_SYMBOL`
+   (currently `{1: HandSymbol, 2: MovementSymbol, 3: DynamicsSymbol,
+   4: <Category-4 dispatch, a sibling team's registration>, 5: BodySymbol}`
+   — Category 6 and 7 aren't registered yet) and constructs the concrete
+   `FSWRenderableSymbol`; `fswr_converter.ast_to_fswr()` runs that over every
+   AST node, pairing each result with its page position
+   (`PositionedSymbol`). `fswr_converter.fsw_to_fswr(fsw)` chains all three
+   stages.
 
-| rotation | direction | angle | hand_side |
+### Per-category symbol classes and their pose contracts
+
+`FSWRenderableSymbol` is a marker only ("this renders to *something*");
+each category's own abstract subclass in `renderable_symbol.py` declares
+the ONE contract that actually makes sense for it, so a renderer built for
+hands never has to branch on category or guess whether a method exists:
+
+| Category | Symbol class | Contract (`FSW*Renderable`) | Pose type |
 |---|---|---|---|
-| `0`-`7` | counter-clockwise | `(rotation % 8) * 45°` | `RIGHT` |
-| `8`-`f` | clockwise (mirror of the 0-7 half) | `(rotation % 8) * 45°` | `LEFT` |
+| 1. Hands (261/261) | `hand_symbol.HandSymbol` | `FSWHandRenderable` | `HandJointPose` (flexion/abduction per joint) |
+| 2. Movement (242/242) | `movement_symbol.MovementSymbol` | `FSWMotionRenderable` | `MotionPath` (trajectory) + `FingerArticulation \| None` (Group 12 only) |
+| 3. Dynamics (8/8) | `dynamics_symbol.DynamicsSymbol` (abstract base: `modifier_symbol.FSWModifierSymbol`) | *(none — sibling hierarchy, see below)* | `DynamicsModifier` |
+| 4. Head & Face (~110) | `face_symbol.FaceSymbol` / `head_symbol.HeadSymbol` / others (dispatch table, see `registry.py`) | `FSWFaceRenderable` / `FSWHeadRenderable` | `FaceExpressionPose` (ARKit-52 blend-shapes) |
+| 5. Trunk & Limb (18/18) | `body_symbol.BodySymbol` | `FSWBodyRenderable` | `BodyPose` (schematic body-diagram descriptor) |
+| 6. Location (0/8) | — | — | not started |
+| 7. Punctuation (0/5) | — | — | not started |
 
-16 rotation values exist -- not 8 -- precisely because `hand_side` is encoded
-in *which half* `rotation` falls into, for Hands; ISWA has no separate
-left/right field. `FSWBaseSymbol.hand_side` is **abstract** (returns
-`HandSide | None`) -- `HandSymbol.hand_side` implements the table above for
-Category 1 specifically. This is deliberately NOT assumed to generalize:
-measured against a real sign-language corpus
+Category 3 (Dynamics) is deliberately **not** part of the
+`FSWRenderableSymbol` tree — a Dynamics symbol modifies the timing/manner
+of *other* symbols in the same sign, it renders nothing of its own
+(`modifier_symbol.py`'s own docstring explains why).
+
+**What's still this project's own model, not derived from any published
+spec:** ISWA/FSW is a 2D notation — there is no authoritative source for a
+3D wrist quaternion, per-joint flexion angle, or Category-2/3/5 numeric
+value. `get_wrist_orientation()` and every `data/*.json` table's
+non-Category-1 values are principled interpretations (documented inline
+and in each file's `_meta`), not placeholders waiting for a "real" version
+— for those categories, there is no other real version to integrate.
+
+### `rotation`/`fill` encode hand_side and orientation — verified per category, not assumed
+
+For **Category 1**, ISWA `rotation` (a hex digit 0-f) splits into two
+halves of 8: `0`-`7` = RIGHT hand, `8`-`f` = LEFT hand (mirror), each half
+giving the same `(rotation % 8) * 45°` compass angle. `fill` (0-5) is
+orthogonal — the "Six Palm Facings" (which side of the hand shows × which
+plane the arm reaches in), confirmed against the real ISWA chart at
+[signwriting.org's Index lesson](https://www.signwriting.org/lessons/iswa/group01/01-01-001-01.html).
+
+This does **not** generalize by assumption: measured against a real corpus
 ([sign-language-processing/signbank-plus](https://github.com/sign-language-processing/signbank-plus),
-257,800 signs), Category 2 (Movement)'s `rotation` does **not** predict
-hand_side the same way -- see `ROADMAP.md`'s Phase 2 section for the actual
-numbers. Each category's symbol class states its own rule; none is
-inherited by accident.
+257,800 signs), Category 2's `rotation` does **not** predict `hand_side`
+the way Category 1's does — `MovementSymbol.hand_side` returns `None`
+rather than guess wrong ~28% of the time (see that class's own docstring
+for the actual numbers). Each category's symbol class states its own rule.
 
-**Why the renderer doesn't mirror a right hand into a left hand:** a left
-hand is not a right hand rotated by some angle -- it's the opposite
-chirality (mirror image), which a rotation operator cannot produce. So
-`HandMeshRenderer3D` takes a `HandRigProvider` and asks it for the rig
-matching `symbol.hand_side` -- two genuinely separate rigs/meshes -- and only
-then applies `get_wrist_orientation()` + `get_joint_pose()` to whichever rig
-came back.
+## `timeline/`: `SignTimeline` (MVP-1 scope)
 
-### `fill` is the "Six Palm Facings" -- not the same thing as `rotation`
+```
+tuple[PositionedSymbol, ...] --[build.py]--> SignTimeline --[sample.py]--> tuple[PoseFrame, ...]
+```
 
-Confirmed against the real chart at
-[signwriting.org's Index lesson](https://www.signwriting.org/lessons/iswa/group01/01-01-001-01.html)
-(`ISWA2010_Symbol_Charts/01-01-001-ISWA_Chart.jpg`): `rotation` sweeps which
-way the extended finger points on the page (0=up, 90=side, 180=down, ...).
-`fill` (0-5) never changes that -- it changes which side of the hand is
-presented, as two combined components:
+**MVP-1 scope, a deliberate cut, not a shortcut:** exactly 1 Category-1
+(hand posture) symbol + at most 1 Category-2 (movement) symbol, no other
+category. Measured on SignBank+: **6.2%** of real signs. Group 12 (Finger
+Movement, 20 of Category 2's 242 base symbols) additionally covers
+**16.8%** of real signs and, since the "Chuyển động khớp ngón tay" task,
+oscillates the actual finger joints (not just the wrist) — see
+`core/finger_articulation.py`.
 
-| fill | facing (fill % 3) | plane (fill // 3) |
-|---|---|---|
-| 0 | Palm of Hand | Wall Plane (front view, arm reaching forward) |
-| 1 | Side of Hand | Wall Plane |
-| 2 | Back of Hand | Wall Plane |
-| 3 | Palm of Hand | Floor Plane (top view, arm reaching down) |
-| 4 | Side of Hand | Floor Plane |
-| 5 | Back of Hand | Floor Plane |
+- `build.py`'s `build_timeline()` raises `UnsupportedSignError` naming
+  exactly why for anything outside MVP-1's scope — never a best-effort
+  wrong timeline.
+- `sample.py`'s `sample()` interpolates every track at a fixed FPS: SLERP
+  for wrist quaternions, linear for joint angles and position. It never
+  re-derives trajectory shape — that's already baked into how many
+  keyframes `build.py` generated (dense enough that linear interpolation
+  between them closely follows curves/circles/finger-joint oscillation
+  without flattening them).
+- `anchor.py` maps FSW signbox coordinates into the same body-space
+  `export/` and `core/movement_paths.py` already use.
 
-`FSWBaseSymbol._fill_facing_degrees()` (0/-90/-180, about the wrist-to-
-fingertip axis -- the same axis `rotation` deliberately does *not* use, see
-above) and `_fill_plane_degrees()` (0/-90, about the spread axis) implement
-this. The sign on facing (negative, not positive) is a concrete correction:
-fill=1 (Side of Hand)'s palm normal must point to -x, not +x -- not
-derivable from the chart's 2D photo alone (no depth cue says which edge of
-the hand faces the camera), confirmed directly instead. Back of Hand
-(fill%3=2, a half turn) lands in the same place either sign, so only Side
-of Hand is actually affected. `_default_wrist_orientation()` composes all
-three components as
-`compass * plane * facing` -- **facing must be applied before plane, not
-after**: pitching into the Floor Plane first rotates the palm-normal vector
-onto the same axis facing rotates around, so a later facing rotation can't
-change it at all (Palm and Back would collapse onto the same orientation --
-this was a real bug, caught by inspection against the chart, see
-`test_fill_palm_faces_up_in_floor_plane` /
-`test_fill_back_faces_down_in_floor_plane`). Base symbols with no quirks of
-their own just return `_default_wrist_orientation()` from
-`get_wrist_orientation()`.
+## `export/`: `.pose` output
+
+```
+tuple[PoseFrame, ...] --[pose_export.py]--> pose_format.Pose (POSE_LANDMARKS + hand landmarks)
+```
+
+- **`forward_kinematics.py`**: `HandJointPose` (angles) → 21 real
+  MediaPipe-convention hand landmarks, via `bone_lengths.py`'s cited bone
+  lengths (own stature-anchored scale via `anthropometry.py`, unified with
+  the body's own scale — see `PROGRESS.md`'s "hand<->body scale" entry).
+- **`arm_ik.py`**: closed-form two-bone IK (law of cosines + one
+  orthonormal-vector combination — deliberately NOT an iterative
+  solver/`scipy.optimize`, so a hyperextended elbow is structurally
+  impossible) solves the elbow position from shoulder + wrist. Pole-vector
+  constants are measured against real anatomical invariants (elbow never
+  rises above both shoulder and wrist), not guessed — see `PROGRESS.md`'s
+  "Sửa lại bất biến IK sai" entry for a real regression found and fixed
+  here.
+- **`body_geometry.py`**: static torso/head/eye landmarks, proportions
+  cited from Drillis & Contini (1966) via Winter's *Biomechanics and Motor
+  Control of Human Movement* — a few (torso length, eye placement) are
+  flagged ESTIMATED where no citation was found, never silently treated as
+  equally sourced.
+- **`pose_export.py`**: assembles all of the above into a real
+  `pose_format.Pose` per frame — `POSE_LANDMARKS` cropped at the hip
+  (real sign-video framing is upper-body only; the hip made
+  `PoseVisualizer` draw a dominant, unreadable filled trapezoid, see
+  `PROGRESS.md`'s "khung hình demo dễ đọc hơn" entry) plus 6 eye points,
+  both shoulders, and the active hand's arm. `BODY_UNITS_TO_PIXELS` /
+  `VERTICAL_CENTER_OFFSET` are MEASURED (not guessed) against the standard
+  demo sign's real bounding box — recalibrated 6 times across this
+  project's history as the figure's own geometry changed; the module's own
+  docstring keeps the full numbered history, never silently overwritten.
+
+## `validation/`: accuracy against ground truth
+
+Not wired into the render path — used by `scripts/eval_fk_accuracy.py` /
+`scripts/eval_anatomical.py`, which write `reports/fk_accuracy.md` /
+`reports/anatomical.md`.
+
+- **`normalization.py`**: `PoseNormalizer` (Procrustes-style
+  scale/translation normalization, size=150) so MPJPE compares SHAPE, not
+  absolute scale.
+- **`anatomical_limits.py`**: `JOINT_LIMITS` (per-joint flexion/abduction
+  ranges, cited per joint from AAOS/clinical ROM references — flagged
+  where estimated, see the module's own docstring) + `validate_pose()`.
+  Also imported directly (not `validate_pose()`) by
+  `core/finger_articulation.py` to CLAMP Group 12's oscillation at the
+  source, not just report violations after the fact.
+
+**Current numbers** (see `reports/`, regenerate with
+`python scripts/eval_fk_accuracy.py` / `eval_anatomical.py`):
+
+- **MPJPE = 48.72** (normalized scale 150), beating both baselines
+  (average-pose 64.84, one-pose-per-group 60.44). Measured against
+  [`sign-language-processing/3d-hands-benchmark`](https://github.com/sign-language-processing/3d-hands-benchmark) —
+  the SAME source `hand_joint_poses.json` itself came from, not an
+  independent ground truth.
+- **224/261 (85.8%)** Category 1 symbols violate at least one
+  `JOINT_LIMITS` bound — mostly thumb CMC (201/261), suspected definition
+  mismatch between the benchmark's own CMC convention and the clinical
+  citation, not yet verified (see `PROGRESS.md`'s Pha 6 entry — the
+  recommended next investigation, not yet done).
 
 ## Layout
 
 ```
 src/fsw_r/
   core/
-    iswa_data.py             # ISWA structure (category/group boundaries, all 7 categories)
-                              #   + per-symbol valid (fill, rotation) combinations
-    fsw_base_symbol.py       # base_hex/fill/rotation + category/group/base_symbol_number/symbol_id (derived)
-                              #   + hand_side (abstract, per-category) + get_wrist_orientation() (abstract)
-    fsw_ast.py                # FSW sign string -> AST, via the real signwriting.formats.fsw_to_sign
-    fsw_symbol_key.py          # decodes one symbol key -> base_hex/fill/rotation (full ISWA range, not just Cat 1)
-    pose_table.py                # generic PoseTable[PoseT] (base_hex-keyed) + HAND_POSE_TABLE, the Category 1 instance
-    hand_symbol.py                 # HandSymbol -- the one class for all 261 Category 1 base symbols
-    registry.py                     # build_symbol() / symbol_from_fsw() -- dispatches by category
-    fswr_converter.py                # AST -> FSWR: ast_to_fswr() / fsw_to_fswr()
-    types.py                          # JointAngle, FingerPose, ThumbPose, HandJointPose, HandSide
-    renderable_symbol.py               # FSWRenderableSymbol
-    renderer.py                         # HandMeshRenderer3D, HandSkeleton, HandRigProvider (Protocol)
-  data/
-    iswa_valid_combinations.json  # from the real ISWA font's cmap, all 652 base symbols
-    hand_joint_poses.json          # real, dataset-derived joint poses, Category 1's 261, keyed by base_hex
+    iswa_data.py              # category/group boundaries (all 7) + per-symbol valid (fill, rotation)
+    fsw_base_symbol.py        # base_hex/fill/rotation + derived category/group/symbol_id + hand_side (abstract)
+    fsw_ast.py / fsw_symbol_key.py / registry.py / fswr_converter.py   # FSW string -> FSWR pipeline (see above)
+    renderable_symbol.py      # FSWRenderableSymbol + per-category FSW*Renderable contracts
+    renderer.py                # HandMeshRenderer3D/HandSkeleton/HandRigProvider (Protocol) -- Category 1's
+                                #   own renderer-agnostic contract, predates export/; only fsw_r.demo's own
+                                #   mock rig exercises it today -- fsw-r-viz's plot_hand.py renders
+                                #   independently (its own hand_geometry.py), not through this Protocol
+    types.py                  # JointAngle/FingerPose/HandJointPose, MotionPath, FingerArticulation, HandSide
+    pose_table.py             # generic PoseTable[PoseT] (base_hex-keyed) + every category's table instance
+    hand_symbol.py / movement_symbol.py / body_symbol.py / face_symbol.py / head_symbol.py
+    dynamics_symbol.py / modifier_symbol.py   # DynamicsSymbol + its abstract FSWModifierSymbol base (Category 3, no render contract)
+    movement_paths.py         # MotionPath -> 3D trajectory samples (path_type x plane formula)
+    finger_articulation.py    # FingerArticulation -> per-frame joint-angle oscillation (Group 12), clamped
+    body_types.py / dynamics_types.py / face_types.py   # per-category pose dataclasses
+  timeline/
+    types.py                  # Keyframe/Track/SignTimeline/PoseFrame/TrackPose
+    build.py                  # PositionedSymbol tuple -> SignTimeline (MVP-1 scope, see above)
+    sample.py                 # SignTimeline -> fixed-FPS PoseFrame sequence (SLERP/lerp)
+    anchor.py / classify.py / errors.py
+  export/
+    forward_kinematics.py     # HandJointPose -> 21 MediaPipe-convention landmarks
+    bone_lengths.py           # cited hand bone lengths, stature-anchored
+    arm_ik.py                 # closed-form two-bone IK for the arm
+    body_geometry.py          # static torso/head/eye landmarks
+    anthropometry.py          # shared stature constant (breaks a core<->export import cycle)
+    pose_export.py            # PoseFrame sequence -> real pose_format.Pose
+  validation/
+    normalization.py          # PoseNormalizer (Procrustes-style)
+    anatomical_limits.py      # JOINT_LIMITS + validate_pose()
+  data/                       # every *.json is base_hex-keyed; _meta always states AUTHORED vs. measured
+    hand_joint_poses.json       # Category 1, MEASURED (MediaPipe on 3d-hands-benchmark photos)
+    movement_paths.json         # Category 2, generated by formula
+    finger_articulations.json   # Group 12, AUTHORED (5/20 bases from real ISWA names, 15 defaulted)
+    dynamics_modifiers.json     # Category 3, AUTHORED
+    body_poses.json             # Category 5, AUTHORED
+    face_expression_poses.json  # Category 4 (sibling team)
+    iswa_valid_combinations.json  # real ISWA font cmap, all 652 base symbols
   demo.py                      # python -m fsw_r.demo
-tests/
-  test_iswa_structure.py
-  test_iswa_data.py
-  test_pose_table.py
-  test_hand_symbol.py
-  test_wrist_orientation.py
-  test_hand_side.py
-  test_fsw_symbol_key.py
-  test_fsw_ast.py
-  test_registry.py
-  test_fswr_converter.py
+scripts/
+  gen_*.py                    # regenerate data/*.json from source tables (run after editing a table)
+  fetch_ground_truth.py / eval_fk_accuracy.py / eval_anatomical.py   # regenerate reports/*.md
+tests/                        # 38 files, 1,475 tests
+reports/
+  fk_accuracy.md / anatomical.md   # regenerated, not hand-edited
 ```
-
-Category 1 (Hands) is complete: all 261 base symbols, data-driven through
-`HandSymbol` + `pose_table.py` (real-named, joint-pose-derived from real
-data -- see "Notes / open items" below) -- not 261 separate classes. See
-`ROADMAP.md` for the plan for the other 6 ISWA categories (Movement,
-Dynamics, Head & Face, Trunk & Limb, Location, Punctuation -- 7 categories
-total, not 8; see `ROADMAP.md`'s category table for why), not yet started.
-Adding one is now "one more `_CATEGORY_SYMBOL` entry in `registry.py`" +
-that category's own new pose type/symbol class/data file -- see "Adding a
-new category" below.
 
 ## Setup
 
@@ -208,90 +257,74 @@ pip install -e ".[dev]"
 
 ```bash
 python -m fsw_r.demo
-pytest
-mypy --strict
+pytest              # 1,475 tests
+mypy --strict         # clean, 91 files -- src/+tests/ plus the scripts/*.py listed in pyproject.toml
+                         # (scripts/export_joint_poses.py is deliberately excluded there: a frozen
+                         # one-time migration record whose imports no longer resolve, see that file)
+python scripts/eval_fk_accuracy.py   # regenerates reports/fk_accuracy.{json,md}
+python scripts/eval_anatomical.py    # regenerates reports/anatomical.{json,md}
 ```
 
 ## Visualization
 
-There is no matplotlib/3D-plotting code in this package on purpose. A visual
-sanity-check renderer (stick-figure hand via matplotlib) lives in the
-sibling package `../fsw-r-viz`, which depends on `fsw-r` -- not the reverse.
-This package stays free of any visualization dependency.
+There is no matplotlib/video-encoding code in this package on purpose. All
+rendering (static sanity-check plots AND real `.pose` → video/GIF) lives in
+the sibling package `../fsw-r-viz`, which depends on `fsw-r` — never the
+reverse. This package stays free of any visualization dependency.
 
-## Adding a new category
+## Adding a new category (Location/Punctuation, or extending an existing one)
 
-Category 1 (Hands) went through both the wrong pattern and the right one,
-worth knowing before starting Category 2: it began as 261 separate
-`FSWRenderableSymbol` subclasses (one per base symbol, each registered via
-a `@register_symbol` decorator), then got refactored to the data-driven
-design described above once it became clear 96% of those classes only
-differed by 15 numbers, not behavior (see `PROGRESS.md`'s "Refactor tang
-Group sang data-driven" entry). Do the data-driven version from the start
-for a new category:
+Category 1 went through both the wrong pattern (261 separate classes) and
+the right one (data-driven, one class + a JSON table) — do the data-driven
+version from the start, following whichever existing category is closest
+(Category 5's `BodySymbol`/`body_poses.json` is the simplest complete
+example):
 
-1. Design that category's own pose type (e.g. a "motion path" for
-   Category 2 -- a keyframe sequence, not a static `HandJointPose`) in
-   `core/types.py` or its own module.
-2. Write a script (like `scripts/export_joint_poses.py`/
-   `scripts/gen_valid_combinations.py`) or hand-author
-   `data/<category>_poses.json`, keyed by `base_hex` (hex string, e.g.
-   `"22b"`), with the pose fields plus a `name`/`symbol_id` field for
-   readability -- follow `hand_joint_poses.json`'s shape.
-3. In `core/pose_table.py` (or a new module), instantiate a
-   `PoseTable[YourPoseT]("data/<category>_poses.json", your_parse_fn,
-   expected_count=N)` -- `PoseTable`'s own class body never needs to
-   change; it doesn't know what `HandJointPose` is.
-4. Write `YourCategorySymbol(FSWRenderableSymbol)`, analogous to
-   `HandSymbol`: `get_joint_pose()` looks itself up in your new table by
-   `self.base_hex`; `get_wrist_orientation()` -- don't assume Category 1's
-   fill/rotation formula generalizes, verify against that category's own
-   chart/spec first (see `ROADMAP.md`'s risk note); `hand_side` -- don't
-   assume Category 1's `rotation`-based rule generalizes either (it
-   measurably doesn't for Category 2, see `ROADMAP.md`'s Phase 2 section)
-   -- return `None` if the category doesn't encode a hand at all.
-5. In `core/registry.py`, add one entry:
-   `_CATEGORY_SYMBOL[2] = YourCategorySymbol`. That's the only change to an
-   existing `core/` file -- `fsw_symbol_key.py`, `fsw_base_symbol.py`,
-   `iswa_data.py`, `renderer.py`, and `pose_table.py`'s `PoseTable` class
-   are already category-agnostic.
+1. Design that category's own pose type in `core/types.py` (or its own
+   `*_types.py` module if it needs several related dataclasses, like
+   `body_types.py`/`dynamics_types.py`/`face_types.py`).
+2. Add a `FSW*Renderable(FSWRenderableSymbol)` contract in
+   `renderable_symbol.py` if the category renders to something (skip this
+   if it's a modifier like Category 3).
+3. Write `scripts/gen_<category>_poses.py` (formula-driven, like
+   `gen_movement_paths.py`) or hand-author `data/<category>_poses.json`
+   directly (AUTHORED, like `dynamics_modifiers.json`) — keyed by
+   `base_hex` (hex string, e.g. `"22b"`), with a `symbol_id`/`name` field
+   for readability, and an honest `_meta` block (`names_source`,
+   `values_source`, `unverified_assumptions`).
+4. In `core/pose_table.py`, add a `_parse_<category>()` function +
+   `<CATEGORY>_TABLE = PoseTable[YourPoseT](...)` instance —
+   `PoseTable`'s own class body never changes.
+5. Write `Your CategorySymbol(FSW*Renderable)`: looks itself up in the new
+   table by `self.base_hex`; `get_wrist_orientation()`/`hand_side` — don't
+   assume Category 1's formulas generalize, verify against that category's
+   own real ISWA names/chart first (Category 2's `hand_side` measurably
+   does NOT follow Category 1's rule — see above).
+6. In `core/registry.py`, add one entry to `_CATEGORY_SYMBOL`. That is the
+   only change to an existing `core/` file — `fsw_symbol_key.py`,
+   `fsw_base_symbol.py`, `iswa_data.py`, and `pose_table.py`'s `PoseTable`
+   class are already category-agnostic.
+7. If the category needs to affect `SignTimeline` (Category 3/5 currently
+   don't — their symbol layer is done but not wired in, see
+   `../ROADMAP.md`), that's a separate `timeline/build.py` change, not part
+   of the symbol-layer work above.
 
 ## Notes / open items
 
-- All 261 of ISWA Category 1's base symbols are registered (`HandSymbol`
-  covers all of them via `pose_table.py`, keyed by `base_hex`).
-  `symbol_from_fsw()` / `fsw_to_fswr()` raise a clear `ValueError` naming
-  the unsupported category for any key outside Category 1 -- see
-  `../ROADMAP.md` for the other 6 ISWA categories, not yet started.
-- Joint angles for all 261 registered base symbols are derived from real
-  data, not guessed: median 3D hand keypoints (MediaPipe v0.10.3, 48 crops)
-  from
-  [sign-language-processing/3d-hands-benchmark](https://github.com/sign-language-processing/3d-hands-benchmark),
-  a real photographed hand posing all 261 ISWA Category-1 shapes at 6
-  orientations. Flexion = angle between consecutive bone vectors
-  (wrist->mcp->pip->dip->tip). This is MediaPipe's own pose *estimate* on a
-  real photo, not verified motion-capture ground truth (that benchmark
-  doesn't claim otherwise either) -- but it's real photographed data, not
-  an invented number. `abduction` (finger spread) isn't measured by this
-  method and is still a guess.
-- `fill`'s "Floor Plane" component (`_fill_plane_degrees`) pitches the whole
-  hand 90 degrees, matching the chart's *description* ("top view, arm
-  reaching down") -- but the chart itself shows this from a camera looking
-  down from above, and neither `fsw-r` nor `fsw-r-viz` change the camera to
-  match. So the quaternion is internally consistent (pinned by
-  `test_fill_plane_differs_between_wall_and_floor`) but hasn't been visually
-  cross-checked against the chart's top-view photos the way the rotation
-  and facing behavior were -- worth another look once a real rig exists.
-- `JointAngle.abduction`'s sign may need flipping for the LEFT hand,
-  depending on your 3D rig's convention -- not handled yet, since no real rig
-  exists to verify against.
-- `data/hand_joint_poses.json` is an internal data source (`base_hex` ->
-  joint pose), not a public export API -- it has no wrist quaternion
-  (that's a function of fill/rotation, computed at render time, not
-  precomputed data). If the final render target ends up being a web viewer
-  (three.js) rather than Blender/Open3D, add a `to_dict()`/`asdict()` based
-  exporter for a symbol's `HandJointPose` + computed wrist `Rotation`
-  quaternion -- the core layer doesn't need to change for that.
-- Written and tested against Python 3.10 (the environment available locally);
-  the design brief called for 3.11+ but nothing here uses a 3.11-only
-  feature, so it also runs unmodified on 3.11/3.12.
+See `../ROADMAP.md` for the full, current list (kept there instead of
+duplicated here so it can't drift out of sync) — highlights:
+
+- **Category 3/5 are done at the symbol layer but not wired into
+  `SignTimeline`** — `DEFAULT_SIGN_DURATION` is still a placeholder
+  constant, and torso pose is still static (`body_geometry.py`'s own
+  constants), not driven by a real Category 5 `BodyPose`.
+- **MVP-2** (signs with >1 hand/movement symbol, ~20.9% of real signs, plus
+  handshape interpolation between two same-side Category 1 symbols in one
+  sign, ~12.8%) needs track-assignment logic MVP-1 deliberately doesn't
+  have yet.
+- **Thumb CMC investigation** (highest-priority recommendation from the
+  validation numbers above) — not started.
+- Categories 6 (Location, 8 base symbols) and 7 (Punctuation, 5) haven't
+  been started at all.
+- Written and tested against Python 3.10 (the environment available
+  locally); nothing here uses a 3.10-only feature.

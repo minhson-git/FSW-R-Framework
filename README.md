@@ -1,61 +1,127 @@
 # fsw-r
 
-Framework chuyển **SignWriting/ISWA (FSW notation)** thành pose 3D render
-được — input là chuỗi FSW thật (vd `"S10010480x480"`), không phải SWML hay
-mô tả tay thủ công. Xem `ROADMAP.md` (lộ trình cover toàn bộ ISWA theo
-từng pha) và `PROGRESS.md` (nhật ký các quyết định/kỹ thuật đã áp dụng, kể
-cả những lần sửa sai) để biết bối cảnh đầy đủ.
+Framework chuyển **SignWriting/ISWA (FSW notation)** thành pose 3D và video
+render được — input là chuỗi FSW thật (vd
+`"M508x515S10000493x485S22a04500x500"`), không phải SWML hay mô tả tay thủ
+công. Xem `ROADMAP.md` (lộ trình theo từng pha, việc còn lại) và
+`PROGRESS.md` (nhật ký đầy đủ mọi quyết định/kỹ thuật đã áp dụng, kể cả
+những lần phát hiện và sửa sai) để biết bối cảnh chi tiết — README này chỉ
+là bản đồ tổng quan.
 
-**Trạng thái hiện tại:** Category 1 (Hands) xong 100% — cả 261/261 base
-symbol của 10 group ASL-counting (Index, Index & Middle, ..., Thumb), mỗi
-symbol nhận đủ `fill`/`rotation` hợp lệ theo đúng bảng ISWA thật (không còn
-validate theo range chung chung). 7 category còn lại của ISWA (Movement,
-Dynamics, Head & Face, Trunk, Limb, Location, Punctuation) chưa bắt đầu.
+## Pipeline
+
+```
+FSW string ──▶ AST ──▶ FSWR symbols ──▶ SignTimeline (MVP-1) ──▶ sampled PoseFrames
+                                              │
+                                              ▼
+                                   export/ (forward kinematics,
+                                   two-bone arm IK, static torso/head)
+                                              │
+                                              ▼
+                                    .pose file (pose-format)
+                                              │
+                              ┌───────────────┼────────────────┐
+                              ▼               ▼                ▼
+                      video toàn thân   video cận cảnh    validation/
+                      (PoseVisualizer)   bàn tay (zoom +   (MPJPE, giới hạn
+                                          góc nhìn 3/4)     giải phẫu)
+```
+
+## Trạng thái hiện tại
+
+**Tầng ký hiệu (ISWA symbol → pose/quaternion/trajectory), theo category:**
+
+| Category | Base symbol | Trạng thái |
+|---|---|---|
+| 1. Hands | 261 | **Xong 100%** — data-driven qua `HandSymbol`, góc khớp từ dữ liệu thật (MediaPipe trên `3d-hands-benchmark`, không phải đoán) |
+| 2. Movement | 242 | **Xong 100%** — quỹ đạo sinh bằng công thức `(path_type × plane)`, không đo |
+| 3. Dynamics | 8 | **Xong 100%** (tầng ký hiệu) — AUTHORED từ tên thật signbank.org, chưa nối vào `SignTimeline` |
+| 4. Head & Face | ~110 | **Xong** (nhóm khác trong dự án phụ trách) — blend-shape ARKit-52 |
+| 5. Trunk & Limb | 18 | **Xong 100%** (tầng ký hiệu) — AUTHORED, chưa nối vào `SignTimeline` |
+| 6. Location | 8 | Chưa làm |
+| 7. Punctuation | 5 | Chưa làm |
+
+**`SignTimeline` (MVP-1):** FSW sign → timeline có trục thời gian thật, phạm
+vi cố ý giới hạn — đúng 1 symbol tay (Category 1) + tối đa 1 symbol chuyển
+động (Category 2), phủ **6,2% sign thật** (đo trên SignBank+, 257.800 sign).
+Group 12 (Finger Movement, 20/242 base symbol Category 2, phủ thêm **16,8%
+sign thật**) sinh chuyển động khớp ngón tay thật (dao động biên độ tới 56,6°
+ở MCP), không chỉ tịnh tiến cổ tay.
+
+**Tầng export + video:** `.pose` xuất đủ 3 chiều không gian (forward
+kinematics bàn tay + two-bone IK cánh tay + thân/đầu tĩnh), qua
+`PoseVisualizer` (thư viện `pose-format` chuẩn cộng đồng) ra video/GIF. Có
+**2 video mỗi sign**: toàn thân (tư thế/quỹ đạo) và cận cảnh bàn tay (phóng
+to + neo cổ tay + xoay góc 3/4, để đọc được handshape/khớp ngón mà video
+toàn thân không đủ độ phân giải để thấy).
+
+**Tầng đánh giá:** MPJPE = **48,72** (thang chuẩn hoá 150, thắng cả 2
+baseline), đo trên `sign-language-processing/3d-hands-benchmark`. Vi phạm
+giới hạn giải phẫu: 224/261 symbol Category 1 (đa số do CMC ngón cái, nghi
+lệch định nghĩa — chưa xác minh, xem `PROGRESS.md`).
+
+**11 GIF demo** (`fsw-r-viz/demo/mvp1_sign_*.gif`) ghi lại toàn bộ tiến
+trình cải thiện chất lượng hình ảnh, từ hand-only đến full-signer đến
+cận-cảnh-góc-3/4 — xem mục "Chạy thử" bên dưới để tự render lại.
 
 ## Cấu trúc 2 package
 
 ```
 Code/
-  fsw-r/       core: FSW parsing + joint-pose/wrist-orientation logic,
-               KHÔNG phụ thuộc matplotlib hay bất kỳ thư viện 3D nào
-  fsw-r-viz/   visualization: stick-figure 3D bằng matplotlib, phụ thuộc fsw-r
+  fsw-r/       core + timeline + export + validation: KHÔNG phụ thuộc
+               matplotlib hay bất kỳ thư viện 3D/hiển thị nào
+  fsw-r-viz/   visualization: matplotlib (sanity-check tĩnh) +
+               pose-format/PoseVisualizer (video thật), phụ thuộc fsw-r
 ```
 
 Hai package tách biệt hoàn toàn, phụ thuộc một chiều (`fsw-r-viz` →
-`fsw-r`). `fsw-r` không có bất kỳ chỗ nào biết cụ thể về group/base symbol
-nào (renderer, registry, parser đều category/group-agnostic) — xem
-`fsw-r/README.md` để biết kiến trúc chi tiết (4 tầng ban đầu → data-driven
-sau refactor, xem `PROGRESS.md`).
+`fsw-r`). `fsw-r`'s `core/` không có chỗ nào biết cụ thể về category/group
+nào (renderer, registry, parser đều category-agnostic) — xem
+`fsw-r/README.md` để biết kiến trúc chi tiết từng tầng
+(`core/`/`timeline/`/`export/`/`validation/`), và `fsw-r-viz/README.md` cho
+các renderer/video.
 
 ## Chạy thử
 
 ```bash
 cd fsw-r && pip install -e ".[dev]"
-python -m fsw_r.demo      # parse FSW thật -> object FSWR, in ra pose/quaternion
-pytest                     # 596 test
-mypy --strict               # strict type-check
+python -m fsw_r.demo        # parse FSW thật -> object FSWR, in ra pose/quaternion
+pytest                       # 1.475 test
+mypy --strict                 # strict type-check, sạch toàn bộ (91 file: src/+tests/+scripts/ đã bật)
 
 cd ../fsw-r-viz && pip install -e ".[dev]"
-python -m fsw_r_viz.demo   # render 2 ảnh PNG stick-figure vào fsw-r-viz/output/
-pytest                      # 4 test
-mypy --strict
+python -m fsw_r_viz.demo    # render toàn bộ ảnh/GIF demo vào output/ và demo/
+pytest                       # 42 test
+mypy --strict                 # 4 lỗi cũ không liên quan (FuncAnimation stub, 1 ndarray generic)
 ```
 
-## 2 giới hạn đã biết (quan trọng khi trích dẫn/dùng số liệu)
+`python -m fsw_r_viz.demo` ghi cả video toàn thân (`demo/mvp1_sign.gif`,
+tên chính tắc "mới nhất") lẫn video cận cảnh bàn tay 2 góc nhìn
+(`demo/mvp1_sign_hand_closeup.gif` 0°, và ví dụ với 1 sign có chuyển động
+khớp ngón — xem `demo/mvp1_sign_10_closeup_front.gif` /
+`_3q.gif`) — môi trường phát triển hiện tại không có `vidgear`/ffmpeg thật
+nên tự động fallback từ `.mp4` sang `.gif` (Pillow), có in cảnh báo rõ ràng
+khi fallback, không âm thầm.
 
-1. **Góc khớp (joint angle) là ước lượng MediaPipe trên ảnh thật, KHÔNG
-   phải motion-capture đã xác thực.** Nguồn:
+## 3 giới hạn đã biết (quan trọng khi trích dẫn/dùng số liệu)
+
+1. **Góc khớp ngón tay (Category 1) là ước lượng MediaPipe trên ảnh thật,
+   KHÔNG phải motion-capture đã xác thực.** Nguồn:
    `sign-language-processing/3d-hands-benchmark` — 1 người thật làm mẫu cả
    261 handshape × 6 góc chụp, pose 3D suy ra bằng MediaPipe v0.10.3 (median
-   qua 48 lần chụp/symbol). Bản thân benchmark cũng không claim đây là
-   ground truth mocap. Đáng tin hơn nhiều so với số tự đoán (baseline cũ
-   trước khi tích hợp dataset), nhưng vẫn là ước lượng, không phải đo đạc
-   trực tiếp.
-2. **`abduction` (độ xoè ngón, khác `flexion` là góc gập) chưa đo được từ
-   dataset trên** — vẫn là số ước lượng thủ công, không phải dữ liệu thật.
-   Muốn đo cần thêm bước định nghĩa mặt phẳng tham chiếu (lòng bàn tay) và
-   tính góc chiếu ngang, phức tạp hơn flexion.
+   qua 48 lần chụp/symbol). MPJPE=48,72 đo trên chính nguồn này (không phải
+   ground truth độc lập).
+2. **Toàn bộ dữ liệu Category 2 (quỹ đạo), 3 (dynamics), 5 (thân người), và
+   `FingerArticulation` (Group 12) là AUTHORED** — người soạn đọc tên ISWA
+   thật trên signbank.org rồi tự gán số, không có dataset nào ánh xạ tên ISWA
+   sang toạ độ/góc số. Luôn ghi rõ trong `_meta` của từng file JSON trong
+   `fsw-r/src/fsw_r/data/`.
+3. **`PoseVisualizer` (renderer chuẩn cộng đồng `pose-format`) chỉ chiếu 2
+   chiều (XY) lên video** — Z chỉ dùng để quyết định thứ tự vẽ. Dữ liệu
+   `.pose` xuất ra giàu hơn thứ renderer chuẩn khai thác được; video cận
+   cảnh bàn tay bù lại bằng cách xoay góc 3/4 trước khi chiếu (xem
+   `fsw-r-viz/README.md`), nhưng bản thân renderer vẫn không đổi.
 
-Cả 2 điểm này được ghi lại trong `_meta` của
-`fsw-r/src/fsw_r/data/hand_joint_poses.json` và trong docstring liên quan —
-không bị mất qua các lần refactor.
+Cả 3 điểm này (và nhiều giả định nhỏ hơn khác) được ghi lại đầy đủ trong
+`PROGRESS.md`'s mục "giả định chưa kiểm chứng" ở mỗi pha, và trong `_meta`
+của từng file dữ liệu — không bị mất qua các lần refactor.
