@@ -612,6 +612,53 @@ lớn hơn nhiều và không tuần hoàn. `SignTimeline` MVP-1 hiện chỉ h�
 đúng 1 symbol tay/sign (xem `timeline/build.py`'s `UnsupportedSignError`)
 nên chưa thể làm — cần logic MVP-2 (gán/phân biệt nhiều symbol tay trên
 cùng track) làm nền trước.
+- **Hiệu chỉnh hằng số hình học bàn tay bằng ground truth** — MPJPE hiện
+  tại (48,72, xem "Tầng đánh giá" ở trên) đo trên hằng số xương/khớp AUTHORED
+  (ước lượng riêng, không phải đo trực tiếp — xem `export/bone_lengths.py`).
+  Chưa có task nào quay lại HIỆU CHỈNH các hằng số đó bằng chính dữ liệu
+  ground truth (3d-hands-benchmark) để giảm MPJPE xuống — Pha 6 chỉ ĐO,
+  chưa SỬA (khuyến nghị ưu tiên số 1 vẫn là điều tra ngón cái, xem mục
+  "Tầng đánh giá").
+
+### Góc nhìn 3/4 cho video cận cảnh bàn tay — ĐÃ XONG
+
+**Lưu ý đánh số:** trong `PROGRESS.md` việc này là "Pha 14" (tiếp Pha 13).
+Task nhỏ, thuần tầng viz — **0 file `fsw-r/src/fsw_r/` bị sửa**.
+
+**Việc đã làm:** GIF cận cảnh của Pha 13 cho thấy khớp ngón "co ngắn" thay
+vì "gập" — `PoseVisualizer` chiếu trực giao lên mặt phẳng XY, trong khi đo
+trực tiếp cho thấy chuyển động MCP thật (Group 12) nằm phần lớn ở Y VÀ Z
+(đầu ngón giữa dịch X=0,000 Y=-0,458 Z=-0,207 body-space units giữa frame
+7/13 của sign chuẩn) — Z bị bỏ hoàn toàn khi chiếu, cung tròn bị bẹp thành
+đường thẳng. Đã thêm tham số `view_angle_deg` cho
+`render_hand_closeup.py`, xoay landmark quanh trục Y TRƯỚC bước neo cổ
+tay/phóng to có sẵn từ Pha 12 (đúng thứ tự yêu cầu — xoay trước rồi mới đo
+bounding box để tính hệ số phóng). Đo đánh đổi thật bằng chính
+implementation (không suy diễn từ bảng cho sẵn): góc tăng → biên độ gập
+thấy được tăng, khoảng cách MCP tối thiểu giảm — chọn **60°**
+(`HAND_CLOSEUP_VIEW_ANGLE_DEG`, MCP tối thiểu đo được 17,3px, còn margin
+so với ngưỡng 15px; 90° tụt xuống 8,2px, dưới ngưỡng). GIF thứ 10
+(`mvp1_sign_10_closeup_front.gif` 0°, `mvp1_sign_10_closeup_3q.gif` 60°)
+đã render, xem lại bằng mắt — 60° cho thấy ngón trỏ ĐỔI HƯỚNG rõ ràng
+(thẳng đứng → chéo lên-phải) giữa 2 frame cực trị, đúng là cung gập; 0°
+chỉ cho thấy ngón NGẮN LẠI. Hai GIF khác nhau rõ rệt. Chi tiết đầy đủ ở
+`PROGRESS.md` mục "Pha 14".
+
+**Sự cố tự bắt được khi triển khai:** brief gợi ý đặt mặc định tham số
+`view_angle_deg` = `HAND_CLOSEUP_VIEW_ANGLE_DEG` (60°) luôn — làm đúng vậy
+thì HỎNG 3 test cũ của Pha 12 (lời gọi cũ không truyền góc ngầm nhận 60°
+thay vì 0°, phá ngưỡng 20px cũ). Phát hiện qua chạy `pytest`, không phải
+đoán trước — sửa lại: mặc định cả 3 hàm về `0.0` (khác gợi ý brief), giữ
+hằng số 60° dùng tường minh đúng 1 chỗ gọi mới. Kết quả: mọi lời gọi cũ
+(kể cả test Pha 12, kể cả `demo.py`'s 2 hàm render cũ) giữ nguyên hành vi
+byte-for-byte — đúng yêu cầu "không đổi video cận cảnh 0° hiện có".
+
+**Điểm đáng chú ý cho báo cáo:** `.pose` xuất ra giữ đủ 3 chiều không
+gian thật, nhưng `PoseVisualizer` (renderer chuẩn của cộng đồng
+`pose-format`) chỉ chiếu 2 chiều lên ảnh — dữ liệu 3D của project này
+giàu hơn thứ công cụ hiển thị tiêu chuẩn khai thác được. Góc nhìn 3/4 là
+cách làm lộ ra sự thật đó, không tính toán gì mới, chỉ "mượn" lại phần dữ
+liệu Z vốn đã có sẵn.
 
 ### Pha 3 — Dynamics (Category 3) — ĐÃ XONG tầng ký hiệu (8/8 base symbol)
 

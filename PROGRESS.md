@@ -1799,15 +1799,37 @@ annotation, không đổi runtime.
   hiện lần xem đầu chọn nhầm frame preview (bị "phách" trùng pha), đã tự
   bắt lỗi bằng số trước khi kết luận, chọn lại đúng cặp frame thấy rõ ngón
   trỏ duỗi/nắm. Chi tiết ở mục "Pha 13" phía trên.
+- **Góc nhìn 3/4 cho video cận cảnh bàn tay (Pha 14) đã xong** — GIF Pha 13
+  cho thấy khớp ngón "co ngắn" thay vì "gập" vì `PoseVisualizer` chiếu
+  trực giao lên XY, còn chuyển động MCP thật đo được lại chủ yếu nằm ở Y
+  VÀ Z (đầu ngón giữa dịch X=0,000 Y=-0,458 Z=-0,207 giữa frame 7/13) — Z
+  bị bỏ hoàn toàn khi chiếu. Thêm tham số `view_angle_deg` cho
+  `render_hand_closeup.py`, xoay landmark quanh trục Y TRƯỚC bước neo/phóng
+  có sẵn (đúng thứ tự yêu cầu). Đo đánh đổi thật (không suy diễn): 60°
+  cho biên độ gập thấy được tăng, tách ngón MCP tối thiểu giảm còn 17,3px
+  (vẫn margin so với ngưỡng 15px), 90° tụt xuống 8,2px — chọn 60°
+  (`HAND_CLOSEUP_VIEW_ANGLE_DEG`). **Tự bắt 1 lỗi khi triển khai**: làm
+  đúng gợi ý code của brief (mặc định tham số = 60°) làm hỏng 3 test cũ
+  Pha 12 — phát hiện qua chạy test, sửa lại mặc định về 0,0 cho cả 3 hàm,
+  giữ hằng số 60° dùng tường minh ở đúng 1 chỗ gọi mới. **0 file
+  `fsw-r/src/fsw_r/` bị sửa** (`git diff --stat` xác nhận), `test_render_hand_closeup.py`
+  (6 test Pha 12) pass y hệt không sửa gì — xác nhận 0° là no-op thật.
+  2 GIF (`mvp1_sign_10_closeup_front.gif`/`_3q.gif`) đã commit, xem lại
+  bằng mắt: ở 0° ngón trỏ chỉ ngắn đi, ở 60° CÙNG 2 frame cho thấy ngón
+  trỏ đổi hướng rõ ràng (thẳng đứng → chéo lên-phải) — đúng là cung gập,
+  không phải co ngắn. Chi tiết ở mục "Pha 14" phía trên.
 - `fsw-r`: `mypy --strict` sạch (86 file), `pytest` **1.475/1.475 pass**
   (1.441 cũ nguyên vẹn + 34 test Pha 13 `test_finger_articulation.py`
-  D1-D6, D7/D8 kiểm bằng quy trình riêng không phải test).
+  D1-D6, D7/D8 kiểm bằng quy trình riêng không phải test; Pha 14 không đụng
+  `fsw-r` nên số này không đổi).
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
-  4/5 qua `git stash`), `pytest` **33/33 pass** (tăng từ 5/5 khi
+  4/5 qua `git stash`), `pytest` **42/42 pass** (tăng từ 5/5 khi
   `fsw-r-viz` còn chỉ có Category 1 — đã qua Pha 4 (Head&Face merge, nhóm
   khác) + Pha 5 (`test_render_pose_video.py`) + Pha 12 (6 test
-  `test_render_hand_closeup.py` C1-C5, C6 là toàn bộ suite) từ lúc đó).
+  `test_render_hand_closeup.py` C1-C5, C6 là toàn bộ suite) + Pha 14 (9
+  test `test_hand_closeup_view_angle.py` B1-B4 + 1 test chéo-kiểm) từ lúc
+  đó).
 - Demo trực quan (`python -m fsw_r_viz.demo`) render đúng cả rotation lẫn
   fill: joint pose giống hệt nhau ở mọi rotation/fill/hand_side, chỉ hướng
   ngón (rotation) hoặc mặt bàn tay/mặt phẳng cánh tay (fill) thay đổi.
@@ -2279,6 +2301,106 @@ nào ánh xạ tên ISWA finger-movement sang góc khớp số. Cụ thể:
   minh hoạ, chưa hiệu chỉnh theo chuyển động thật.
 - 15 base không nghiên cứu riêng (`default_bases` trong `_meta`) — dùng
   chung 1 placeholder, không phải đọc tên thật của chính chúng.
+
+## Pha 14 — Góc nhìn 3/4 cho video cận cảnh bàn tay
+
+Task nhỏ, thuần tầng viz — **0 file `fsw-r/src/fsw_r/` bị sửa** (`git diff
+--stat` xác nhận), không đổi dữ liệu, MPJPE không đổi (`fsw-r` không bị
+đụng nên hiển nhiên không đổi).
+
+**Vấn đề (Phần 0):** Pha 13 đã sinh đúng chuyển động khớp ngón (biên độ
+56,6° ở MCP), nhưng xem GIF thấy ngón tay trông như CO NGẮN LẠI chứ không
+phải GẬP. Đo trực tiếp độ dịch chuyển đầu ngón GIỮA (không phải trỏ) giữa
+frame 7 và frame 13 của sign `M508x515S10000493x485S22100500x500`, trong
+body-space (đơn vị thân, trước khi xuất pixel):
+
+```
+X = +0.000    Y = -0.458    Z = -0.207
+```
+
+Khớp lại chính xác con số brief đưa ra. Khi MCP gập, đầu ngón đi theo cung
+tròn — vừa xuống (Y) vừa tới trước về phía lòng bàn tay (Z). Nhưng
+`PoseVisualizer` chiếu trực giao lên mặt phẳng XY, Z chỉ dùng để quyết
+định thứ tự vẽ (painter's algorithm) — hoàn toàn không ảnh hưởng vị trí.
+Dữ liệu đúng, chuyển động đúng — camera nhìn thẳng vào mặt phẳng gập nên
+cung tròn bị bẹp thành đường thẳng (chỉ còn thấy "ngắn đi", không thấy
+"gập").
+
+**Giải pháp:** xoay landmark bàn tay quanh trục Y một góc `view_angle_deg`
+TRƯỚC bước neo cổ tay + phóng to hiện có (Pha 12) — biến 1 phần Z thành X,
+cung gập hiện ra trong mặt phẳng ảnh.
+
+**Đánh đổi đo được** (đo trực tiếp bằng implementation thật, không suy
+diễn từ bảng của brief — số cụ thể khác brief 1 chút do định nghĩa metric
+khác nhau, nhưng xu hướng khớp hoàn toàn: góc tăng → thấy gập rõ hơn,
+tách ngón giảm):
+
+| Góc xoay | Biên độ gập thấy được (px, đầu ngón giữa) | MCP tối thiểu (px, mọi frame) |
+|---|---|---|
+| 0° | 103,9 | 27,3 |
+| 30° | 106,5 | 24,4 |
+| 45° | 109,1 | 21,1 |
+| **60°** | **111,6** | **17,3** |
+| 90° | 114,0 | 8,2 |
+
+Chọn **60°** (`HAND_CLOSEUP_VIEW_ANGLE_DEG`): vẫn còn dư địa thoải mái so
+với ngưỡng 15px của B3 (17,3 > 15, margin ~15%), trong khi 90° tụt xuống
+8,2px — dưới hẳn ngưỡng, các ngón sẽ chồng lên nhau không đọc được. Quyết
+định này VẪN LÀ THỊ GIÁC (đã render cả 2 GIF 0°/60°, xem bằng mắt, không
+chỉ đọc bảng số) — xem "Xem bằng mắt" bên dưới.
+
+**Triển khai:** `render_hand_closeup.py`'s `hand_closeup_pose()`/
+`render_hand_closeup()`/`fsw_to_hand_closeup_video()` thêm tham số
+`view_angle_deg`, áp `Rotation.from_euler("y", view_angle_deg,
+degrees=True)` lên toạ độ tương đối-so-với-cổ-tay TRƯỚC khi đo bounding
+box/tính hệ số phóng/neo (đúng thứ tự A2 yêu cầu — xoay trước rồi mới đo,
+không ngược lại).
+
+**Sự cố tự bắt được khi triển khai (đáng ghi lại):** code mẫu trong brief
+gợi ý đặt mặc định tham số là `HAND_CLOSEUP_VIEW_ANGLE_DEG` (60°) luôn.
+Thử theo đúng gợi ý này thì **làm hỏng 3 test cũ của Pha 12** — các lời
+gọi cũ không truyền góc (`hand_closeup_pose(pose, hand)`) bỗng ngầm nhận
+60° thay vì 0°, khiến test C2 cũ (ngưỡng 20px ở 0°) đo ra 18,9px và fail.
+Đã phát hiện qua chạy `pytest` (không phải đoán) — **đổi lại mặc định về
+`0.0`** cho cả 3 hàm (khác gợi ý của brief), giữ `HAND_CLOSEUP_VIEW_ANGLE_DEG`
+làm hằng số CÓ TÊN dùng tường minh ở đúng 1 chỗ gọi mới (video 3/4), thay
+vì làm mặc định ngầm. Kết quả: mọi lời gọi cũ (kể cả test cũ, kể cả
+`demo.py`'s `_render_hand_closeup_demo`/`_render_finger_movement_demo`)
+giữ nguyên hành vi/byte-for-byte, đúng yêu cầu "không đổi video cận cảnh
+0° hiện có" và B1.
+
+**Xem bằng mắt trước khi commit — khác rõ giữa 2 góc:** ở 0°, đường màu
+xanh dương (ngón trỏ) chỉ NGẮN ĐI giữa frame 7 (duỗi) và frame 13 (nắm) —
+đọc như "co lại", không như "gập". Ở 60°, CÙNG 2 frame đó cho thấy ngón
+trỏ ĐỔI HƯỚNG rõ ràng — từ gần thẳng đứng (frame 7) sang chéo lên-phải
+(frame 13) — đọc đúng là 1 cung/góc gập thật, không phải co ngắn. Hai GIF
+khác nhau rõ rệt, đúng tiêu chí Phần C. GIF `mvp1_sign_10_closeup_front.gif`
+(0°) và `mvp1_sign_10_closeup_3q.gif` (60°) đã commit.
+
+**Điểm đáng chú ý cho báo cáo (theo yêu cầu Phần D2):** `.pose` xuất ra từ
+`fsw_r.export.pose_export` giữ ĐỦ BA CHIỀU không gian (x, y, z thật, tính
+từ forward kinematics), nhưng `PoseVisualizer` — renderer chuẩn của cộng
+đồng `pose-format`, công cụ project này chọn dùng vì lý do tương thích hệ
+sinh thái (xem PROGRESS.md phần "vì sao chọn pose-format") — chỉ chiếu
+HAI chiều lên ảnh, Z chỉ phục vụ thứ tự vẽ. Dữ liệu 3D của project này
+giàu hơn thứ công cụ hiển thị tiêu chuẩn khai thác được — góc nhìn 3/4 là
+cách LÀM LỘ RA sự thật đó bằng cách "mượn" 1 phần dữ liệu Z vốn đã có sẵn,
+không tính toán gì mới.
+
+**Kiểm chứng:** `mypy --strict` sạch (`fsw-r` không đổi gì nên vẫn 86
+file sạch; `fsw-r-viz` 30 file, không thêm lỗi mới — vẫn 4 lỗi cũ không
+liên quan). `pytest` **fsw-r-viz 42/42 pass** (33 cũ nguyên vẹn — đặc biệt
+`test_render_hand_closeup.py` cả 6 test Pha 12 pass y hệt, xác nhận 0° là
+no-op thật — + 9 test mới `test_hand_closeup_view_angle.py` B1-B4 và 1
+test chéo-kiểm bảng đơn điệu). `fsw-r` **1.475/1.475 pass nguyên** (không
+đổi gì, chắc chắn không hồi quy). `git diff --stat` xác nhận 0 file
+`fsw-r/src/fsw_r/` bị sửa. `reports/fk_accuracy.md` không đổi (hiển
+nhiên).
+
+**Giả định chưa kiểm chứng:** giá trị 60° là lựa chọn thị giác (đã render
++ xem, không chỉ tính toán), không phải tối ưu toán học — brief tự nói rõ
+điều này. Chưa thử cho các base Group 12 khác ngoài `0x221`, hay cho
+handshape khác Index.
 
 ## Việc còn để ngỏ / chưa làm
 
