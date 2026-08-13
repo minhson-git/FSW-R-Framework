@@ -1818,10 +1818,20 @@ annotation, không đổi runtime.
   bằng mắt: ở 0° ngón trỏ chỉ ngắn đi, ở 60° CÙNG 2 frame cho thấy ngón
   trỏ đổi hướng rõ ràng (thẳng đứng → chéo lên-phải) — đúng là cung gập,
   không phải co ngắn. Chi tiết ở mục "Pha 14" phía trên.
-- `fsw-r`: `mypy --strict` sạch (86 file), `pytest` **1.475/1.475 pass**
+- `fsw-r`: `mypy --strict` sạch (92 file — +1 `scripts/
+  calibrate_hand_geometry.py` ở Pha 15), `pytest` **1.475/1.475 pass**
   (1.441 cũ nguyên vẹn + 34 test Pha 13 `test_finger_articulation.py`
   D1-D6, D7/D8 kiểm bằng quy trình riêng không phải test; Pha 14 không đụng
-  `fsw-r` nên số này không đổi).
+  `fsw-r`; Pha 15 hiệu chỉnh 2 hằng số ngón cái — 1.475 giữ nguyên, không
+  test nào khoá hằng số cũ).
+- **Hiệu chỉnh hình học ngón cái (Pha 15) đã xong** — 2 hằng số ngón cái
+  không nguồn (`_THUMB_BASE_OFFSET_MM`/`_THUMB_BASE_ROTATION`) giờ **FITTED**
+  vào ground truth trên tập **held-out 70/30 phân tầng** (seed 42): test
+  MPJPE **48,14 → 45,07 (6,4%, KHÔNG overfit — train cải thiện đúng 6,4%)**,
+  thắng cả 2 baseline (59,07/55,67). `fk_accuracy.md` toàn-261 **48,72 →
+  45,60**, thumb per-finger **80,29 → 63,93**. **0 file `core/`/`timeline/`/
+  `validation/`; `hand_joint_poses.json` không đổi 1 byte.** GIF so sánh
+  `mvp1_sign_11_closeup_3q.gif`. Chi tiết ở mục "Pha 15" phía trên.
 - `fsw-r-viz`: `mypy --strict` sạch (4 lỗi cũ không liên quan — 2
   `FuncAnimation` type stub, 1 `ndarray` generic, xác nhận có từ trước Pha
   4/5 qua `git stash`), `pytest` **42/42 pass** (tăng từ 5/5 khi
@@ -2401,6 +2411,109 @@ nhiên).
 + xem, không chỉ tính toán), không phải tối ưu toán học — brief tự nói rõ
 điều này. Chưa thử cho các base Group 12 khác ngoài `0x221`, hay cho
 handshape khác Index.
+
+## Pha 15 — Hiệu chỉnh hằng số hình học ngón cái bằng ground truth (FITTED)
+
+**Con số cải thiện ĐẦU TIÊN của dự án đo trên tập HELD-OUT.** Trước pha này
+tầng đánh giá chỉ *đo* sai số (ngón cái là nguồn lỗi lớn nhất: per-finger
+MPJPE 80,3 vs 39-48 các ngón khác) mà chưa *sửa*. Pha này hiệu chỉnh 2 hằng
+số ngón cái **tự khai KHÔNG có nguồn** trong `export/forward_kinematics.py`
+— `_THUMB_BASE_OFFSET_MM` (điểm gắn) và `_THUMB_BASE_ROTATION` (góc xoay
+gốc) — bằng cách **fit vào ground truth 3d-hands-benchmark**, KHÔNG đụng
+`hand_joint_poses.json` (bảng góc khớp "đo từ dataset" giữ nguyên 1 byte —
+điều kiện liêm chính của paper).
+
+### Nguồn gốc MỚI: `FITTED`
+
+Bên cạnh `AUTHORED` / `measured` / `derived` / `cited` đã dùng trong tầng
+này, 2 hằng số trên giờ mang nhãn **`FITTED`**: giá trị là *bất cứ số nào
+tối thiểu hoá MPJPE chuẩn hoá trên tập fit*, không phải trích nguồn nhân
+trắc cũng không phải "visually verified". Ghi rõ trong docstring của chính
+2 hằng số.
+
+### Phương pháp — BẮT BUỘC chia train/test (phần cốt lõi)
+
+- **Chia theo `base_hex` 70/30, phân tầng theo group ISWA (1-10)**, seed
+  **42** cố định. Danh sách base_hex mỗi tập ghi ở
+  `reports/calibration_split.json` (train 183 / test 78, commit).
+- **Tối ưu `scipy.optimize` Nelder-Mead** (đạo hàm tự do, tất định từ x0),
+  1 seed, 1 khởi tạo (= giá trị cũ), KHÔNG thử nhiều seed. Hàm mục tiêu là
+  MPJPE **trên tập TRAIN**.
+- **Tái dùng nguyên `validation/normalization.normalize_landmarks`** (gồm
+  bước canonicalize dấu z sửa bug pháp tuyến `PoseNormalizer` ở tầng đánh
+  giá) — KHÔNG viết lại (ràng buộc cứng: viết lại dễ tái phát bug dấu, biến
+  mọi số thành rác). Script mới `scripts/calibrate_hand_geometry.py` import
+  lại `eval_fk_accuracy.py`'s ground-truth builder + `predict_landmarks`,
+  không tái hiện.
+
+### Bốn số (MPJPE chuẩn hoá, size=150)
+
+| | train (183) | test (78, HELD-OUT) |
+|---|---|---|
+| **trước** | 48,97 | **48,14** |
+| **sau** | 45,83 | **45,07** |
+
+- **Số công bố được: test 48,14 → 45,07 = cải thiện 6,4%** (held-out).
+- Train cũng cải thiện **đúng 6,4%** → **KHÔNG overfitting** (train/test
+  cải thiện đồng đều là dấu hiệu fit tổng quát hoá, không học vẹt tập fit).
+- Kiểm chứng chéo: split-weighted "trước" = (183·48,97 + 78·48,14)/261 =
+  **48,72** — khớp CHÍNH XÁC `fk_accuracy.md` cũ (toàn 261), xác nhận cách
+  tính MPJPE của script tái lập đúng baseline.
+- Thấp hơn kỳ vọng "~16%" brief nêu — vì chỉ 4/21 landmark là ngón cái, và
+  fit giảm lỗi ngón cái nhưng không về hẳn mức 45. Ghi ĐÚNG số thật, không
+  ép.
+
+### Baseline tính lại trên CÙNG tập test (dựng từ train, không rò rỉ test)
+
+- `average_pose_baseline`: **59,07**
+- `one_pose_per_group_baseline`: **55,67**
+
+Model per-symbol (test sau = 45,07) thắng rõ cả 2 → per-symbol có giá trị
+thật, không phải chỉ đoán trung bình.
+
+### Hằng số trước/sau (FITTED)
+
+| Hằng số | Trước (AUTHORED) | Sau (FITTED) |
+|---|---|---|
+| `_THUMB_BASE_OFFSET_MM` (raw ratio) | `[26, 15, 0]` | `[27.2162, 15.6248, 0.0009]` |
+| `_THUMB_BASE_ROTATION` (zy deg) | `[-65, -20]` | `[-29.7002, -24.5550]` |
+
+Offset gần như không đổi; thay đổi lớn ở **góc xoay z (-65° → -29,7°)** —
+đúng "z là trục lỗi trội". Offset vẫn `× HAND_SCALE` (fit trên raw ratio)
+nên vẫn neo vào cùng 1 stature như mọi kích thước khác (Pha 8).
+
+### D — Kiểm chứng sau hiệu chỉnh
+
+- **D1** `test_hand_body_scale.py` vẫn pass — hiệu chỉnh ngón cái KHÔNG đụng
+  tỉ lệ palm/shoulder (0,201) hay /forearm (0,356) vì các tỉ lệ đó đo trên
+  ngón GIỮA, không phải ngón cái.
+- **D2** toàn bộ FK test cũ pass, gồm `test_e4_...[thumb]` (nắm đấm → đầu
+  ngón cái gần cổ tay hơn duỗi) — không test nào khoá hằng số cũ.
+- **D3** pipeline video toàn thân + cận cảnh chạy lại không lỗi.
+- **D4 (bằng chứng thị giác, độc lập với MPJPE):** xuất `demo/
+  mvp1_sign_11_closeup_3q.gif` (cùng sign + góc 3/4 60° như
+  `mvp1_sign_10_closeup_3q.gif` đã commit, chỉ khác hằng số). Nhìn: ngón cái
+  (đường đỏ) từ chỗ **vọt lên phải góc dốc** (before) hạ về **góc thoải hơn,
+  sát bàn tay hơn** (after) — tự nhiên hơn cho handshape Index. **Hai bằng
+  chứng ĐỒNG THUẬN** (hình tự nhiên hơn ↔ thumb MPJPE 80,3 → 63,9), không
+  mâu thuẫn.
+- **D5** `pytest` **1.475/1.475 pass** với hằng số mới.
+
+### Cập nhật `reports/fk_accuracy.md` (lần đầu con số này được phép đổi)
+
+`fk_accuracy.md` (toàn 261) tự sinh lại: **48,72 → 45,60**; thumb per-finger
+**80,29 → 63,93**. ⚠️ **Lưu ý đọc số:** 45,60 là toàn 261 nhưng 183/261 nằm
+trong tập fit → KHÔNG phải số tổng quát hoá sạch. **Con số trung thực để
+công bố là held-out test 45,07** (ở `fk_calibration.md`), so với test-trước
+48,14. 48,72-cũ và 45,60-mới đều toàn-261 nên so trực tiếp được với nhau,
+nhưng chúng KHÁC bản chất với số held-out.
+
+### Ràng buộc đã giữ
+
+`git diff --stat`: chỉ `export/forward_kinematics.py` (2 hằng số + docstring)
+bị sửa trong `src/`; **0 file `core/`, `timeline/`, `validation/`**;
+`hand_joint_poses.json` **không đổi 1 byte** (đã xác nhận). Script mới +
+báo cáo mới nằm ở `scripts/`, `reports/`.
 
 ## Việc còn để ngỏ / chưa làm
 

@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "generated_by": "scripts/calibrate_hand_geometry.py",
+    "objective": "MPJPE (mean per-symbol) after validation/normalization.normalize_landmarks (size=150)",
+    "fitted_constants": "_THUMB_BASE_OFFSET_MM (raw, pre-HAND_SCALE) and _THUMB_BASE_ROTATION (zy Euler deg)",
+    "optimizer": "scipy Nelder-Mead, single start x0=[26.0, 15.0, 0.0, -65.0, -20.0], no restarts",
+    "seed": 42,
+    "meaningful_improvement_threshold": 0.05
+  },
+  "split": {
+    "n_train": 183,
+    "n_test": 78,
+    "seed": 42,
+    "stratified_by": "ISWA group"
+  },
+  "mpjpe": {
+    "train_before": 48.965547009145986,
+    "train_after": 45.82876534763402,
+    "test_before": 48.13643623715872,
+    "test_after": 45.06548160823778
+  },
+  "improvement": {
+    "train_relative": 0.06406099498747694,
+    "test_relative": 0.06379688379486487,
+    "test_is_meaningful": true
+  },
+  "baselines_on_test": {
+    "average_pose_baseline": 59.06880760128173,
+    "one_pose_per_group_baseline": 55.666128896319755
+  },
+  "fitted": {
+    "thumb_base_offset_mm_raw": [
+      27.216202462242805,
+      15.62483170164176,
+      0.0008790304812606271
+    ],
+    "thumb_base_offset_mm_scaled": [
+      36.65150087053233,
+      21.041639938897333,
+      0.0011837722949718738
+    ],
+    "thumb_base_rotation_zy_deg": [
+      -29.700238163832324,
+      -24.55500733259191
+    ],
+    "optimizer_success": true,
+    "optimizer_iterations": 150
+  },
+  "initial": {
+    "thumb_base_offset_mm_raw": [
+      26.0,
+      15.0,
+      0.0
+    ],
+    "thumb_base_rotation_zy_deg": [
+      -65.0,
+      -20.0
+    ]
+  }
+}

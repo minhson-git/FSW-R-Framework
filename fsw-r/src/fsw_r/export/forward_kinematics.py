@@ -75,20 +75,26 @@ _FINGER_LATERAL_SLOTS: dict[str, float] = {
 }
 
 # The thumb doesn't extend along +y like the other fingers -- it comes off
-# the palm at roughly a right angle, tilted out of the palm plane. No
-# citation covers this 3D attachment angle (bone_lengths.py's module
-# docstring); reuses the same qualitative convention already visually
-# verified in fsw-r-viz/hand_geometry.py's _THUMB_BASE_ROTATION.
+# the palm at roughly a right angle, tilted out of the palm plane. These two
+# constants (attachment OFFSET + base ROTATION) have origin **FITTED**: they
+# were optimized against the 3d-hands-benchmark ground truth on a held-out,
+# ISWA-group-stratified 70/30 split (scripts/calibrate_hand_geometry.py,
+# seed 42) -- NOT an anthropometric citation, and no longer the earlier
+# "visually verified" authored guess (was offset [26, 15, 0], rotation
+# zy [-65, -20]). FITTED is a distinct origin from the AUTHORED / measured /
+# derived / cited values elsewhere in this layer: the numbers are simply
+# whatever minimizes normalized MPJPE on the fit set. The thumb was this
+# project's single largest FK error source (per-finger MPJPE ~80 vs 39-48);
+# this fit cut held-out (test-set) MPJPE 6.4% (48.14 -> 45.07). The z Euler
+# angle was the dominant error (-65 -> -29.70). See reports/fk_calibration.md,
+# reports/calibration_split.json, and PROGRESS.md's calibration entry.
 #
-# Scaled by HAND_SCALE -- this is the ONE hand dimension not stored as a
-# bone_lengths constant, so it must be multiplied by the same uniform factor
-# as every bone, or the thumb's attachment point would stay put while its
-# bones grew, changing the hand's relative shape (and MPJPE). Only the raw
-# [26, 15, 0] RATIO carries the un-cited attachment geometry; the magnitude
-# now derives from the same single stature as everything else. See
-# bone_lengths.HAND_SCALE's comment.
-_THUMB_BASE_OFFSET_MM: _Vec3 = np.array([26.0, 15.0, 0.0]) * HAND_SCALE
-_THUMB_BASE_ROTATION = Rotation.from_euler("zy", [-65, -20], degrees=True)
+# The offset is still multiplied by HAND_SCALE (the fit was on the raw ratio),
+# so it stays coupled to the single stature every other hand/body dimension
+# derives from -- otherwise the thumb attachment would not scale with the rest
+# of the hand (see bone_lengths.HAND_SCALE's comment).
+_THUMB_BASE_OFFSET_MM: _Vec3 = np.array([27.2162, 15.6248, 0.0009]) * HAND_SCALE  # FITTED, see above
+_THUMB_BASE_ROTATION = Rotation.from_euler("zy", [-29.7002, -24.5550], degrees=True)  # FITTED, see above
 
 _FINGER_JOINT_NAMES = ("MCP", "PIP", "DIP", "TIP")
 _THUMB_JOINT_NAMES = ("CMC", "MCP", "IP", "TIP")

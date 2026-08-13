@@ -64,6 +64,7 @@ files = [
     "scripts/fetch_ground_truth.py",
     "scripts/eval_fk_accuracy.py",
     "scripts/eval_anatomical.py",
+    "scripts/calibrate_hand_geometry.py",
 ]
 
 [[tool.mypy.overrides]]

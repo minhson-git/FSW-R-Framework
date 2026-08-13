@@ -348,6 +348,23 @@ def _render_finger_movement_3q_demo(demo_dir: Path) -> None:
     print(f"Saved: {three_quarter_written} (from FSW {fsw!r}, view_angle_deg={HAND_CLOSEUP_VIEW_ANGLE_DEG})")
 
 
+def _render_thumb_calibration_3q_demo(demo_dir: Path) -> None:
+    # "Hiệu chỉnh hằng số hình học ngón cái" task (PROGRESS.md Pha 15): the
+    # SAME sign and 3/4 view angle as _render_finger_movement_3q_demo's
+    # mvp1_sign_10_closeup_3q, re-rendered as mvp1_sign_11 AFTER fsw-r's two
+    # un-cited thumb constants (_THUMB_BASE_OFFSET_MM / _THUMB_BASE_ROTATION in
+    # forward_kinematics.py) were FITTED to the 3d-hands-benchmark ground truth
+    # on a held-out split. mvp1_sign_10 (before) stays UNCHANGED; the pair is
+    # this task's before/after visual evidence (D4) -- only the thumb geometry
+    # differs, so the thumb (red) sitting at a flatter, more natural angle is
+    # attributable to the fit, agreeing with the measured thumb-MPJPE drop
+    # (80.3 -> 63.9). See reports/fk_calibration.md.
+    fsw = "M508x515S10000493x485S22100500x500"
+    path = demo_dir / "mvp1_sign_11_closeup_3q.mp4"
+    written = fsw_to_hand_closeup_video(fsw, path, view_angle_deg=HAND_CLOSEUP_VIEW_ANGLE_DEG)
+    print(f"Saved: {written} (from FSW {fsw!r}, view_angle_deg={HAND_CLOSEUP_VIEW_ANGLE_DEG}, thumb FITTED)")
+
+
 def main() -> None:
     output_dir = Path(__file__).resolve().parent.parent.parent / "output"
     output_dir.mkdir(exist_ok=True)
@@ -370,6 +387,7 @@ def main() -> None:
     _render_hand_closeup_demo(demo_dir)
     _render_finger_movement_demo(demo_dir)
     _render_finger_movement_3q_demo(demo_dir)
+    _render_thumb_calibration_3q_demo(demo_dir)
 
 
 if __name__ == "__main__":

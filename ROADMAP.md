@@ -313,8 +313,20 @@ không sửa `core/`/`timeline/`/`export/`.
 khớp; ưu tiên điều tra riêng ngón cái (định nghĩa `thumb.cmc` +
 `export/bone_lengths.py`'s giả định hình học ngón cái) trước khi đầu tư IK
 cánh tay — tránh khuếch đại lỗi có sẵn. **Cập nhật:** phần "làm IK cánh
-tay" đã LÀM RỒI ngay sau task đo này (xem mục dưới đây) — việc điều tra
-ngón cái vẫn CHƯA làm, vẫn là ưu tiên hàng đầu còn lại.
+tay" đã LÀM RỒI ngay sau task đo này (xem mục dưới đây).
+
+**✅ Hiệu chỉnh hình học ngón cái — ĐÃ XONG (Pha 15).** Hai hằng số ngón cái
+không nguồn (`_THUMB_BASE_OFFSET_MM`, `_THUMB_BASE_ROTATION`) đã được **fit
+vào ground truth** trên tập held-out 70/30 phân tầng (seed 42) — origin mới
+`FITTED`. Kết quả held-out (test): MPJPE **48,14 → 45,07 (6,4%, không
+overfit)**; thumb per-finger **80,29 → 63,93**. **Không** đụng
+`hand_joint_poses.json` hay góc khớp. Chi tiết + 4 số + baseline ở
+`PROGRESS.md` mục "Pha 15", báo cáo `reports/fk_calibration.md` +
+`reports/calibration_split.json`. **Hướng tiếp theo (theo brief, vì cải
+thiện ≥5%): sang MVP-2 (2 tay)** — xem mục "MVP-2" phía trên. Phần CÒN LẠI
+của điều tra ngón cái (đối chiếu định nghĩa `thumb.cmc` của dataset với định
+nghĩa lâm sàng CMC — nguồn nghi ngờ của 224/261 vi phạm giải phẫu) vẫn nằm
+ở tầng GÓC KHỚP, tách biệt với hình học tái dựng vừa fit, và vẫn để ngỏ.
 
 ### Video ra hình người ký hiệu (scale + thân tĩnh + two-bone IK) — ĐÃ XONG
 
