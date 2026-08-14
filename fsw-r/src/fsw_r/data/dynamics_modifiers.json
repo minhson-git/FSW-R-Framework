@@ -11,7 +11,7 @@
     "generated_by": "scripts/gen_dynamics_modifiers.py"
   },
   "2f7": {
-    "symbol_id": "03-21-001",
+    "symbol_id": "03-01-001-01",
     "name": "Fast",
     "speed": 0.7,
     "repeat": null,
@@ -19,7 +19,7 @@
     "alternating": false
   },
   "2f8": {
-    "symbol_id": "03-21-002",
+    "symbol_id": "03-01-002-01",
     "name": "Slow",
     "speed": 1.4,
     "repeat": null,
@@ -27,7 +27,7 @@
     "alternating": false
   },
   "2f9": {
-    "symbol_id": "03-21-003",
+    "symbol_id": "03-01-003-01",
     "name": "Tense",
     "speed": 1.0,
     "repeat": null,
@@ -35,7 +35,7 @@
     "alternating": false
   },
   "2fa": {
-    "symbol_id": "03-21-004",
+    "symbol_id": "03-01-003-02",
     "name": "Relaxed",
     "speed": 1.0,
     "repeat": null,
@@ -43,7 +43,7 @@
     "alternating": false
   },
   "2fb": {
-    "symbol_id": "03-21-005",
+    "symbol_id": "03-01-004-01",
     "name": "Same Time",
     "speed": 1.0,
     "repeat": null,
@@ -51,7 +51,7 @@
     "alternating": false
   },
   "2fc": {
-    "symbol_id": "03-21-006",
+    "symbol_id": "03-01-004-02",
     "name": "Same Time Alternating",
     "speed": 1.0,
     "repeat": null,
@@ -59,7 +59,7 @@
     "alternating": true
   },
   "2fd": {
-    "symbol_id": "03-21-007",
+    "symbol_id": "03-01-004-03",
     "name": "Every Other Time",
     "speed": 1.0,
     "repeat": 2,
@@ -67,7 +67,7 @@
     "alternating": true
   },
   "2fe": {
-    "symbol_id": "03-21-008",
+    "symbol_id": "03-01-004-04",
     "name": "Gradual",
     "speed": 1.0,
     "repeat": null,

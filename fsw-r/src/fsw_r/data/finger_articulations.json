@@ -30,7 +30,7 @@
     "generated_by": "scripts/gen_finger_articulations.py"
   },
   "216": {
-    "symbol_id": "02-12-001",
+    "symbol_id": "02-02-001-01",
     "name": "Squeeze Large Single",
     "fingers": [
       "index",
@@ -47,7 +47,7 @@
     "phase_offset": 0.0
   },
   "217": {
-    "symbol_id": "02-12-002",
+    "symbol_id": "02-02-001-02",
     "name": null,
     "fingers": [
       "index",
@@ -63,7 +63,7 @@
     "phase_offset": 0.0
   },
   "218": {
-    "symbol_id": "02-12-003",
+    "symbol_id": "02-02-002-01",
     "name": null,
     "fingers": [
       "index",
@@ -79,7 +79,7 @@
     "phase_offset": 0.0
   },
   "219": {
-    "symbol_id": "02-12-004",
+    "symbol_id": "02-02-002-02",
     "name": null,
     "fingers": [
       "index",
@@ -95,7 +95,7 @@
     "phase_offset": 0.0
   },
   "21a": {
-    "symbol_id": "02-12-005",
+    "symbol_id": "02-02-003-01",
     "name": null,
     "fingers": [
       "index",
@@ -111,7 +111,7 @@
     "phase_offset": 0.0
   },
   "21b": {
-    "symbol_id": "02-12-006",
+    "symbol_id": "02-02-004-01",
     "name": "Flick Large Single",
     "fingers": [
       "index"
@@ -125,7 +125,7 @@
     "phase_offset": 0.0
   },
   "21c": {
-    "symbol_id": "02-12-007",
+    "symbol_id": "02-02-004-02",
     "name": null,
     "fingers": [
       "index",
@@ -141,7 +141,7 @@
     "phase_offset": 0.0
   },
   "21d": {
-    "symbol_id": "02-12-008",
+    "symbol_id": "02-02-005-01",
     "name": null,
     "fingers": [
       "index",
@@ -157,7 +157,7 @@
     "phase_offset": 0.0
   },
   "21e": {
-    "symbol_id": "02-12-009",
+    "symbol_id": "02-02-005-02",
     "name": null,
     "fingers": [
       "index",
@@ -173,7 +173,7 @@
     "phase_offset": 0.0
   },
   "21f": {
-    "symbol_id": "02-12-010",
+    "symbol_id": "02-02-006-01",
     "name": null,
     "fingers": [
       "index",
@@ -189,7 +189,7 @@
     "phase_offset": 0.0
   },
   "220": {
-    "symbol_id": "02-12-011",
+    "symbol_id": "02-02-007-01",
     "name": null,
     "fingers": [
       "index",
@@ -205,7 +205,7 @@
     "phase_offset": 0.0
   },
   "221": {
-    "symbol_id": "02-12-012",
+    "symbol_id": "02-02-008-01",
     "name": "Hinge Movement, Up Down Large",
     "fingers": [
       "index",
@@ -221,7 +221,7 @@
     "phase_offset": 0.0
   },
   "222": {
-    "symbol_id": "02-12-013",
+    "symbol_id": "02-02-008-02",
     "name": "Hinge Movement, Up Down Small",
     "fingers": [
       "index",
@@ -237,7 +237,7 @@
     "phase_offset": 0.0
   },
   "223": {
-    "symbol_id": "02-12-014",
+    "symbol_id": "02-02-009-01",
     "name": null,
     "fingers": [
       "index",
@@ -253,7 +253,7 @@
     "phase_offset": 0.0
   },
   "224": {
-    "symbol_id": "02-12-015",
+    "symbol_id": "02-02-009-02",
     "name": null,
     "fingers": [
       "index",
@@ -269,7 +269,7 @@
     "phase_offset": 0.0
   },
   "225": {
-    "symbol_id": "02-12-016",
+    "symbol_id": "02-02-010-01",
     "name": "Hinge Movement, Up Down Alternating Large",
     "fingers": [
       "index",
@@ -285,7 +285,7 @@
     "phase_offset": 1.5707963267948966
   },
   "226": {
-    "symbol_id": "02-12-017",
+    "symbol_id": "02-02-010-02",
     "name": null,
     "fingers": [
       "index",
@@ -301,7 +301,7 @@
     "phase_offset": 0.0
   },
   "227": {
-    "symbol_id": "02-12-018",
+    "symbol_id": "02-02-011-01",
     "name": null,
     "fingers": [
       "index",
@@ -317,7 +317,7 @@
     "phase_offset": 0.0
   },
   "228": {
-    "symbol_id": "02-12-019",
+    "symbol_id": "02-02-012-01",
     "name": null,
     "fingers": [
       "index",
@@ -333,7 +333,7 @@
     "phase_offset": 0.0
   },
   "229": {
-    "symbol_id": "02-12-020",
+    "symbol_id": "02-02-013-01",
     "name": null,
     "fingers": [
       "index",

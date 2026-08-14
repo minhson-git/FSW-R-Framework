@@ -56,9 +56,9 @@
     "generated_by": "scripts/gen_face_poses.py"
   },
   "30a": {
-    "symbol_id": "04-23-001",
+    "symbol_id": "04-02-001-01",
     "name": "Eyebrows Straight Up",
-    "source": "name from signbank 04-23-001; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-001-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "browInnerUp": 0.6,
@@ -93,9 +93,9 @@
     }
   },
   "30b": {
-    "symbol_id": "04-23-002",
+    "symbol_id": "04-02-001-02",
     "name": "Eyebrows Straight Neutral",
-    "source": "name from signbank 04-23-002; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-001-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -106,9 +106,9 @@
     }
   },
   "30c": {
-    "symbol_id": "04-23-003",
+    "symbol_id": "04-02-001-03",
     "name": "Eyebrows Straight Down",
-    "source": "name from signbank 04-23-003; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-001-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "browDownLeft": 0.7,
@@ -137,18 +137,18 @@
     }
   },
   "311": {
-    "symbol_id": "04-23-008",
+    "symbol_id": "04-02-003-01",
     "name": "Forehead Neutral",
-    "source": "name from signbank 04-23-008; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-003-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {}
     }
   },
   "313": {
-    "symbol_id": "04-23-010",
+    "symbol_id": "04-02-003-03",
     "name": "Forehead Wrinkled",
-    "source": "name from signbank 04-23-010; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-003-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "browInnerUp": 0.4,
@@ -163,9 +163,9 @@
     }
   },
   "314": {
-    "symbol_id": "04-23-011",
+    "symbol_id": "04-02-004-01",
     "name": "Eyes Open",
-    "source": "name from signbank 04-23-011; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-004-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -175,9 +175,9 @@
     }
   },
   "315": {
-    "symbol_id": "04-23-012",
+    "symbol_id": "04-02-004-02",
     "name": "Eyes Squeezed",
-    "source": "name from signbank 04-23-012; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-004-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "eyeBlinkLeft": 0.8,
@@ -212,9 +212,9 @@
     }
   },
   "316": {
-    "symbol_id": "04-23-013",
+    "symbol_id": "04-02-004-03",
     "name": "Eyes Closed",
-    "source": "name from signbank 04-23-013; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-004-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "eyeBlinkLeft": 1.0,
@@ -239,9 +239,9 @@
     }
   },
   "319": {
-    "symbol_id": "04-23-016",
+    "symbol_id": "04-02-005-01",
     "name": "Eyes Half Open",
-    "source": "name from signbank 04-23-016; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-005-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "eyeBlinkLeft": 0.5,
@@ -266,9 +266,9 @@
     }
   },
   "31a": {
-    "symbol_id": "04-23-017",
+    "symbol_id": "04-02-005-02",
     "name": "Eyes Wide Open",
-    "source": "name from signbank 04-23-017; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-005-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "eyeWideLeft": 0.8,
@@ -293,9 +293,9 @@
     }
   },
   "31b": {
-    "symbol_id": "04-23-018",
+    "symbol_id": "04-02-005-03",
     "name": "Eyes Half Closed",
-    "source": "name from signbank 04-23-018; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-005-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "eyeBlinkLeft": 0.5,
@@ -320,9 +320,9 @@
     }
   },
   "31d": {
-    "symbol_id": "04-23-020",
+    "symbol_id": "04-02-005-05",
     "name": "Eye Wink (Squeezed Eye Blink)",
-    "source": "name from signbank 04-23-020; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-005-05; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "eyeBlinkRight": 1.0,
@@ -347,9 +347,9 @@
     }
   },
   "321": {
-    "symbol_id": "04-23-024",
+    "symbol_id": "04-02-007-01",
     "name": "Eyegaze Straight Wall Plane",
-    "source": "name from signbank 04-23-024; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-007-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -358,9 +358,9 @@
     }
   },
   "322": {
-    "symbol_id": "04-23-025",
+    "symbol_id": "04-02-007-02",
     "name": "Eyegaze Straight Wall Double",
-    "source": "name from signbank 04-23-025; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-007-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -369,9 +369,9 @@
     }
   },
   "323": {
-    "symbol_id": "04-23-026",
+    "symbol_id": "04-02-007-03",
     "name": "Eyegaze Straight Wall Alternate",
-    "source": "name from signbank 04-23-026; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-007-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -380,9 +380,9 @@
     }
   },
   "324": {
-    "symbol_id": "04-23-027",
+    "symbol_id": "04-02-008-01",
     "name": "Eyegaze Straight Floor Plane",
-    "source": "name from signbank 04-23-027; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-008-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -391,9 +391,9 @@
     }
   },
   "325": {
-    "symbol_id": "04-23-028",
+    "symbol_id": "04-02-008-02",
     "name": "Eyegaze Straight Floor Double",
-    "source": "name from signbank 04-23-028; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-008-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -402,9 +402,9 @@
     }
   },
   "326": {
-    "symbol_id": "04-23-029",
+    "symbol_id": "04-02-008-03",
     "name": "Eyegaze Straight Floor Alternate",
-    "source": "name from signbank 04-23-029; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-02-008-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -413,9 +413,9 @@
     }
   },
   "32a": {
-    "symbol_id": "04-24-001",
+    "symbol_id": "04-03-001-01",
     "name": "Cheeks Puffed",
-    "source": "name from signbank 04-24-001; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-001-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "cheekPuff": 0.8
@@ -435,9 +435,9 @@
     }
   },
   "32b": {
-    "symbol_id": "04-24-002",
+    "symbol_id": "04-03-001-02",
     "name": "Cheeks Neutral",
-    "source": "name from signbank 04-24-002; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-001-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {},
@@ -447,9 +447,9 @@
     }
   },
   "32d": {
-    "symbol_id": "04-24-004",
+    "symbol_id": "04-03-002-01",
     "name": "Tense Cheeks High",
-    "source": "name from signbank 04-24-004; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-002-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "cheekSquintLeft": 0.6,
@@ -470,9 +470,9 @@
     }
   },
   "32e": {
-    "symbol_id": "04-24-005",
+    "symbol_id": "04-03-002-02",
     "name": "Tense Cheeks Middle",
-    "source": "name from signbank 04-24-005; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-002-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "cheekSquintLeft": 0.6,
@@ -493,9 +493,9 @@
     }
   },
   "32f": {
-    "symbol_id": "04-24-006",
+    "symbol_id": "04-03-002-03",
     "name": "Tense Cheeks Low",
-    "source": "name from signbank 04-24-006; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-002-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "cheekSquintLeft": 0.6,
@@ -516,18 +516,18 @@
     }
   },
   "331": {
-    "symbol_id": "04-24-008",
+    "symbol_id": "04-03-004-01",
     "name": "Nose Neutral",
-    "source": "name from signbank 04-24-008; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-004-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {}
     }
   },
   "333": {
-    "symbol_id": "04-24-010",
+    "symbol_id": "04-03-004-03",
     "name": "Nose Wrinkles",
-    "source": "name from signbank 04-24-010; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-03-004-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "noseSneerLeft": 0.6,
@@ -540,18 +540,18 @@
     }
   },
   "33b": {
-    "symbol_id": "04-25-001",
+    "symbol_id": "04-04-001-01",
     "name": "Mouth Closed Neutral",
-    "source": "name from signbank 04-25-001; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-001-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {},
       "1": {}
     }
   },
   "33c": {
-    "symbol_id": "04-25-002",
+    "symbol_id": "04-04-001-02",
     "name": "Mouth Closed Forward",
-    "source": "name from signbank 04-25-002; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-001-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPucker": 0.4
@@ -562,9 +562,9 @@
     }
   },
   "33d": {
-    "symbol_id": "04-25-003",
+    "symbol_id": "04-04-001-03",
     "name": "Mouth Closed Contact",
-    "source": "name from signbank 04-25-003; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-001-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPressLeft": 0.3,
@@ -577,9 +577,9 @@
     }
   },
   "33e": {
-    "symbol_id": "04-25-004",
+    "symbol_id": "04-04-002-01",
     "name": "Mouth Smile",
-    "source": "name from signbank 04-25-004; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-002-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthSmileLeft": 0.8,
@@ -592,9 +592,9 @@
     }
   },
   "33f": {
-    "symbol_id": "04-25-005",
+    "symbol_id": "04-04-002-02",
     "name": "Mouth Smile Wrinkled",
-    "source": "name from signbank 04-25-005; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-002-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthSmileLeft": 0.8,
@@ -611,9 +611,9 @@
     }
   },
   "340": {
-    "symbol_id": "04-25-006",
+    "symbol_id": "04-04-002-03",
     "name": "Mouth Smile Open",
-    "source": "name from signbank 04-25-006; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-002-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthSmileLeft": 0.7,
@@ -628,9 +628,9 @@
     }
   },
   "341": {
-    "symbol_id": "04-25-007",
+    "symbol_id": "04-04-003-01",
     "name": "Mouth Frown",
-    "source": "name from signbank 04-25-007; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-003-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthFrownLeft": 0.8,
@@ -643,9 +643,9 @@
     }
   },
   "342": {
-    "symbol_id": "04-25-008",
+    "symbol_id": "04-04-003-02",
     "name": "Mouth Frown Wrinkled",
-    "source": "name from signbank 04-25-008; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-003-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthFrownLeft": 0.8,
@@ -662,9 +662,9 @@
     }
   },
   "343": {
-    "symbol_id": "04-25-009",
+    "symbol_id": "04-04-003-03",
     "name": "Mouth Frown Open",
-    "source": "name from signbank 04-25-009; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-003-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthFrownLeft": 0.7,
@@ -679,9 +679,9 @@
     }
   },
   "344": {
-    "symbol_id": "04-25-010",
+    "symbol_id": "04-04-004-01",
     "name": "Mouth Open Circle",
-    "source": "name from signbank 04-25-010; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-004-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.4,
@@ -694,9 +694,9 @@
     }
   },
   "345": {
-    "symbol_id": "04-25-011",
+    "symbol_id": "04-04-004-02",
     "name": "Mouth Open Forward",
-    "source": "name from signbank 04-25-011; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-004-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.3,
@@ -711,9 +711,9 @@
     }
   },
   "346": {
-    "symbol_id": "04-25-012",
+    "symbol_id": "04-04-004-03",
     "name": "Mouth Open Wrinkled",
-    "source": "name from signbank 04-25-012; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-004-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.4,
@@ -730,9 +730,9 @@
     }
   },
   "347": {
-    "symbol_id": "04-25-013",
+    "symbol_id": "04-04-005-01",
     "name": "Mouth Open Oval",
-    "source": "name from signbank 04-25-013; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-005-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.5,
@@ -745,9 +745,9 @@
     }
   },
   "348": {
-    "symbol_id": "04-25-014",
+    "symbol_id": "04-04-005-02",
     "name": "Mouth Open Oval Wrinkled",
-    "source": "name from signbank 04-25-014; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-005-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.5,
@@ -764,9 +764,9 @@
     }
   },
   "349": {
-    "symbol_id": "04-25-015",
+    "symbol_id": "04-04-005-03",
     "name": "Mouth Open Oval Yawn",
-    "source": "name from signbank 04-25-015; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-005-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.8,
@@ -779,9 +779,9 @@
     }
   },
   "34a": {
-    "symbol_id": "04-25-016",
+    "symbol_id": "04-04-006-01",
     "name": "Mouth Open Rectangle",
-    "source": "name from signbank 04-25-016; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-006-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.5,
@@ -796,9 +796,9 @@
     }
   },
   "34b": {
-    "symbol_id": "04-25-017",
+    "symbol_id": "04-04-006-02",
     "name": "Mouth Open Rectangle Wrinkled",
-    "source": "name from signbank 04-25-017; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-006-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.5,
@@ -817,9 +817,9 @@
     }
   },
   "34c": {
-    "symbol_id": "04-25-018",
+    "symbol_id": "04-04-006-03",
     "name": "Mouth Open Rectangle Yawn",
-    "source": "name from signbank 04-25-018; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-006-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "jawOpen": 0.8,
@@ -834,9 +834,9 @@
     }
   },
   "34d": {
-    "symbol_id": "04-25-019",
+    "symbol_id": "04-04-007-01",
     "name": "Mouth Kiss",
-    "source": "name from signbank 04-25-019; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-007-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPucker": 0.9
@@ -847,9 +847,9 @@
     }
   },
   "34e": {
-    "symbol_id": "04-25-020",
+    "symbol_id": "04-04-007-02",
     "name": "Mouth Kiss Forward",
-    "source": "name from signbank 04-25-020; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-007-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPucker": 0.8,
@@ -862,9 +862,9 @@
     }
   },
   "34f": {
-    "symbol_id": "04-25-021",
+    "symbol_id": "04-04-007-03",
     "name": "Mouth Kiss Wrinkled",
-    "source": "name from signbank 04-25-021; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-007-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPucker": 0.9,
@@ -879,9 +879,9 @@
     }
   },
   "350": {
-    "symbol_id": "04-25-022",
+    "symbol_id": "04-04-008-01",
     "name": "Mouth Tense",
-    "source": "name from signbank 04-25-022; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-008-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPressLeft": 0.5,
@@ -896,9 +896,9 @@
     }
   },
   "351": {
-    "symbol_id": "04-25-023",
+    "symbol_id": "04-04-008-02",
     "name": "Mouth Tense Forward",
-    "source": "name from signbank 04-25-023; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-008-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPressLeft": 0.4,
@@ -913,9 +913,9 @@
     }
   },
   "352": {
-    "symbol_id": "04-25-024",
+    "symbol_id": "04-04-008-03",
     "name": "Mouth Tense Sucked",
-    "source": "name from signbank 04-25-024; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-008-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthRollLower": 0.6,
@@ -928,9 +928,9 @@
     }
   },
   "353": {
-    "symbol_id": "04-25-025",
+    "symbol_id": "04-04-009-01",
     "name": "Lips Pressed Together",
-    "source": "name from signbank 04-25-025; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-009-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthPressLeft": 0.6,
@@ -945,9 +945,9 @@
     }
   },
   "354": {
-    "symbol_id": "04-25-026",
+    "symbol_id": "04-04-009-02",
     "name": "Lip Lower Over Upper",
-    "source": "name from signbank 04-25-026; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-009-02; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthShrugLower": 0.5,
@@ -960,9 +960,9 @@
     }
   },
   "355": {
-    "symbol_id": "04-25-027",
+    "symbol_id": "04-04-009-03",
     "name": "Lip Upper Over Lower",
-    "source": "name from signbank 04-25-027; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-04-009-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "mouthShrugUpper": 0.5,
@@ -975,9 +975,9 @@
     }
   },
   "359": {
-    "symbol_id": "04-26-001",
+    "symbol_id": "04-05-001-01",
     "name": "Tongue Sticks Out Far",
-    "source": "name from signbank 04-26-001; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-05-001-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "tongueOut": 1.0
@@ -988,9 +988,9 @@
     }
   },
   "35b": {
-    "symbol_id": "04-26-003",
+    "symbol_id": "04-05-001-03",
     "name": "Tongue Tip Between Lips",
-    "source": "name from signbank 04-26-003; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-05-001-03; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "tongueOut": 0.4
@@ -1001,9 +1001,9 @@
     }
   },
   "35f": {
-    "symbol_id": "04-26-007",
+    "symbol_id": "04-05-003-01",
     "name": "Tongue Center Sticks Out",
-    "source": "name from signbank 04-26-007; blend-shapes authored (ARKit-52)",
+    "source": "name from signbank 04-05-003-01; blend-shapes authored (ARKit-52)",
     "fills": {
       "0": {
         "tongueOut": 0.9

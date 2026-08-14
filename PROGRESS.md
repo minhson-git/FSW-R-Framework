@@ -2674,6 +2674,196 @@ KHÔNG đổi vì từ `body_geometry`). **Lúc nghiệm thu Pha 17 tôi chỉ c
 `fsw-r`, quên `fsw-r-viz`** nên sót — đã sửa giá trị test ở pha này và ghi
 nhận để không lặp lại (giờ chạy full suite CẢ HAI package).
 
+## Pha 19 — Sửa `symbol_id` dùng `symidArr` chuẩn (ưu tiên 1/3 trong chuỗi
+`symbol_id` → `path_type` → `amplitude`)
+
+### Phần 0 — Vấn đề (đo được, không phải suy đoán)
+
+`iswa_data.py::symbol_id_of()` (bản cũ) tính
+`f"{category_of(b):02d}-{group_of(b):02d}-{base_symbol_number_of(b):03d}"` —
+đối chiếu trực tiếp với `symidArr` thật của ISWA (xem "Nguồn" bên dưới), sai
+lệch ở **328/652 (50,3%)** base symbol. 2 nguyên nhân ĐỘC LẬP:
+
+- **Nguyên nhân A — group đánh số toàn cục, không theo từng category.**
+  `group_of()` đánh số group 1-30 xuyên suốt cả 7 category (đây là lựa chọn
+  thiết kế CÓ CHỦ Ý, đã tự khai ở docstring cũ — bản thân KHÔNG phải bug), còn
+  Symbol ID chuẩn của ISWA đánh số group 1-10 **RIÊNG TRONG TỪNG category**
+  (vd `0x22a` là group 3 *trong* Category 2 → `"02-03-..."`, không phải group
+  13 toàn cục → `"02-13-..."`). Kết quả `symbol_id_of()` SAI so với ISWA thật,
+  dù `group_of()` tự nó không sai.
+- **Nguyên nhân B — thiếu hẳn trường variation (bug thật).** Symbol ID chuẩn
+  có 4 phần `category-group-base-variation`; framework bỏ hẳn phần variation.
+  Nhiều `base_hex` liên tiếp là CÁC VARIATION của CÙNG 1 base symbol (vd
+  `0x216`/`0x217` cùng là base "001", variation 01/02) — `base_symbol_number_of()`
+  chỉ đếm tuần tự theo `base_hex` nên **trôi số dồn tích** cho mọi base sau
+  base-có-nhiều-variation đầu tiên trong mỗi group. 652 `base_hex` chỉ ứng với
+  **469** base symbol thật.
+
+| `base_hex` | `symbol_id_of()` cũ (sai) | Symbol ID ISWA thật |
+| --- | --- | --- |
+| `0x100` | `01-01-001` | `01-01-001-01` |
+| `0x216` | `02-02-001` | `02-02-001-01` |
+| `0x217` | `02-03-001` (group trôi do B, group sai do A) | `02-02-001-02` |
+| `0x218` | `02-03-002` | `02-02-002-01` |
+| `0x22a` | `02-13-001` (group toàn cục, sai theo A) | `02-03-001-01` |
+
+### Nguồn: `symidArr` thật + bẫy khi parse (Phần A2)
+
+Nguồn: npm package `@sutton-signwriting/core`, file `src/convert/symidArr.js`
+— mảng 652 phần tử THẬT (không phải mảng của framework này), đúng thứ tự
+`base_hex` từ `0x100`, mỗi phần tử là chuỗi symid "minimized" 6 chữ số (vd
+`"101011"` → category=1, group=01 (trong category), base=001, variation=1,
+đúng format `symidMax()` của chính package đó decode ra: `"01-01-001-01"`).
+Lấy về bằng `npm pack` (tải package thật, không scrape web) — cùng cách
+`gen_valid_combinations.py` đã dùng cho font ISWA.
+
+**Bẫy đã tự kiểm chứng bằng tay trước khi viết code, không chỉ tin theo
+brief:** comment JSDoc ngay phía trên mảng có ví dụ `"101011"` trong VĂN BẢN
+(không phải dữ liệu). Parse ẩu bằng `re.findall(r'"(\d{6})"', full_file_text)`
+trên TOÀN BỘ file khớp luôn cả ví dụ đó → ra 653 "phần tử" với 2 phần tử đầu
+đều là `"101011"` — nhìn giống hệt bug trùng lặp off-by-one nhưng thực ra là
+lỗi parse (dính prose lẫn dữ liệu). `scripts/gen_symbol_ids.py::parse_symid_arr()`
+chỉ parse phần văn bản NẰM GIỮA `"const symidArr = ["` và dấu `]` đóng mảng,
+và **assert đúng 652 phần tử trước khi dùng** — nếu assert fail thì
+`sys.exit(1)` kèm lý do, không âm thầm dùng số sai.
+
+### Sửa: `core/iswa_data.py` (giữ nguyên `group_of()`/`GROUP_START`)
+
+**KHÔNG đổi `group_of()`/`GROUP_START`** — `movement_paths`/`finger_articulations`
+khoá bảng của chính chúng theo đúng số toàn cục này (group 12 = Finger
+Movement); đổi sẽ hỏng cả hai. Thay vào đó tách hẳn 2 khái niệm: `group_of()`
+là **chỉ số nội bộ của framework**, KHÔNG phải trường `group` trong Symbol ID
+chuẩn — cả 2 docstring giờ nói rõ điều này tường minh.
+
+Hàm mới (theo đúng chữ ký brief yêu cầu), nguồn từ `data/iswa_symbol_ids.json`
+(sinh bởi `scripts/gen_symbol_ids.py`), hoàn toàn KHÔNG còn suy từ
+`GROUP_START`/`group_of()`/`base_symbol_number_of()` nữa:
+
+- `variation_of(base_hex) -> int` — 1-based, hầu hết luôn là 1.
+- `base_symbol_id_of(base_hex) -> str` — `"02-02-001"`, chưa có variation.
+- `symbol_id_of(base_hex) -> str` — `"02-02-001-02"`, đầy đủ 4 phần, đây là
+  chuỗi hiển thị/log thật, không dùng làm khoá tra cứu (khoá tra cứu vẫn luôn
+  là `base_hex`, không đổi).
+
+`base_symbol_id_of()`/`symbol_id_of()` dùng chung 1 helper `_decode_symid_min()`
+để không lệch nhau về cách pad số 0 (bug tôi tự mắc rồi tự bắt: bản đầu quên
+pad base thành 3 chữ số, ra `"02-02-02"` thay vì `"02-02-002"`).
+
+### D1-D7 — kiểm chứng
+
+`tests/test_iswa_symbol_ids.py` (file mới, 15 test case) là nơi kiểm chứng
+tường minh từng mục D1-D5, D2 tách thành 10 test case tham số hoá riêng biệt.
+D6 (script sinh lại ra byte-identical) và D7 (1.481 test cũ pass) KHÔNG phải
+pytest test — D6 vì cần mạng (`npm pack`), sẽ phá tính "chạy offline" của
+pytest suite; đã tự kiểm bằng tay 2 lần chạy `gen_symbol_ids.py`, diff ra
+byte-identical. D7 tự nó là thuộc tính của CẢ suite, không phải 1 test kiểm
+được về chính nó.
+
+- D1: `_load_symbol_id_table()` đúng 652 entry, khoá liên tục `0x100..0x38b`. ✅
+- D2: 10 milestone đúng cả 10 (bảng ở trên + `0x38b → "07-01-003-01"`). ✅
+- D3: 469 base symbol thật (không tính variation); **94** base có >1
+  variation — **đo được là 94, KHÔNG phải 95 như brief nêu** (kiểm bằng 2
+  cách độc lập: gom theo `category-group-base`, histogram phân bố số
+  variation/base: `{1: 375, 2: 37, 3: 33, 4: 17, 5: 6, 6: 1}`, tổng
+  375+37+33+17+6+1=469 base, 94 base có count>1). Đã chọn ghi số tự đo được,
+  không chép lại số brief — đúng tiền lệ dự án (vd "119/261 không phải
+  136/261" ở Pha 3).
+- D4: `category_of()` (từ `GROUP_START`) khớp digit category của `symidArr`
+  cho **cả 652/652** base — không có mismatch, nên KHÔNG cần dừng-và-báo.
+- D5: `group_of()` vẫn trả đúng giá trị toàn cục cũ (không hồi quy);
+  `movement_paths`/`finger_articulation` vẫn resolve đúng.
+- D7: `pytest` **1.496/1.496** (1.481 cũ + 15 test D1-D7 mới) — 5 file test
+  cũ có string `symbol_id` cũ dạng 3 phần được cập nhật sang 4 phần
+  (`test_hand_symbol.py`, `test_registry.py`, `test_fswr_converter.py`,
+  `test_iswa_structure.py`, `test_pose_table.py`), tổng cộng thay đổi khớp
+  hết 527 test case fail ban đầu (522/527 chỉ từ 1 sửa 2 dòng ở
+  `test_hand_symbol.py`, vì test đó tham số hoá cả 261 base Category 1).
+
+### Tầng dữ liệu: `symbol_id` vẫn `derived`, đổi NGUỒN sang đáng tin hơn
+
+`symbol_id` KHÔNG đổi tầng (`derived`, không phải `measured`/`estimated`) —
+vẫn là suy ra từ nguồn khác, không đo trực tiếp trên dataset nào. Nhưng nguồn
+suy ra đổi từ "tự tính từ `GROUP_START` nội bộ của framework" sang "thư viện
+tham chiếu ISWA thật (`@sutton-signwriting/core`)" — cùng tầng `derived`,
+NGUỒN đáng tin hơn hẳn.
+
+`symbol_id` là display-only, đã tự khai đúng ở docstring cũ ("for
+logging/error messages/test readability ONLY, never used as a lookup key") —
+kiểm tra lại xác nhận đúng, mọi tra cứu thật đều khoá bằng `base_hex`. Phạm vi
+ảnh hưởng: error message (`fsw_base_symbol.py`, `registry.py`, `renderer.py`,
+`face_symbol.py`), trường `symbol_id` BÊN TRONG 6 file JSON dữ liệu
+(`hand_joint_poses.json`, `movement_paths.json`, `body_poses.json`,
+`dynamics_modifiers.json`, `finger_articulations.json`,
+`face_expression_poses.json`), `reports/*.md`, `demo.py`.
+
+5/6 file JSON regenerate bằng đúng script sinh gốc của nó
+(`gen_movement_paths.py`, `gen_body_poses.py`, `gen_dynamics_modifiers.py`,
+`gen_finger_articulations.py`, `gen_face_poses.py`) — file thứ 6,
+`hand_joint_poses.json`, có script sinh gốc `export_joint_poses.py` đã
+**FROZEN/HISTORICAL** từ trước (tự khai trong docstring của chính nó: import
+package `groups/` đã xoá, không chạy được nữa, bị loại khỏi danh sách file
+`mypy --strict` của `pyproject.toml`) — viết script vá hẹp phạm vi riêng,
+`scripts/fix_hand_joint_poses_symbol_id.py`, CHỈ sửa trường `symbol_id` của
+261 entry, verify bằng diff before/after xác nhận không đụng field nào khác
+(261×2=522 dòng diff, lọc bỏ dòng chứa `symbol_id` thì diff rỗng).
+
+`git diff` trên cả 6 file JSON: chỉ dòng `"symbol_id"` (và với
+`face_expression_poses.json`, vài chuỗi `"source"` gắn `symbol_id` cũ bên
+trong, vd `"name from signbank 04-23-001"` → `"...04-02-001-01"`) đổi — không
+giá trị số nào đổi, đã verify bằng regex loại trừ mọi dòng có shape
+symbol-id (`grep -viE 'symbol_id|0[0-9]-[0-9][0-9]-[0-9]{3}(-[0-9]{2})?'` ra
+rỗng trên cả `fk_accuracy.json` lẫn `anatomical.json`).
+
+### Số liệu KHÔNG tái lập được từ brief (đo, không đoán, ghi nhận thẳng)
+
+- **D3: 94, không phải 95** — đã nêu ở mục D1-D7 phía trên.
+- **`reports/fk_accuracy.md` MPJPE**: brief nêu tiêu chí nghiệm thu "giữ
+  nguyên 45,07" — số ĐO ĐƯỢC ở baseline commit `423c3db` (backup lấy TRƯỚC
+  khi sửa bất cứ gì của Pha 19) đã là **45,60**, không phải 45,07. Sau khi
+  sửa `symbol_id`, MPJPE vẫn **45,60**, y hệt trước — số 45,07 trong brief là
+  số cũ/không khớp thực tế, không phải hồi quy do Pha 19 gây ra.
+- **`reports/anatomical.md` "Pearson r": 0,014 (backup trước Pha 19) → 0,002
+  (sau khi regenerate report ở Pha 19), ổn định ở 0,002 qua 5+ lần chạy lại
+  trong cùng phiên.** Điều tra kỹ trước khi kết luận:
+  - `git diff` trên `fk_accuracy.json` phần `per_symbol_mpjpe` (input MPJPE
+    của correlation): **0 dòng đổi** — dữ liệu đầu vào giống hệt.
+  - `worst_flexion_overshoot` (input còn lại của correlation) tính trực tiếp
+    từ góc khớp trong `hand_joint_poses.json`, đã xác nhận KHÔNG đổi giá trị
+    số nào (chỉ đổi `symbol_id`) → input này cũng phải giống hệt.
+  - `correlation_with_fk_error()` (`eval_anatomical.py`) build 2 list
+    `overshoots`/`mpjpes` bằng cách lặp `sorted(HAND_POSE_TABLE.base_hexes())`
+    — thứ tự int, xác định, KHÔNG phụ thuộc `symbol_id` hay hash-randomization
+    nào cả.
+  - Kết luận: input của phép tính Pearson r giống hệt trước/sau Pha 19 →
+    0,014 ở bản backup nhiều khả năng đến từ 1 trạng thái repo khác/cũ hơn,
+    không phải hồi quy do Pha 19. Ghi nhận thẳng, không ép số về 0,014.
+  - **Phát hiện phụ (vô hại, không thuộc phạm vi Pha 19):** `anatomical.json`
+    có 1 chỗ diff lạ — dòng `"ring": 63,` xuất hiện cả ở `+` lẫn `-` (giá trị
+    y hệt, chỉ đổi VỊ TRÍ). Truy ra: `_finger_flexion_distribution()`
+    (`eval_anatomical.py:80`) build từ `{v.finger for v in ...}` — 1 **set**
+    các chuỗi tên ngón tay, thứ tự lặp set phụ thuộc hash-randomization
+    per-process của Python (`PYTHONHASHSEED`, mặc định random mỗi lần chạy
+    `python`) → thứ tự khoá trong `by_finger`/`by_joint` của JSON có thể đổi
+    giữa các lần chạy dù GIÁ TRỊ không đổi. Bug có sẵn từ trước Pha 19, không
+    liên quan `symbol_id` — ghi nhận, không sửa (ngoài phạm vi task này).
+
+### Kiểm chứng cuối (7 tiêu chí nghiệm thu)
+
+1. `mypy --strict` sạch `fsw-r` (93 file, tăng từ 92 vì 2 file mới
+   `gen_symbol_ids.py`/`fix_hand_joint_poses_symbol_id.py` + test mới).
+   `fsw-r-viz` có sẵn **3 lỗi mypy pre-existing, KHÔNG do Pha 19** (đã xác
+   nhận bằng `git stash` chạy lại đúng commit `423c3db` cho ra cùng 3 lỗi
+   `FuncAnimation` ở `animate_head.py`/`animate_movement.py`/`animate_face.py`)
+   — ngoài phạm vi, không sửa ở Pha 19.
+2. `pytest` xanh: **1.496/1.496**.
+3. Cả 10 milestone D2 đúng.
+4. D3 (94, ghi nhận lệch so brief) và D4 (652/652 khớp) pass.
+5. `git diff` JSON: chỉ dòng `symbol_id`-shaped đổi.
+6. `fk_accuracy.md`: chỉ `symbol_id` đổi, MPJPE **45,60** không đổi (không
+   phải 45,07 — xem ghi chú số liệu ở trên).
+7. `gen_symbol_ids.py` tự verify, `sys.exit(1)` nếu fail, đã commit kèm
+   `data/iswa_symbol_ids.json`.
+
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)

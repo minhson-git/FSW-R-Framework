@@ -11,7 +11,7 @@
     "generated_by": "scripts/gen_movement_paths.py"
   },
   "205": {
-    "symbol_id": "02-11-001",
+    "symbol_id": "02-01-001-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -21,7 +21,7 @@
     "is_hit": false
   },
   "206": {
-    "symbol_id": "02-11-002",
+    "symbol_id": "02-01-002-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -31,7 +31,7 @@
     "is_hit": false
   },
   "207": {
-    "symbol_id": "02-11-003",
+    "symbol_id": "02-01-003-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -41,7 +41,7 @@
     "is_hit": false
   },
   "208": {
-    "symbol_id": "02-11-004",
+    "symbol_id": "02-01-004-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -51,7 +51,7 @@
     "is_hit": false
   },
   "209": {
-    "symbol_id": "02-11-005",
+    "symbol_id": "02-01-005-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -61,7 +61,7 @@
     "is_hit": false
   },
   "20a": {
-    "symbol_id": "02-11-006",
+    "symbol_id": "02-01-006-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -71,7 +71,7 @@
     "is_hit": false
   },
   "20b": {
-    "symbol_id": "02-11-007",
+    "symbol_id": "02-01-007-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -81,7 +81,7 @@
     "is_hit": false
   },
   "20c": {
-    "symbol_id": "02-11-008",
+    "symbol_id": "02-01-008-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -91,7 +91,7 @@
     "is_hit": false
   },
   "20d": {
-    "symbol_id": "02-11-009",
+    "symbol_id": "02-01-009-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -101,7 +101,7 @@
     "is_hit": false
   },
   "20e": {
-    "symbol_id": "02-11-010",
+    "symbol_id": "02-01-010-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -111,7 +111,7 @@
     "is_hit": false
   },
   "20f": {
-    "symbol_id": "02-11-011",
+    "symbol_id": "02-01-011-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -121,7 +121,7 @@
     "is_hit": false
   },
   "210": {
-    "symbol_id": "02-11-012",
+    "symbol_id": "02-01-012-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -131,7 +131,7 @@
     "is_hit": false
   },
   "211": {
-    "symbol_id": "02-11-013",
+    "symbol_id": "02-01-013-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -141,7 +141,7 @@
     "is_hit": false
   },
   "212": {
-    "symbol_id": "02-11-014",
+    "symbol_id": "02-01-014-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -151,7 +151,7 @@
     "is_hit": false
   },
   "213": {
-    "symbol_id": "02-11-015",
+    "symbol_id": "02-01-015-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -161,7 +161,7 @@
     "is_hit": false
   },
   "214": {
-    "symbol_id": "02-11-016",
+    "symbol_id": "02-01-016-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -171,7 +171,7 @@
     "is_hit": false
   },
   "215": {
-    "symbol_id": "02-11-017",
+    "symbol_id": "02-01-017-01",
     "group_name": "Contact",
     "path_type": "contact",
     "plane": null,
@@ -181,7 +181,7 @@
     "is_hit": false
   },
   "216": {
-    "symbol_id": "02-12-001",
+    "symbol_id": "02-02-001-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -191,7 +191,7 @@
     "is_hit": false
   },
   "217": {
-    "symbol_id": "02-12-002",
+    "symbol_id": "02-02-001-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -201,7 +201,7 @@
     "is_hit": false
   },
   "218": {
-    "symbol_id": "02-12-003",
+    "symbol_id": "02-02-002-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -211,7 +211,7 @@
     "is_hit": false
   },
   "219": {
-    "symbol_id": "02-12-004",
+    "symbol_id": "02-02-002-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -221,7 +221,7 @@
     "is_hit": false
   },
   "21a": {
-    "symbol_id": "02-12-005",
+    "symbol_id": "02-02-003-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -231,7 +231,7 @@
     "is_hit": false
   },
   "21b": {
-    "symbol_id": "02-12-006",
+    "symbol_id": "02-02-004-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -241,7 +241,7 @@
     "is_hit": false
   },
   "21c": {
-    "symbol_id": "02-12-007",
+    "symbol_id": "02-02-004-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -251,7 +251,7 @@
     "is_hit": false
   },
   "21d": {
-    "symbol_id": "02-12-008",
+    "symbol_id": "02-02-005-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -261,7 +261,7 @@
     "is_hit": false
   },
   "21e": {
-    "symbol_id": "02-12-009",
+    "symbol_id": "02-02-005-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -271,7 +271,7 @@
     "is_hit": false
   },
   "21f": {
-    "symbol_id": "02-12-010",
+    "symbol_id": "02-02-006-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -281,7 +281,7 @@
     "is_hit": false
   },
   "220": {
-    "symbol_id": "02-12-011",
+    "symbol_id": "02-02-007-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -291,7 +291,7 @@
     "is_hit": false
   },
   "221": {
-    "symbol_id": "02-12-012",
+    "symbol_id": "02-02-008-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -301,7 +301,7 @@
     "is_hit": false
   },
   "222": {
-    "symbol_id": "02-12-013",
+    "symbol_id": "02-02-008-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -311,7 +311,7 @@
     "is_hit": false
   },
   "223": {
-    "symbol_id": "02-12-014",
+    "symbol_id": "02-02-009-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -321,7 +321,7 @@
     "is_hit": false
   },
   "224": {
-    "symbol_id": "02-12-015",
+    "symbol_id": "02-02-009-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -331,7 +331,7 @@
     "is_hit": false
   },
   "225": {
-    "symbol_id": "02-12-016",
+    "symbol_id": "02-02-010-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -341,7 +341,7 @@
     "is_hit": false
   },
   "226": {
-    "symbol_id": "02-12-017",
+    "symbol_id": "02-02-010-02",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -351,7 +351,7 @@
     "is_hit": false
   },
   "227": {
-    "symbol_id": "02-12-018",
+    "symbol_id": "02-02-011-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -361,7 +361,7 @@
     "is_hit": false
   },
   "228": {
-    "symbol_id": "02-12-019",
+    "symbol_id": "02-02-012-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -371,7 +371,7 @@
     "is_hit": false
   },
   "229": {
-    "symbol_id": "02-12-020",
+    "symbol_id": "02-02-013-01",
     "group_name": "Finger Movement",
     "path_type": "finger",
     "plane": null,
@@ -381,7 +381,7 @@
     "is_hit": false
   },
   "22a": {
-    "symbol_id": "02-13-001",
+    "symbol_id": "02-03-001-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -391,7 +391,7 @@
     "is_hit": false
   },
   "22b": {
-    "symbol_id": "02-13-002",
+    "symbol_id": "02-03-001-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -401,7 +401,7 @@
     "is_hit": false
   },
   "22c": {
-    "symbol_id": "02-13-003",
+    "symbol_id": "02-03-001-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -411,7 +411,7 @@
     "is_hit": false
   },
   "22d": {
-    "symbol_id": "02-13-004",
+    "symbol_id": "02-03-001-04",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -421,7 +421,7 @@
     "is_hit": false
   },
   "22e": {
-    "symbol_id": "02-13-005",
+    "symbol_id": "02-03-001-05",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -431,7 +431,7 @@
     "is_hit": false
   },
   "22f": {
-    "symbol_id": "02-13-006",
+    "symbol_id": "02-03-002-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -441,7 +441,7 @@
     "is_hit": false
   },
   "230": {
-    "symbol_id": "02-13-007",
+    "symbol_id": "02-03-002-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -451,7 +451,7 @@
     "is_hit": false
   },
   "231": {
-    "symbol_id": "02-13-008",
+    "symbol_id": "02-03-003-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -461,7 +461,7 @@
     "is_hit": false
   },
   "232": {
-    "symbol_id": "02-13-009",
+    "symbol_id": "02-03-003-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -471,7 +471,7 @@
     "is_hit": false
   },
   "233": {
-    "symbol_id": "02-13-010",
+    "symbol_id": "02-03-004-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -481,7 +481,7 @@
     "is_hit": false
   },
   "234": {
-    "symbol_id": "02-13-011",
+    "symbol_id": "02-03-005-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -491,7 +491,7 @@
     "is_hit": false
   },
   "235": {
-    "symbol_id": "02-13-012",
+    "symbol_id": "02-03-005-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -501,7 +501,7 @@
     "is_hit": false
   },
   "236": {
-    "symbol_id": "02-13-013",
+    "symbol_id": "02-03-006-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -511,7 +511,7 @@
     "is_hit": false
   },
   "237": {
-    "symbol_id": "02-13-014",
+    "symbol_id": "02-03-006-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -521,7 +521,7 @@
     "is_hit": false
   },
   "238": {
-    "symbol_id": "02-13-015",
+    "symbol_id": "02-03-007-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -531,7 +531,7 @@
     "is_hit": false
   },
   "239": {
-    "symbol_id": "02-13-016",
+    "symbol_id": "02-03-007-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -541,7 +541,7 @@
     "is_hit": false
   },
   "23a": {
-    "symbol_id": "02-13-017",
+    "symbol_id": "02-03-007-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -551,7 +551,7 @@
     "is_hit": false
   },
   "23b": {
-    "symbol_id": "02-13-018",
+    "symbol_id": "02-03-008-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -561,7 +561,7 @@
     "is_hit": false
   },
   "23c": {
-    "symbol_id": "02-13-019",
+    "symbol_id": "02-03-008-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -571,7 +571,7 @@
     "is_hit": false
   },
   "23d": {
-    "symbol_id": "02-13-020",
+    "symbol_id": "02-03-008-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -581,7 +581,7 @@
     "is_hit": false
   },
   "23e": {
-    "symbol_id": "02-13-021",
+    "symbol_id": "02-03-008-04",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -591,7 +591,7 @@
     "is_hit": false
   },
   "23f": {
-    "symbol_id": "02-13-022",
+    "symbol_id": "02-03-009-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -601,7 +601,7 @@
     "is_hit": false
   },
   "240": {
-    "symbol_id": "02-13-023",
+    "symbol_id": "02-03-009-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -611,7 +611,7 @@
     "is_hit": false
   },
   "241": {
-    "symbol_id": "02-13-024",
+    "symbol_id": "02-03-009-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -621,7 +621,7 @@
     "is_hit": false
   },
   "242": {
-    "symbol_id": "02-13-025",
+    "symbol_id": "02-03-010-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -631,7 +631,7 @@
     "is_hit": false
   },
   "243": {
-    "symbol_id": "02-13-026",
+    "symbol_id": "02-03-010-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -641,7 +641,7 @@
     "is_hit": false
   },
   "244": {
-    "symbol_id": "02-13-027",
+    "symbol_id": "02-03-010-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -651,7 +651,7 @@
     "is_hit": false
   },
   "245": {
-    "symbol_id": "02-13-028",
+    "symbol_id": "02-03-011-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -661,7 +661,7 @@
     "is_hit": false
   },
   "246": {
-    "symbol_id": "02-13-029",
+    "symbol_id": "02-03-011-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -671,7 +671,7 @@
     "is_hit": false
   },
   "247": {
-    "symbol_id": "02-13-030",
+    "symbol_id": "02-03-011-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -681,7 +681,7 @@
     "is_hit": false
   },
   "248": {
-    "symbol_id": "02-13-031",
+    "symbol_id": "02-03-012-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -691,7 +691,7 @@
     "is_hit": false
   },
   "249": {
-    "symbol_id": "02-13-032",
+    "symbol_id": "02-03-012-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -701,7 +701,7 @@
     "is_hit": false
   },
   "24a": {
-    "symbol_id": "02-13-033",
+    "symbol_id": "02-03-012-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -711,7 +711,7 @@
     "is_hit": false
   },
   "24b": {
-    "symbol_id": "02-13-034",
+    "symbol_id": "02-03-013-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -721,7 +721,7 @@
     "is_hit": false
   },
   "24c": {
-    "symbol_id": "02-13-035",
+    "symbol_id": "02-03-014-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -731,7 +731,7 @@
     "is_hit": false
   },
   "24d": {
-    "symbol_id": "02-13-036",
+    "symbol_id": "02-03-015-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -741,7 +741,7 @@
     "is_hit": false
   },
   "24e": {
-    "symbol_id": "02-13-037",
+    "symbol_id": "02-03-016-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -751,7 +751,7 @@
     "is_hit": false
   },
   "24f": {
-    "symbol_id": "02-13-038",
+    "symbol_id": "02-03-017-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -761,7 +761,7 @@
     "is_hit": false
   },
   "250": {
-    "symbol_id": "02-13-039",
+    "symbol_id": "02-03-018-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -771,7 +771,7 @@
     "is_hit": false
   },
   "251": {
-    "symbol_id": "02-13-040",
+    "symbol_id": "02-03-019-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -781,7 +781,7 @@
     "is_hit": false
   },
   "252": {
-    "symbol_id": "02-13-041",
+    "symbol_id": "02-03-020-01",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -791,7 +791,7 @@
     "is_hit": false
   },
   "253": {
-    "symbol_id": "02-13-042",
+    "symbol_id": "02-03-020-02",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -801,7 +801,7 @@
     "is_hit": false
   },
   "254": {
-    "symbol_id": "02-13-043",
+    "symbol_id": "02-03-020-03",
     "group_name": "Straight Wall Plane",
     "path_type": "straight",
     "plane": "wall",
@@ -811,7 +811,7 @@
     "is_hit": false
   },
   "255": {
-    "symbol_id": "02-14-001",
+    "symbol_id": "02-04-001-01",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -821,7 +821,7 @@
     "is_hit": false
   },
   "256": {
-    "symbol_id": "02-14-002",
+    "symbol_id": "02-04-001-02",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -831,7 +831,7 @@
     "is_hit": false
   },
   "257": {
-    "symbol_id": "02-14-003",
+    "symbol_id": "02-04-001-03",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -841,7 +841,7 @@
     "is_hit": false
   },
   "258": {
-    "symbol_id": "02-14-004",
+    "symbol_id": "02-04-001-04",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -851,7 +851,7 @@
     "is_hit": false
   },
   "259": {
-    "symbol_id": "02-14-005",
+    "symbol_id": "02-04-002-01",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -861,7 +861,7 @@
     "is_hit": false
   },
   "25a": {
-    "symbol_id": "02-14-006",
+    "symbol_id": "02-04-002-02",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -871,7 +871,7 @@
     "is_hit": false
   },
   "25b": {
-    "symbol_id": "02-14-007",
+    "symbol_id": "02-04-002-03",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -881,7 +881,7 @@
     "is_hit": false
   },
   "25c": {
-    "symbol_id": "02-14-008",
+    "symbol_id": "02-04-002-04",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -891,7 +891,7 @@
     "is_hit": false
   },
   "25d": {
-    "symbol_id": "02-14-009",
+    "symbol_id": "02-04-003-01",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -901,7 +901,7 @@
     "is_hit": false
   },
   "25e": {
-    "symbol_id": "02-14-010",
+    "symbol_id": "02-04-003-02",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -911,7 +911,7 @@
     "is_hit": false
   },
   "25f": {
-    "symbol_id": "02-14-011",
+    "symbol_id": "02-04-003-03",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -921,7 +921,7 @@
     "is_hit": false
   },
   "260": {
-    "symbol_id": "02-14-012",
+    "symbol_id": "02-04-003-04",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -931,7 +931,7 @@
     "is_hit": false
   },
   "261": {
-    "symbol_id": "02-14-013",
+    "symbol_id": "02-04-004-01",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -941,7 +941,7 @@
     "is_hit": false
   },
   "262": {
-    "symbol_id": "02-14-014",
+    "symbol_id": "02-04-004-02",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -951,7 +951,7 @@
     "is_hit": false
   },
   "263": {
-    "symbol_id": "02-14-015",
+    "symbol_id": "02-04-004-03",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -961,7 +961,7 @@
     "is_hit": false
   },
   "264": {
-    "symbol_id": "02-14-016",
+    "symbol_id": "02-04-004-04",
     "group_name": "Straight Diagonal Plane",
     "path_type": "straight",
     "plane": "diagonal",
@@ -971,7 +971,7 @@
     "is_hit": false
   },
   "265": {
-    "symbol_id": "02-15-001",
+    "symbol_id": "02-05-001-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -981,7 +981,7 @@
     "is_hit": false
   },
   "266": {
-    "symbol_id": "02-15-002",
+    "symbol_id": "02-05-001-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -991,7 +991,7 @@
     "is_hit": false
   },
   "267": {
-    "symbol_id": "02-15-003",
+    "symbol_id": "02-05-001-03",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1001,7 +1001,7 @@
     "is_hit": false
   },
   "268": {
-    "symbol_id": "02-15-004",
+    "symbol_id": "02-05-001-04",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1011,7 +1011,7 @@
     "is_hit": false
   },
   "269": {
-    "symbol_id": "02-15-005",
+    "symbol_id": "02-05-001-05",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1021,7 +1021,7 @@
     "is_hit": false
   },
   "26a": {
-    "symbol_id": "02-15-006",
+    "symbol_id": "02-05-002-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1031,7 +1031,7 @@
     "is_hit": false
   },
   "26b": {
-    "symbol_id": "02-15-007",
+    "symbol_id": "02-05-002-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1041,7 +1041,7 @@
     "is_hit": false
   },
   "26c": {
-    "symbol_id": "02-15-008",
+    "symbol_id": "02-05-003-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1051,7 +1051,7 @@
     "is_hit": false
   },
   "26d": {
-    "symbol_id": "02-15-009",
+    "symbol_id": "02-05-003-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1061,7 +1061,7 @@
     "is_hit": false
   },
   "26e": {
-    "symbol_id": "02-15-010",
+    "symbol_id": "02-05-004-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1071,7 +1071,7 @@
     "is_hit": false
   },
   "26f": {
-    "symbol_id": "02-15-011",
+    "symbol_id": "02-05-005-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1081,7 +1081,7 @@
     "is_hit": false
   },
   "270": {
-    "symbol_id": "02-15-012",
+    "symbol_id": "02-05-005-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1091,7 +1091,7 @@
     "is_hit": false
   },
   "271": {
-    "symbol_id": "02-15-013",
+    "symbol_id": "02-05-006-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1101,7 +1101,7 @@
     "is_hit": false
   },
   "272": {
-    "symbol_id": "02-15-014",
+    "symbol_id": "02-05-006-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1111,7 +1111,7 @@
     "is_hit": false
   },
   "273": {
-    "symbol_id": "02-15-015",
+    "symbol_id": "02-05-007-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1121,7 +1121,7 @@
     "is_hit": false
   },
   "274": {
-    "symbol_id": "02-15-016",
+    "symbol_id": "02-05-008-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1131,7 +1131,7 @@
     "is_hit": false
   },
   "275": {
-    "symbol_id": "02-15-017",
+    "symbol_id": "02-05-008-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1141,7 +1141,7 @@
     "is_hit": false
   },
   "276": {
-    "symbol_id": "02-15-018",
+    "symbol_id": "02-05-008-03",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1151,7 +1151,7 @@
     "is_hit": false
   },
   "277": {
-    "symbol_id": "02-15-019",
+    "symbol_id": "02-05-009-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1161,7 +1161,7 @@
     "is_hit": false
   },
   "278": {
-    "symbol_id": "02-15-020",
+    "symbol_id": "02-05-010-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1171,7 +1171,7 @@
     "is_hit": false
   },
   "279": {
-    "symbol_id": "02-15-021",
+    "symbol_id": "02-05-010-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1181,7 +1181,7 @@
     "is_hit": false
   },
   "27a": {
-    "symbol_id": "02-15-022",
+    "symbol_id": "02-05-010-03",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1191,7 +1191,7 @@
     "is_hit": false
   },
   "27b": {
-    "symbol_id": "02-15-023",
+    "symbol_id": "02-05-011-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1201,7 +1201,7 @@
     "is_hit": false
   },
   "27c": {
-    "symbol_id": "02-15-024",
+    "symbol_id": "02-05-011-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1211,7 +1211,7 @@
     "is_hit": false
   },
   "27d": {
-    "symbol_id": "02-15-025",
+    "symbol_id": "02-05-011-03",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1221,7 +1221,7 @@
     "is_hit": false
   },
   "27e": {
-    "symbol_id": "02-15-026",
+    "symbol_id": "02-05-012-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1231,7 +1231,7 @@
     "is_hit": false
   },
   "27f": {
-    "symbol_id": "02-15-027",
+    "symbol_id": "02-05-012-02",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1241,7 +1241,7 @@
     "is_hit": false
   },
   "280": {
-    "symbol_id": "02-15-028",
+    "symbol_id": "02-05-012-03",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1251,7 +1251,7 @@
     "is_hit": false
   },
   "281": {
-    "symbol_id": "02-15-029",
+    "symbol_id": "02-05-013-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1261,7 +1261,7 @@
     "is_hit": false
   },
   "282": {
-    "symbol_id": "02-15-030",
+    "symbol_id": "02-05-014-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1271,7 +1271,7 @@
     "is_hit": false
   },
   "283": {
-    "symbol_id": "02-15-031",
+    "symbol_id": "02-05-015-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1281,7 +1281,7 @@
     "is_hit": false
   },
   "284": {
-    "symbol_id": "02-15-032",
+    "symbol_id": "02-05-016-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1291,7 +1291,7 @@
     "is_hit": false
   },
   "285": {
-    "symbol_id": "02-15-033",
+    "symbol_id": "02-05-017-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1301,7 +1301,7 @@
     "is_hit": false
   },
   "286": {
-    "symbol_id": "02-15-034",
+    "symbol_id": "02-05-018-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1311,7 +1311,7 @@
     "is_hit": false
   },
   "287": {
-    "symbol_id": "02-15-035",
+    "symbol_id": "02-05-019-01",
     "group_name": "Straight Floor Plane",
     "path_type": "straight",
     "plane": "floor",
@@ -1321,7 +1321,7 @@
     "is_hit": false
   },
   "288": {
-    "symbol_id": "02-16-001",
+    "symbol_id": "02-06-001-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1331,7 +1331,7 @@
     "is_hit": false
   },
   "289": {
-    "symbol_id": "02-16-002",
+    "symbol_id": "02-06-001-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1341,7 +1341,7 @@
     "is_hit": false
   },
   "28a": {
-    "symbol_id": "02-16-003",
+    "symbol_id": "02-06-001-03",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1351,7 +1351,7 @@
     "is_hit": false
   },
   "28b": {
-    "symbol_id": "02-16-004",
+    "symbol_id": "02-06-001-04",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1361,7 +1361,7 @@
     "is_hit": false
   },
   "28c": {
-    "symbol_id": "02-16-005",
+    "symbol_id": "02-06-002-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1371,7 +1371,7 @@
     "is_hit": false
   },
   "28d": {
-    "symbol_id": "02-16-006",
+    "symbol_id": "02-06-002-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1381,7 +1381,7 @@
     "is_hit": false
   },
   "28e": {
-    "symbol_id": "02-16-007",
+    "symbol_id": "02-06-002-03",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1391,7 +1391,7 @@
     "is_hit": false
   },
   "28f": {
-    "symbol_id": "02-16-008",
+    "symbol_id": "02-06-002-04",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1401,7 +1401,7 @@
     "is_hit": false
   },
   "290": {
-    "symbol_id": "02-16-009",
+    "symbol_id": "02-06-003-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1411,7 +1411,7 @@
     "is_hit": false
   },
   "291": {
-    "symbol_id": "02-16-010",
+    "symbol_id": "02-06-003-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1421,7 +1421,7 @@
     "is_hit": false
   },
   "292": {
-    "symbol_id": "02-16-011",
+    "symbol_id": "02-06-004-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1431,7 +1431,7 @@
     "is_hit": false
   },
   "293": {
-    "symbol_id": "02-16-012",
+    "symbol_id": "02-06-004-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1441,7 +1441,7 @@
     "is_hit": false
   },
   "294": {
-    "symbol_id": "02-16-013",
+    "symbol_id": "02-06-004-03",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1451,7 +1451,7 @@
     "is_hit": false
   },
   "295": {
-    "symbol_id": "02-16-014",
+    "symbol_id": "02-06-005-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1461,7 +1461,7 @@
     "is_hit": false
   },
   "296": {
-    "symbol_id": "02-16-015",
+    "symbol_id": "02-06-005-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1471,7 +1471,7 @@
     "is_hit": false
   },
   "297": {
-    "symbol_id": "02-16-016",
+    "symbol_id": "02-06-005-03",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1481,7 +1481,7 @@
     "is_hit": false
   },
   "298": {
-    "symbol_id": "02-16-017",
+    "symbol_id": "02-06-005-04",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1491,7 +1491,7 @@
     "is_hit": false
   },
   "299": {
-    "symbol_id": "02-16-018",
+    "symbol_id": "02-06-006-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1501,7 +1501,7 @@
     "is_hit": false
   },
   "29a": {
-    "symbol_id": "02-16-019",
+    "symbol_id": "02-06-006-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1511,7 +1511,7 @@
     "is_hit": false
   },
   "29b": {
-    "symbol_id": "02-16-020",
+    "symbol_id": "02-06-006-03",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1521,7 +1521,7 @@
     "is_hit": false
   },
   "29c": {
-    "symbol_id": "02-16-021",
+    "symbol_id": "02-06-006-04",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1531,7 +1531,7 @@
     "is_hit": false
   },
   "29d": {
-    "symbol_id": "02-16-022",
+    "symbol_id": "02-06-006-05",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1541,7 +1541,7 @@
     "is_hit": false
   },
   "29e": {
-    "symbol_id": "02-16-023",
+    "symbol_id": "02-06-006-06",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1551,7 +1551,7 @@
     "is_hit": false
   },
   "29f": {
-    "symbol_id": "02-16-024",
+    "symbol_id": "02-06-007-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1561,7 +1561,7 @@
     "is_hit": false
   },
   "2a0": {
-    "symbol_id": "02-16-025",
+    "symbol_id": "02-06-007-02",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1571,7 +1571,7 @@
     "is_hit": false
   },
   "2a1": {
-    "symbol_id": "02-16-026",
+    "symbol_id": "02-06-007-03",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1581,7 +1581,7 @@
     "is_hit": false
   },
   "2a2": {
-    "symbol_id": "02-16-027",
+    "symbol_id": "02-06-008-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1591,7 +1591,7 @@
     "is_hit": false
   },
   "2a3": {
-    "symbol_id": "02-16-028",
+    "symbol_id": "02-06-009-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1601,7 +1601,7 @@
     "is_hit": false
   },
   "2a4": {
-    "symbol_id": "02-16-029",
+    "symbol_id": "02-06-010-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1611,7 +1611,7 @@
     "is_hit": false
   },
   "2a5": {
-    "symbol_id": "02-16-030",
+    "symbol_id": "02-06-011-01",
     "group_name": "Curves Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1621,7 +1621,7 @@
     "is_hit": false
   },
   "2a6": {
-    "symbol_id": "02-17-001",
+    "symbol_id": "02-07-001-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1631,7 +1631,7 @@
     "is_hit": true
   },
   "2a7": {
-    "symbol_id": "02-17-002",
+    "symbol_id": "02-07-002-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1641,7 +1641,7 @@
     "is_hit": true
   },
   "2a8": {
-    "symbol_id": "02-17-003",
+    "symbol_id": "02-07-003-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1651,7 +1651,7 @@
     "is_hit": true
   },
   "2a9": {
-    "symbol_id": "02-17-004",
+    "symbol_id": "02-07-004-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1661,7 +1661,7 @@
     "is_hit": true
   },
   "2aa": {
-    "symbol_id": "02-17-005",
+    "symbol_id": "02-07-005-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1671,7 +1671,7 @@
     "is_hit": true
   },
   "2ab": {
-    "symbol_id": "02-17-006",
+    "symbol_id": "02-07-006-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1681,7 +1681,7 @@
     "is_hit": true
   },
   "2ac": {
-    "symbol_id": "02-17-007",
+    "symbol_id": "02-07-007-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1691,7 +1691,7 @@
     "is_hit": true
   },
   "2ad": {
-    "symbol_id": "02-17-008",
+    "symbol_id": "02-07-009-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1701,7 +1701,7 @@
     "is_hit": true
   },
   "2ae": {
-    "symbol_id": "02-17-009",
+    "symbol_id": "02-07-010-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1711,7 +1711,7 @@
     "is_hit": true
   },
   "2af": {
-    "symbol_id": "02-17-010",
+    "symbol_id": "02-07-011-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1721,7 +1721,7 @@
     "is_hit": true
   },
   "2b0": {
-    "symbol_id": "02-17-011",
+    "symbol_id": "02-07-012-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1731,7 +1731,7 @@
     "is_hit": true
   },
   "2b1": {
-    "symbol_id": "02-17-012",
+    "symbol_id": "02-07-013-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1741,7 +1741,7 @@
     "is_hit": true
   },
   "2b2": {
-    "symbol_id": "02-17-013",
+    "symbol_id": "02-07-014-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1751,7 +1751,7 @@
     "is_hit": true
   },
   "2b3": {
-    "symbol_id": "02-17-014",
+    "symbol_id": "02-07-015-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1761,7 +1761,7 @@
     "is_hit": true
   },
   "2b4": {
-    "symbol_id": "02-17-015",
+    "symbol_id": "02-07-016-01",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1771,7 +1771,7 @@
     "is_hit": true
   },
   "2b5": {
-    "symbol_id": "02-17-016",
+    "symbol_id": "02-07-016-02",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1781,7 +1781,7 @@
     "is_hit": true
   },
   "2b6": {
-    "symbol_id": "02-17-017",
+    "symbol_id": "02-07-016-03",
     "group_name": "Curves Hit Wall Plane",
     "path_type": "curved",
     "plane": "wall",
@@ -1791,7 +1791,7 @@
     "is_hit": true
   },
   "2b7": {
-    "symbol_id": "02-18-001",
+    "symbol_id": "02-08-001-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1801,7 +1801,7 @@
     "is_hit": true
   },
   "2b8": {
-    "symbol_id": "02-18-002",
+    "symbol_id": "02-08-001-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1811,7 +1811,7 @@
     "is_hit": true
   },
   "2b9": {
-    "symbol_id": "02-18-003",
+    "symbol_id": "02-08-002-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1821,7 +1821,7 @@
     "is_hit": true
   },
   "2ba": {
-    "symbol_id": "02-18-004",
+    "symbol_id": "02-08-002-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1831,7 +1831,7 @@
     "is_hit": true
   },
   "2bb": {
-    "symbol_id": "02-18-005",
+    "symbol_id": "02-08-002-03",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1841,7 +1841,7 @@
     "is_hit": true
   },
   "2bc": {
-    "symbol_id": "02-18-006",
+    "symbol_id": "02-08-002-04",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1851,7 +1851,7 @@
     "is_hit": true
   },
   "2bd": {
-    "symbol_id": "02-18-007",
+    "symbol_id": "02-08-003-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1861,7 +1861,7 @@
     "is_hit": true
   },
   "2be": {
-    "symbol_id": "02-18-008",
+    "symbol_id": "02-08-003-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1871,7 +1871,7 @@
     "is_hit": true
   },
   "2bf": {
-    "symbol_id": "02-18-009",
+    "symbol_id": "02-08-003-03",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1881,7 +1881,7 @@
     "is_hit": true
   },
   "2c0": {
-    "symbol_id": "02-18-010",
+    "symbol_id": "02-08-003-04",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1891,7 +1891,7 @@
     "is_hit": true
   },
   "2c1": {
-    "symbol_id": "02-18-011",
+    "symbol_id": "02-08-004-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1901,7 +1901,7 @@
     "is_hit": true
   },
   "2c2": {
-    "symbol_id": "02-18-012",
+    "symbol_id": "02-08-004-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1911,7 +1911,7 @@
     "is_hit": true
   },
   "2c3": {
-    "symbol_id": "02-18-013",
+    "symbol_id": "02-08-005-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1921,7 +1921,7 @@
     "is_hit": true
   },
   "2c4": {
-    "symbol_id": "02-18-014",
+    "symbol_id": "02-08-006-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1931,7 +1931,7 @@
     "is_hit": true
   },
   "2c5": {
-    "symbol_id": "02-18-015",
+    "symbol_id": "02-08-007-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1941,7 +1941,7 @@
     "is_hit": true
   },
   "2c6": {
-    "symbol_id": "02-18-016",
+    "symbol_id": "02-08-008-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1951,7 +1951,7 @@
     "is_hit": true
   },
   "2c7": {
-    "symbol_id": "02-18-017",
+    "symbol_id": "02-08-008-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1961,7 +1961,7 @@
     "is_hit": true
   },
   "2c8": {
-    "symbol_id": "02-18-018",
+    "symbol_id": "02-08-009-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1971,7 +1971,7 @@
     "is_hit": true
   },
   "2c9": {
-    "symbol_id": "02-18-019",
+    "symbol_id": "02-08-009-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1981,7 +1981,7 @@
     "is_hit": true
   },
   "2ca": {
-    "symbol_id": "02-18-020",
+    "symbol_id": "02-08-009-03",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -1991,7 +1991,7 @@
     "is_hit": true
   },
   "2cb": {
-    "symbol_id": "02-18-021",
+    "symbol_id": "02-08-009-04",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2001,7 +2001,7 @@
     "is_hit": true
   },
   "2cc": {
-    "symbol_id": "02-18-022",
+    "symbol_id": "02-08-010-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2011,7 +2011,7 @@
     "is_hit": true
   },
   "2cd": {
-    "symbol_id": "02-18-023",
+    "symbol_id": "02-08-010-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2021,7 +2021,7 @@
     "is_hit": true
   },
   "2ce": {
-    "symbol_id": "02-18-024",
+    "symbol_id": "02-08-010-03",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2031,7 +2031,7 @@
     "is_hit": true
   },
   "2cf": {
-    "symbol_id": "02-18-025",
+    "symbol_id": "02-08-010-04",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2041,7 +2041,7 @@
     "is_hit": true
   },
   "2d0": {
-    "symbol_id": "02-18-026",
+    "symbol_id": "02-08-011-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2051,7 +2051,7 @@
     "is_hit": true
   },
   "2d1": {
-    "symbol_id": "02-18-027",
+    "symbol_id": "02-08-011-02",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2061,7 +2061,7 @@
     "is_hit": true
   },
   "2d2": {
-    "symbol_id": "02-18-028",
+    "symbol_id": "02-08-012-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2071,7 +2071,7 @@
     "is_hit": true
   },
   "2d3": {
-    "symbol_id": "02-18-029",
+    "symbol_id": "02-08-013-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2081,7 +2081,7 @@
     "is_hit": true
   },
   "2d4": {
-    "symbol_id": "02-18-030",
+    "symbol_id": "02-08-014-01",
     "group_name": "Curves Hit Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2091,7 +2091,7 @@
     "is_hit": true
   },
   "2d5": {
-    "symbol_id": "02-19-001",
+    "symbol_id": "02-09-001-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2101,7 +2101,7 @@
     "is_hit": false
   },
   "2d6": {
-    "symbol_id": "02-19-002",
+    "symbol_id": "02-09-001-02",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2111,7 +2111,7 @@
     "is_hit": false
   },
   "2d7": {
-    "symbol_id": "02-19-003",
+    "symbol_id": "02-09-001-03",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2121,7 +2121,7 @@
     "is_hit": false
   },
   "2d8": {
-    "symbol_id": "02-19-004",
+    "symbol_id": "02-09-001-04",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2131,7 +2131,7 @@
     "is_hit": false
   },
   "2d9": {
-    "symbol_id": "02-19-005",
+    "symbol_id": "02-09-001-05",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2141,7 +2141,7 @@
     "is_hit": false
   },
   "2da": {
-    "symbol_id": "02-19-006",
+    "symbol_id": "02-09-002-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2151,7 +2151,7 @@
     "is_hit": false
   },
   "2db": {
-    "symbol_id": "02-19-007",
+    "symbol_id": "02-09-003-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2161,7 +2161,7 @@
     "is_hit": false
   },
   "2dc": {
-    "symbol_id": "02-19-008",
+    "symbol_id": "02-09-004-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2171,7 +2171,7 @@
     "is_hit": false
   },
   "2dd": {
-    "symbol_id": "02-19-009",
+    "symbol_id": "02-09-004-02",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2181,7 +2181,7 @@
     "is_hit": false
   },
   "2de": {
-    "symbol_id": "02-19-010",
+    "symbol_id": "02-09-004-03",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2191,7 +2191,7 @@
     "is_hit": false
   },
   "2df": {
-    "symbol_id": "02-19-011",
+    "symbol_id": "02-09-005-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2201,7 +2201,7 @@
     "is_hit": false
   },
   "2e0": {
-    "symbol_id": "02-19-012",
+    "symbol_id": "02-09-006-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2211,7 +2211,7 @@
     "is_hit": false
   },
   "2e1": {
-    "symbol_id": "02-19-013",
+    "symbol_id": "02-09-007-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2221,7 +2221,7 @@
     "is_hit": false
   },
   "2e2": {
-    "symbol_id": "02-19-014",
+    "symbol_id": "02-09-008-01",
     "group_name": "Curves Floor Plane",
     "path_type": "curved",
     "plane": "floor",
@@ -2231,7 +2231,7 @@
     "is_hit": false
   },
   "2e3": {
-    "symbol_id": "02-20-001",
+    "symbol_id": "02-10-001-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2241,7 +2241,7 @@
     "is_hit": false
   },
   "2e4": {
-    "symbol_id": "02-20-002",
+    "symbol_id": "02-10-001-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2251,7 +2251,7 @@
     "is_hit": false
   },
   "2e5": {
-    "symbol_id": "02-20-003",
+    "symbol_id": "02-10-002-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2261,7 +2261,7 @@
     "is_hit": false
   },
   "2e6": {
-    "symbol_id": "02-20-004",
+    "symbol_id": "02-10-002-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2271,7 +2271,7 @@
     "is_hit": false
   },
   "2e7": {
-    "symbol_id": "02-20-005",
+    "symbol_id": "02-10-003-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2281,7 +2281,7 @@
     "is_hit": false
   },
   "2e8": {
-    "symbol_id": "02-20-006",
+    "symbol_id": "02-10-003-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2291,7 +2291,7 @@
     "is_hit": false
   },
   "2e9": {
-    "symbol_id": "02-20-007",
+    "symbol_id": "02-10-003-03",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2301,7 +2301,7 @@
     "is_hit": false
   },
   "2ea": {
-    "symbol_id": "02-20-008",
+    "symbol_id": "02-10-004-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2311,7 +2311,7 @@
     "is_hit": false
   },
   "2eb": {
-    "symbol_id": "02-20-009",
+    "symbol_id": "02-10-004-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2321,7 +2321,7 @@
     "is_hit": false
   },
   "2ec": {
-    "symbol_id": "02-20-010",
+    "symbol_id": "02-10-004-03",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2331,7 +2331,7 @@
     "is_hit": false
   },
   "2ed": {
-    "symbol_id": "02-20-011",
+    "symbol_id": "02-10-005-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2341,7 +2341,7 @@
     "is_hit": false
   },
   "2ee": {
-    "symbol_id": "02-20-012",
+    "symbol_id": "02-10-005-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2351,7 +2351,7 @@
     "is_hit": false
   },
   "2ef": {
-    "symbol_id": "02-20-013",
+    "symbol_id": "02-10-006-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2361,7 +2361,7 @@
     "is_hit": false
   },
   "2f0": {
-    "symbol_id": "02-20-014",
+    "symbol_id": "02-10-006-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2371,7 +2371,7 @@
     "is_hit": false
   },
   "2f1": {
-    "symbol_id": "02-20-015",
+    "symbol_id": "02-10-007-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2381,7 +2381,7 @@
     "is_hit": false
   },
   "2f2": {
-    "symbol_id": "02-20-016",
+    "symbol_id": "02-10-007-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2391,7 +2391,7 @@
     "is_hit": false
   },
   "2f3": {
-    "symbol_id": "02-20-017",
+    "symbol_id": "02-10-007-03",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2401,7 +2401,7 @@
     "is_hit": false
   },
   "2f4": {
-    "symbol_id": "02-20-018",
+    "symbol_id": "02-10-007-04",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2411,7 +2411,7 @@
     "is_hit": false
   },
   "2f5": {
-    "symbol_id": "02-20-019",
+    "symbol_id": "02-10-008-01",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,
@@ -2421,7 +2421,7 @@
     "is_hit": false
   },
   "2f6": {
-    "symbol_id": "02-20-020",
+    "symbol_id": "02-10-008-02",
     "group_name": "Circles",
     "path_type": "circle",
     "plane": null,

@@ -16,12 +16,14 @@ def test_fsw_to_fswr_converts_two_handed_sign() -> None:
 
     first, second = positioned_symbols
     assert isinstance(first.symbol, HandSymbol)
-    assert first.symbol.symbol_id == "01-01-001"
+    # "-01": Index (0x100)/Index Bent (0x106) each have exactly one ISWA
+    # variation -- see PROGRESS.md's "Sửa symbol_id dùng symidArr chuẩn" entry.
+    assert first.symbol.symbol_id == "01-01-001-01"
     assert (first.x, first.y) == (480, 480)
     assert first.symbol.hand_side == HandSide.RIGHT
 
     assert isinstance(second.symbol, HandSymbol)
-    assert second.symbol.symbol_id == "01-01-007"
+    assert second.symbol.symbol_id == "01-01-007-01"
     assert (second.x, second.y) == (520, 520)
     assert second.symbol.hand_side == HandSide.LEFT
 

@@ -33,6 +33,18 @@ reset to 1 at each category boundary -- Category 1 (Hands) happens to BE
 the first 10 groups, so this is identical to the old Category-1-only
 numbering for every symbol that exists today; it only becomes visible once
 a symbol from Category 2+ is decoded.
+
+**``group_of()`` is a framework-internal index, NOT the ISWA standard
+Symbol ID's own ``group`` field** ("Sửa symbol_id dùng symidArr chuẩn"
+task, kept deliberately unchanged by that task -- see its own docstring
+below and PROGRESS.md's entry for why): ISWA's real Symbol ID numbers
+groups PER CATEGORY (1-10 within Hands, 1-10 within Movement, ...), while
+``group_of()`` numbers them globally 1-30 across all of ISWA.
+``movement_paths.py`` and ``finger_articulation.py`` key their own tables
+by THIS global numbering (group 12 = Finger Movement), so it stays as-is
+-- ``symbol_id_of()`` is the function that returns ISWA's own numbering,
+from a different source entirely (see below), not derived from
+``group_of()`` at all anymore.
 """
 
 from __future__ import annotations
@@ -92,11 +104,84 @@ def base_symbol_number_of(base_hex: int) -> int:
     return base_hex - GROUP_START[group - 1] + 1
 
 
+@lru_cache(maxsize=1)
+def _load_symbol_id_table() -> dict[int, str]:
+    """``base_hex -> 6-digit minimized symid`` (e.g. ``0x218 -> "202021"``),
+    from ``data/iswa_symbol_ids.json`` (``scripts/gen_symbol_ids.py``,
+    derived from ``@sutton-signwriting/core``'s own ``symidArr`` -- the
+    real ISWA reference library, not this project's own numbering -- see
+    that script's module docstring for the full provenance and the
+    parsing trap it guards against)."""
+    raw_text = resources.files("fsw_r.data").joinpath("iswa_symbol_ids.json").read_text(encoding="utf-8")
+    raw = json.loads(raw_text)
+    table: dict[int, str] = {}
+    for key, value in raw.items():
+        if key == "_meta":
+            continue
+        table[int(key, 16)] = value
+    return table
+
+
+def _symid_min_for(base_hex: int) -> str:
+    _validate_base_hex(base_hex)
+    table = _load_symbol_id_table()
+    symid_min = table.get(base_hex)
+    if symid_min is None:
+        raise ValueError(f"base 0x{base_hex:03x} has no entry in iswa_symbol_ids.json")
+    return symid_min
+
+
+def variation_of(base_hex: int) -> int:
+    """1-based variation number within this base symbol's own
+    category-group-base -- the field ``group_of()``/``base_symbol_number_of()``
+    have no way to represent (see module docstring). Almost always 1: only
+    94 of ISWA's 652 ``base_hex`` values share a category-group-base with
+    another (a "sibling" variation) -- see ``data/iswa_symbol_ids.json``'s
+    own ``_meta``."""
+    return int(_symid_min_for(base_hex)[5])
+
+
+def _decode_symid_min(symid_min: str) -> tuple[str, str, str, str]:
+    """``"202021"`` -> ``("02", "02", "002", "01")`` -- the exact digit
+    layout ``@sutton-signwriting/core``'s own ``symidMax()`` builds
+    (category zero-padded to 2, group already 2 digits, base zero-padded
+    to 3, variation zero-padded to 2), reproduced here rather than
+    re-derived, so ``base_symbol_id_of()``/``symbol_id_of()`` can't drift
+    apart on the padding."""
+    category, group, base, variation = symid_min[0], symid_min[1:3], symid_min[3:5], symid_min[5]
+    return f"{int(category):02d}", group, f"0{base}", f"0{variation}"
+
+
+def base_symbol_id_of(base_hex: int) -> str:
+    """``"02-02-001"``-style id -- category, ISWA's own PER-CATEGORY group
+    number, and base symbol number, from the real ISWA Symbol ID
+    (``data/iswa_symbol_ids.json``) -- WITHOUT the variation suffix, i.e.
+    identifying the base symbol two variations (like 0x216/0x217) share.
+    See ``symbol_id_of()`` for the full 4-part id including variation."""
+    category, group, base, _variation = _decode_symid_min(_symid_min_for(base_hex))
+    return f"{category}-{group}-{base}"
+
+
 def symbol_id_of(base_hex: int) -> str:
-    """``"01-05-002"``-style display id -- for logging/error messages/test
-    readability ONLY, never used as a lookup key (see ``registry.py`` and
-    ``pose_table.py``, both keyed by ``base_hex`` directly)."""
-    return f"{category_of(base_hex):02d}-{group_of(base_hex):02d}-{base_symbol_number_of(base_hex):03d}"
+    """``"02-02-001-02"``-style display id -- ISWA's own real, standard
+    Symbol ID (category-group-base-variation), from
+    ``data/iswa_symbol_ids.json`` (``@sutton-signwriting/core``'s
+    ``symidArr``) -- for logging/error messages/test readability ONLY,
+    never used as a lookup key (see ``registry.py`` and ``pose_table.py``,
+    both keyed by ``base_hex`` directly).
+
+    **Not derived from ``GROUP_START``/``group_of()``/``base_symbol_number_of()``
+    anymore** ("Sửa symbol_id dùng symidArr chuẩn" task -- those functions
+    stayed unchanged, but no longer feed this one): the old formula
+    disagreed with ISWA's own id for 328 of 652 base symbols, from two
+    independent causes -- ISWA numbers groups PER CATEGORY, not globally
+    1-30, and consecutive ``base_hex`` values can be VARIATIONS of the
+    SAME base symbol (which the old formula had no field for at all, so it
+    silently drifted every base after the first multi-variation one in a
+    group). See PROGRESS.md's entry for this task for the full before/after
+    table and the 469-vs-652 distinction this uncovered."""
+    category, group, base, variation = _decode_symid_min(_symid_min_for(base_hex))
+    return f"{category}-{group}-{base}-{variation}"
 
 
 def base_hex_of(category: int, group: int, base_symbol_number: int) -> int:

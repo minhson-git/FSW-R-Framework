@@ -219,6 +219,38 @@ chiếu thêm Lessons in SignWriting chương 6 trước khi chốt. Đây là l
 `HandSide` cần thêm `BOTH` (giá trị ISWA fill code 2 ám chỉ) thay vì chỉ
 RIGHT/LEFT nhị phân.
 
+#### Chuỗi sửa 3 lỗi nguồn dữ liệu Category 2 (1/3 xong): `symbol_id` →
+`path_type` → `amplitude`
+
+3 việc này BẮT BUỘC làm THEO ĐÚNG THỨ TỰ trên (không đổi chỗ, không làm song
+song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới.
+
+- **1/3 — `symbol_id` dùng `symidArr` chuẩn: ĐÃ XONG** (`PROGRESS.md` mục
+  "Pha 19"). `symbol_id_of()` giờ lấy từ thư viện tham chiếu ISWA thật
+  (`@sutton-signwriting/core`'s `symidArr`, qua `data/iswa_symbol_ids.json`),
+  không còn tự suy từ `GROUP_START` nội bộ nữa — sửa 328/652 base symbol có
+  `symbol_id` hiển thị sai, thêm hẳn trường variation trước đó bị bỏ sót.
+  `group_of()`/`GROUP_START` giữ nguyên KHÔNG đổi (việc này chỉ đổi trường
+  hiển thị `symbol_id`, không đụng khoá tra cứu `base_hex` hay bảng
+  `movement_paths`/`finger_articulations`).
+- **2/3 — `path_type` suy SAI nguồn (chưa làm):** hiện `path_type` suy từ
+  **TÊN GROUP** (vd cả 43 base trong group "Straight Wall Plane" đều nhận
+  `path_type="straight"`), trong khi nhiều base trong group đó thật ra vẽ
+  Zigzag/Box/Check/Corner/Peaks theo đúng TÊN BASE SYMBOL riêng của nó, không
+  phải theo tên group cha. Cần: mở rộng `PathType` enum, tra tên từng base
+  symbol (không phải tên group) trên signbank.org, gán lại `path_type` theo
+  đúng hình dạng thật của từng base.
+- **3/3 — `amplitude` cứng 10.0 cho toàn bộ 242 base Category 2 (chưa
+  làm, PHẢI làm SAU 2/3):** nên suy ra từ kích thước bounding-box thật của
+  glyph (qua `fontTools`, đọc font ISWA đã có sẵn cho việc lấy
+  `iswa_valid_combinations.json`), không phải hằng số đoán. **Lý do bắt buộc
+  làm sau `path_type`:** bề rộng glyph phản ánh ĐỘ PHỨC TẠP hình dạng, không
+  phải khoảng cách di chuyển — 1 glyph Zigzag rộng vì nó ngoằn ngoèo, không
+  phải vì nó đi xa. Nếu đo `amplitude` từ bounding-box TRƯỚC khi `path_type`
+  đúng, sẽ không tách được "rộng vì zigzag" khỏi "rộng vì đi xa" — con số
+  `amplitude` đo ra sẽ lẫn cả 2 nguyên nhân, vô nghĩa để dùng làm biên độ
+  chuyển động thật.
+
 ### SignTimeline (MVP-1) — ĐÃ XONG
 
 **Lưu ý đánh số:** đây KHÔNG phải "Pha 3" theo đánh số category ở file này

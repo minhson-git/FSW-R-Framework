@@ -8,7 +8,7 @@
     "generated_by": "scripts/gen_body_poses.py"
   },
   "36d": {
-    "symbol_id": "05-27-001",
+    "symbol_id": "05-01-001-01",
     "name": "Shoulder Hip Spine",
     "part": "trunk",
     "motion_type": "REFERENCE",
@@ -25,7 +25,7 @@
     "limb_length_units": null
   },
   "36e": {
-    "symbol_id": "05-27-002",
+    "symbol_id": "05-01-002-01",
     "name": "Shoulder Hip Positions",
     "part": "trunk",
     "motion_type": "POSITIONS",
@@ -42,7 +42,7 @@
     "limb_length_units": null
   },
   "36f": {
-    "symbol_id": "05-27-003",
+    "symbol_id": "05-01-003-01",
     "name": "Shoulder Hip Move Wall Plane",
     "part": "trunk",
     "motion_type": "MOVE_WALL",
@@ -59,7 +59,7 @@
     "limb_length_units": null
   },
   "370": {
-    "symbol_id": "05-27-004",
+    "symbol_id": "05-01-004-01",
     "name": "Shoulder Hip Move Floor Plane",
     "part": "trunk",
     "motion_type": "MOVE_FLOOR",
@@ -76,7 +76,7 @@
     "limb_length_units": null
   },
   "371": {
-    "symbol_id": "05-27-005",
+    "symbol_id": "05-01-005-01",
     "name": "Shoulder Tilts (from Waist)",
     "part": "trunk",
     "motion_type": "TILT_WAIST",
@@ -93,7 +93,7 @@
     "limb_length_units": null
   },
   "372": {
-    "symbol_id": "05-27-006",
+    "symbol_id": "05-01-006-01",
     "name": "Torso Straight Stretch Wall",
     "part": "trunk",
     "motion_type": "STRETCH_WALL",
@@ -110,7 +110,7 @@
     "limb_length_units": null
   },
   "373": {
-    "symbol_id": "05-27-007",
+    "symbol_id": "05-01-007-01",
     "name": "Torso Curved Bend Wall",
     "part": "trunk",
     "motion_type": "BEND_WALL",
@@ -127,7 +127,7 @@
     "limb_length_units": null
   },
   "374": {
-    "symbol_id": "05-27-008",
+    "symbol_id": "05-01-008-01",
     "name": "Torso Twist Floor Plane",
     "part": "trunk",
     "motion_type": "TWIST_FLOOR",
@@ -144,7 +144,7 @@
     "limb_length_units": null
   },
   "375": {
-    "symbol_id": "05-27-009",
+    "symbol_id": "05-01-009-01",
     "name": "Upper Body Tilts (from Hip Joints)",
     "part": "trunk",
     "motion_type": "TILT_HIP",
@@ -161,7 +161,7 @@
     "limb_length_units": null
   },
   "376": {
-    "symbol_id": "05-28-001",
+    "symbol_id": "05-02-001-01",
     "name": "Limb Combinations",
     "part": "limb",
     "motion_type": "LIMB_COMBINATIONS",
@@ -170,7 +170,7 @@
     "limb_length_units": 0
   },
   "377": {
-    "symbol_id": "05-28-002",
+    "symbol_id": "05-02-002-01",
     "name": "Limb Length 1",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -179,7 +179,7 @@
     "limb_length_units": 1
   },
   "378": {
-    "symbol_id": "05-28-003",
+    "symbol_id": "05-02-002-02",
     "name": "Limb Length 2",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -188,7 +188,7 @@
     "limb_length_units": 2
   },
   "379": {
-    "symbol_id": "05-28-004",
+    "symbol_id": "05-02-002-03",
     "name": "Limb Length 3",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -197,7 +197,7 @@
     "limb_length_units": 3
   },
   "37a": {
-    "symbol_id": "05-28-005",
+    "symbol_id": "05-02-002-04",
     "name": "Limb Length 4",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -206,7 +206,7 @@
     "limb_length_units": 4
   },
   "37b": {
-    "symbol_id": "05-28-006",
+    "symbol_id": "05-02-003-01",
     "name": "Limb Length 5",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -215,7 +215,7 @@
     "limb_length_units": 5
   },
   "37c": {
-    "symbol_id": "05-28-007",
+    "symbol_id": "05-02-003-02",
     "name": "Limb Length 6",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -224,7 +224,7 @@
     "limb_length_units": 6
   },
   "37d": {
-    "symbol_id": "05-28-008",
+    "symbol_id": "05-02-003-03",
     "name": "Limb Length 7",
     "part": "limb",
     "motion_type": "LENGTH",
@@ -233,7 +233,7 @@
     "limb_length_units": 7
   },
   "37e": {
-    "symbol_id": "05-28-009",
+    "symbol_id": "05-02-004-01",
     "name": "Fingers",
     "part": "limb",
     "motion_type": "FINGERS",

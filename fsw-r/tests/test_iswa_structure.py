@@ -55,8 +55,22 @@ def test_full_round_trip_across_all_652_base_symbols() -> None:
 
 
 def test_symbol_id_of_matches_display_format() -> None:
-    assert symbol_id_of(0x100) == "01-01-001"
-    assert symbol_id_of(0x14D) == "01-05-002"
+    # D2 (this task's brief, "Sửa symbol_id dùng symidArr chuẩn") -- the
+    # real ISWA Symbol ID, from data/iswa_symbol_ids.json, NOT derived from
+    # GROUP_START/group_of() anymore (see symbol_id_of()'s own docstring).
+    # 10 milestones spanning every category boundary plus the two
+    # multi-variation cases (0x216/0x217) the old GROUP_START-based formula
+    # got wrong.
+    assert symbol_id_of(0x100) == "01-01-001-01"
+    assert symbol_id_of(0x14D) == "01-05-002-01"
+    assert symbol_id_of(0x216) == "02-02-001-01"
+    assert symbol_id_of(0x217) == "02-02-001-02"
+    assert symbol_id_of(0x218) == "02-02-002-01"
+    assert symbol_id_of(0x22A) == "02-03-001-01"
+    assert symbol_id_of(0x2F7) == "03-01-001-01"
+    assert symbol_id_of(0x36D) == "05-01-001-01"
+    assert symbol_id_of(0x387) == "07-01-001-01"
+    assert symbol_id_of(0x38B) == "07-01-003-01"
 
 
 def test_category_of_raises_outside_iswa_range() -> None:

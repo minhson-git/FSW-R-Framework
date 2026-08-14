@@ -17,12 +17,18 @@ def test_pose_table_and_name_table_share_the_same_base_hexes() -> None:
 
 
 def test_every_base_hex_maps_to_a_well_formed_symbol_id() -> None:
+    # 4 parts now (category-group-base-variation), not 3 -- see
+    # PROGRESS.md's "Sửa symbol_id dùng symidArr chuẩn" entry. Every
+    # Category 1 base symbol has exactly ONE ISWA variation (verified
+    # against the real symidArr, not assumed), so "01" is asserted here,
+    # not just any 2-digit number.
     for base_hex in HAND_POSE_TABLE.base_hexes():
         symbol_id = symbol_id_of(base_hex)
-        category, group, base_symbol_number = symbol_id.split("-")
+        category, group, base_symbol_number, variation = symbol_id.split("-")
         assert category == "01"
         assert 1 <= int(group) <= 10
         assert 1 <= int(base_symbol_number) <= 58
+        assert variation == "01"
 
 
 def test_every_name_is_a_non_empty_string() -> None:

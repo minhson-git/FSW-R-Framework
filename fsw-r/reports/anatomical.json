@@ -14,9 +14,9 @@
     "angle_checks_with_violation": 400,
     "angle_checks_total": 3915,
     "by_finger": {
+      "ring": 63,
       "thumb": 202,
       "pinky": 73,
-      "ring": 63,
       "middle": 42,
       "index": 18
     },
@@ -29,7 +29,7 @@
     "worst_overshoot": [
       {
         "base_hex": "0x12a",
-        "symbol_id": "01-03-013",
+        "symbol_id": "01-03-013-01",
         "name": "Index Middle Thumb Hook",
         "worst_overshoot_degrees": 60.0,
         "violations": [
@@ -46,7 +46,7 @@
       },
       {
         "base_hex": "0x16c",
-        "symbol_id": "01-05-033",
+        "symbol_id": "01-05-033-01",
         "name": "Open Cup",
         "worst_overshoot_degrees": 60.0,
         "violations": [
@@ -63,7 +63,7 @@
       },
       {
         "base_hex": "0x180",
-        "symbol_id": "01-05-053",
+        "symbol_id": "01-05-053-01",
         "name": "Hinge Thumb Side",
         "worst_overshoot_degrees": 60.0,
         "violations": [
@@ -80,7 +80,7 @@
       },
       {
         "base_hex": "0x128",
-        "symbol_id": "01-03-011",
+        "symbol_id": "01-03-011-01",
         "name": "Index Middle Thumb Cup",
         "worst_overshoot_degrees": 58.0,
         "violations": [
@@ -124,7 +124,7 @@
       },
       {
         "base_hex": "0x199",
-        "symbol_id": "01-06-020",
+        "symbol_id": "01-06-020-01",
         "name": "Baby Touches Thumb",
         "worst_overshoot_degrees": 47.0,
         "violations": [
@@ -168,7 +168,7 @@
       },
       {
         "base_hex": "0x1f5",
-        "symbol_id": "01-10-001",
+        "symbol_id": "01-10-001-01",
         "name": "Thumb",
         "worst_overshoot_degrees": 47.0,
         "violations": [
@@ -221,7 +221,7 @@
       },
       {
         "base_hex": "0x202",
-        "symbol_id": "01-10-014",
+        "symbol_id": "01-10-014-01",
         "name": "Thumb Over Four Raised Knuckles",
         "worst_overshoot_degrees": 47.0,
         "violations": [
@@ -274,7 +274,7 @@
       },
       {
         "base_hex": "0x197",
-        "symbol_id": "01-06-018",
+        "symbol_id": "01-06-018-01",
         "name": "Baby Raised Knuckle",
         "worst_overshoot_degrees": 46.0,
         "violations": [
@@ -327,7 +327,7 @@
       },
       {
         "base_hex": "0x1ae",
-        "symbol_id": "01-07-011",
+        "symbol_id": "01-07-011-01",
         "name": "Ring Up",
         "worst_overshoot_degrees": 46.0,
         "violations": [
@@ -371,7 +371,7 @@
       },
       {
         "base_hex": "0x1c9",
-        "symbol_id": "01-08-016",
+        "symbol_id": "01-08-016-01",
         "name": "Middle Up, Thumb Side",
         "worst_overshoot_degrees": 44.0,
         "violations": [
@@ -406,7 +406,7 @@
       },
       {
         "base_hex": "0x203",
-        "symbol_id": "01-10-015",
+        "symbol_id": "01-10-015-01",
         "name": "Fist",
         "worst_overshoot_degrees": 44.0,
         "violations": [
@@ -459,7 +459,7 @@
       },
       {
         "base_hex": "0x14a",
-        "symbol_id": "01-04-007",
+        "symbol_id": "01-04-007-01",
         "name": "Four Fingers Unit Bent",
         "worst_overshoot_degrees": 43.0,
         "violations": [
@@ -512,7 +512,7 @@
       },
       {
         "base_hex": "0x1f9",
-        "symbol_id": "01-10-005",
+        "symbol_id": "01-10-005-01",
         "name": "Thumb Side Bent",
         "worst_overshoot_degrees": 42.0,
         "violations": [
@@ -556,7 +556,7 @@
       },
       {
         "base_hex": "0x1cc",
-        "symbol_id": "01-08-019",
+        "symbol_id": "01-08-019-01",
         "name": "Middle Baby",
         "worst_overshoot_degrees": 40.0,
         "violations": [
@@ -582,7 +582,7 @@
       },
       {
         "base_hex": "0x1b5",
-        "symbol_id": "01-07-018",
+        "symbol_id": "01-07-018-01",
         "name": "Ring Middle Unit",
         "worst_overshoot_degrees": 39.0,
         "violations": [
@@ -608,7 +608,7 @@
       },
       {
         "base_hex": "0x1b6",
-        "symbol_id": "01-07-019",
+        "symbol_id": "01-07-019-01",
         "name": "Ring Middle Raised Knuckles",
         "worst_overshoot_degrees": 39.0,
         "violations": [
@@ -652,7 +652,7 @@
       },
       {
         "base_hex": "0x1b7",
-        "symbol_id": "01-07-020",
+        "symbol_id": "01-07-020-01",
         "name": "Ring Index",
         "worst_overshoot_degrees": 39.0,
         "violations": [
@@ -687,7 +687,7 @@
       },
       {
         "base_hex": "0x1ca",
-        "symbol_id": "01-08-017",
+        "symbol_id": "01-08-017-01",
         "name": "Middle Thumb Hook",
         "worst_overshoot_degrees": 39.0,
         "violations": [
@@ -722,7 +722,7 @@
       },
       {
         "base_hex": "0x1f7",
-        "symbol_id": "01-10-003",
+        "symbol_id": "01-10-003-01",
         "name": "Thumb Side Diagonal",
         "worst_overshoot_degrees": 38.0,
         "violations": [
@@ -757,7 +757,7 @@
       },
       {
         "base_hex": "0x1be",
-        "symbol_id": "01-08-005",
+        "symbol_id": "01-08-005-01",
         "name": "Index Ring Baby on Hook In",
         "worst_overshoot_degrees": 36.0,
         "violations": [
@@ -780,7 +780,7 @@
     "note": "hand_joint_poses.json's own abduction values are already documented as un-measured estimates (see PROGRESS.md) -- these violation counts are a weaker signal than the flexion ones above, reported separately rather than merged into one number."
   },
   "correlation_with_fk_error": {
-    "pearson_r": 0.013796507973681921,
+    "pearson_r": 0.001541487164158859,
     "n_symbols": 261,
     "interpretation": "positive r: symbols with worse anatomical violations tend to also have worse FK reconstruction error (consistent with a shared root cause); near-zero or negative r: the two are not obviously related"
   }

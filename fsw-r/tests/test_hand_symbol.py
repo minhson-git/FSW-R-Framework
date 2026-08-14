@@ -40,7 +40,14 @@ def test_symbol_constructs_with_correct_id_and_name(group: int, base_symbol_numb
     fill = min(valid_combinations_for(base_hex).fills)
     symbol = HandSymbol(base_hex=base_hex, fill=fill, rotation=0)
 
-    symbol_id = f"01-{group:02d}-{base_symbol_number:03d}"
+    # "-01": every one of Category 1's 261 base symbols has exactly ONE
+    # ISWA variation (see PROGRESS.md's "Sửa symbol_id dùng symidArr chuẩn"
+    # entry -- verified against the real symidArr, not assumed), and
+    # Category 1's own group numbering happens to be identical between the
+    # framework's global group_of() and ISWA's per-category numbering
+    # (Category 1 IS ISWA's groups 1-10), so this f-string only needed the
+    # variation suffix added, nothing else.
+    symbol_id = f"01-{group:02d}-{base_symbol_number:03d}-01"
     assert symbol.symbol_id == symbol_id
     assert symbol.name == HAND_NAME_TABLE[base_hex]
     assert isinstance(symbol.get_joint_pose(), HandJointPose)
@@ -60,7 +67,8 @@ def test_symbol_from_fsw_builds_the_right_symbol(group: int, base_symbol_number:
     assert isinstance(symbol, HandSymbol)
     assert symbol.fill == fill
     assert symbol.rotation == rotation
-    assert symbol.symbol_id == f"01-{group:02d}-{base_symbol_number:03d}"
+    # Same "-01" reasoning as test_symbol_constructs_with_correct_id_and_name above.
+    assert symbol.symbol_id == f"01-{group:02d}-{base_symbol_number:03d}-01"
 
 
 def test_joint_pose_is_independent_of_fill_and_rotation() -> None:

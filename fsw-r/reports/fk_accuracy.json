@@ -9,20 +9,20 @@
     "checked": 783,
     "invalid_pairs_found": 14,
     "warnings": [
-      "base 0x14d (01-05-002): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x14d (01-05-002): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x14f (01-05-004): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x14f (01-05-004): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x151 (01-05-006): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x151 (01-05-006): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x15c (01-05-017): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x15c (01-05-017): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x15e (01-05-019): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x15e (01-05-019): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x1f6 (01-10-002): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x1f6 (01-10-002): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x204 (01-10-016): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
-      "base 0x204 (01-10-016): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]"
+      "base 0x14d (01-05-002-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x14d (01-05-002-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x14f (01-05-004-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x14f (01-05-004-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x151 (01-05-006-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x151 (01-05-006-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x15c (01-05-017-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x15c (01-05-017-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x15e (01-05-019-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x15e (01-05-019-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x1f6 (01-10-002-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x1f6 (01-10-002-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x204 (01-10-016-01): fill=0 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]",
+      "base 0x204 (01-10-016-01): fill=2 used by hands.py's ground truth is NOT in ISWA's valid_fills=[1]"
     ]
   },
   "mpjpe_overall": {
@@ -423,121 +423,121 @@
   "worst_20": [
     {
       "base_hex": "0x159",
-      "symbol_id": "01-05-014",
+      "symbol_id": "01-05-014-01",
       "name": "Five Fingers Spread Hinge, No Thumb",
       "mpjpe": 192.7912166693953
     },
     {
       "base_hex": "0x16c",
-      "symbol_id": "01-05-033",
+      "symbol_id": "01-05-033-01",
       "name": "Open Cup",
       "mpjpe": 116.99413955258093
     },
     {
       "base_hex": "0x180",
-      "symbol_id": "01-05-053",
+      "symbol_id": "01-05-053-01",
       "name": "Hinge Thumb Side",
       "mpjpe": 113.53495146039752
     },
     {
       "base_hex": "0x1f6",
-      "symbol_id": "01-10-002",
+      "symbol_id": "01-10-002-01",
       "name": "Thumb Heel",
       "mpjpe": 79.22763349495631
     },
     {
       "base_hex": "0x14b",
-      "symbol_id": "01-04-008",
+      "symbol_id": "01-04-008-01",
       "name": "Four Fingers Unit Hinge",
       "mpjpe": 74.32973034003014
     },
     {
       "base_hex": "0x158",
-      "symbol_id": "01-05-013",
+      "symbol_id": "01-05-013-01",
       "name": "Five Fingers Spread Hinge, Thumb Side",
       "mpjpe": 72.11652562799031
     },
     {
       "base_hex": "0x1a3",
-      "symbol_id": "01-06-030",
+      "symbol_id": "01-06-030-01",
       "name": "Baby Index On Angle",
       "mpjpe": 70.69164761572759
     },
     {
       "base_hex": "0x1a2",
-      "symbol_id": "01-06-029",
+      "symbol_id": "01-06-029-01",
       "name": "Baby Index On Hinge",
       "mpjpe": 68.04871900137977
     },
     {
       "base_hex": "0x102",
-      "symbol_id": "01-01-003",
+      "symbol_id": "01-01-003-01",
       "name": "Index on Cup",
       "mpjpe": 67.52506034769951
     },
     {
       "base_hex": "0x19b",
-      "symbol_id": "01-06-022",
+      "symbol_id": "01-06-022-01",
       "name": "Baby Thumb on Hinge",
       "mpjpe": 67.11714802164735
     },
     {
       "base_hex": "0x1ec",
-      "symbol_id": "01-09-032",
+      "symbol_id": "01-09-032-01",
       "name": "Index Thumb Cup",
       "mpjpe": 64.58466275437956
     },
     {
       "base_hex": "0x18f",
-      "symbol_id": "01-06-010",
+      "symbol_id": "01-06-010-01",
       "name": "Baby Down, Ripple Straight",
       "mpjpe": 64.55601464999839
     },
     {
       "base_hex": "0x188",
-      "symbol_id": "01-06-003",
+      "symbol_id": "01-06-003-01",
       "name": "Index Middle Ring on Hinge",
       "mpjpe": 62.000301844546
     },
     {
       "base_hex": "0x17e",
-      "symbol_id": "01-05-051",
+      "symbol_id": "01-05-051-01",
       "name": "Small Hinge",
       "mpjpe": 61.5923868225469
     },
     {
       "base_hex": "0x146",
-      "symbol_id": "01-04-003",
+      "symbol_id": "01-04-003-01",
       "name": "Four Fingers Hinge",
       "mpjpe": 61.43076812355643
     },
     {
       "base_hex": "0x11b",
-      "symbol_id": "01-02-014",
+      "symbol_id": "01-02-014-01",
       "name": "Index Middle Cross On Circle",
       "mpjpe": 61.0970409241935
     },
     {
       "base_hex": "0x15e",
-      "symbol_id": "01-05-019",
+      "symbol_id": "01-05-019-01",
       "name": "Flat Thumb Side, Heel",
       "mpjpe": 60.777745083041985
     },
     {
       "base_hex": "0x14f",
-      "symbol_id": "01-05-004",
+      "symbol_id": "01-05-004-01",
       "name": "Five Fingers Spread Four Bent Heel",
       "mpjpe": 59.91699564863869
     },
     {
       "base_hex": "0x1bc",
-      "symbol_id": "01-08-003",
+      "symbol_id": "01-08-003-01",
       "name": "Index Ring Baby on Curlicue",
       "mpjpe": 59.874217468727714
     },
     {
       "base_hex": "0x182",
-      "symbol_id": "01-05-055",
+      "symbol_id": "01-05-055-01",
       "name": "Hinge No Thumb",
       "mpjpe": 59.35674377736932
     }
@@ -545,121 +545,121 @@
   "best_20": [
     {
       "base_hex": "0x176",
-      "symbol_id": "01-05-043",
+      "symbol_id": "01-05-043-01",
       "name": "Circle",
       "mpjpe": 27.66149319559458
     },
     {
       "base_hex": "0x118",
-      "symbol_id": "01-02-011",
+      "symbol_id": "01-02-011-01",
       "name": "Index Middle Unit Cup",
       "mpjpe": 28.98415992620841
     },
     {
       "base_hex": "0x1ed",
-      "symbol_id": "01-09-033",
+      "symbol_id": "01-09-033-01",
       "name": "Index Thumb Cup Open",
       "mpjpe": 30.18661001843224
     },
     {
       "base_hex": "0x166",
-      "symbol_id": "01-05-027",
+      "symbol_id": "01-05-027-01",
       "name": "Claw",
       "mpjpe": 31.030120951063303
     },
     {
       "base_hex": "0x191",
-      "symbol_id": "01-06-012",
+      "symbol_id": "01-06-012-01",
       "name": "Baby Down, Others Circle",
       "mpjpe": 31.058687654295703
     },
     {
       "base_hex": "0x1e7",
-      "symbol_id": "01-09-027",
+      "symbol_id": "01-09-027-01",
       "name": "Index Thumb Curlicue",
       "mpjpe": 31.06945429804857
     },
     {
       "base_hex": "0x14a",
-      "symbol_id": "01-04-007",
+      "symbol_id": "01-04-007-01",
       "name": "Four Fingers Unit Bent",
       "mpjpe": 31.115634869576645
     },
     {
       "base_hex": "0x13a",
-      "symbol_id": "01-03-029",
+      "symbol_id": "01-03-029-01",
       "name": "Index Thumb Angle Out, Middle Up",
       "mpjpe": 31.429986911838682
     },
     {
       "base_hex": "0x108",
-      "symbol_id": "01-01-009",
+      "symbol_id": "01-01-009-01",
       "name": "Index Bent on Fist, Thumb Under",
       "mpjpe": 32.34811876651221
     },
     {
       "base_hex": "0x17a",
-      "symbol_id": "01-05-047",
+      "symbol_id": "01-05-047-01",
       "name": "Oval Thumb Forward",
       "mpjpe": 32.75843461133469
     },
     {
       "base_hex": "0x1e5",
-      "symbol_id": "01-09-025",
+      "symbol_id": "01-09-025-01",
       "name": "Index Thumb Forward, Index Bent",
       "mpjpe": 32.92861059189838
     },
     {
       "base_hex": "0x117",
-      "symbol_id": "01-02-010",
+      "symbol_id": "01-02-010-01",
       "name": "Index Middle Unit, Middle Bent",
       "mpjpe": 32.9559945731564
     },
     {
       "base_hex": "0x10d",
-      "symbol_id": "01-01-014",
+      "symbol_id": "01-01-014-01",
       "name": "Index Hinge on Circle",
       "mpjpe": 33.101925067921066
     },
     {
       "base_hex": "0x1c8",
-      "symbol_id": "01-08-015",
+      "symbol_id": "01-08-015-01",
       "name": "Middle Raised Knuckle",
       "mpjpe": 33.17279474821451
     },
     {
       "base_hex": "0x114",
-      "symbol_id": "01-02-007",
+      "symbol_id": "01-02-007-01",
       "name": "Index Hinge, Middle Up",
       "mpjpe": 33.345423447291225
     },
     {
       "base_hex": "0x1b9",
-      "symbol_id": "01-07-022",
+      "symbol_id": "01-07-022-01",
       "name": "Ring Thumb Hook",
       "mpjpe": 33.39334641964002
     },
     {
       "base_hex": "0x175",
-      "symbol_id": "01-05-042",
+      "symbol_id": "01-05-042-01",
       "name": "Curlicue",
       "mpjpe": 33.583481839877905
     },
     {
       "base_hex": "0x10f",
-      "symbol_id": "01-02-002",
+      "symbol_id": "01-02-002-01",
       "name": "Index Middle on Circle",
       "mpjpe": 33.668238538416325
     },
     {
       "base_hex": "0x1ef",
-      "symbol_id": "01-09-035",
+      "symbol_id": "01-09-035-01",
       "name": "Index Thumb Hinge Large",
       "mpjpe": 33.87645643861682
     },
     {
       "base_hex": "0x10b",
-      "symbol_id": "01-01-012",
+      "symbol_id": "01-01-012-01",
       "name": "Index Hinge",
       "mpjpe": 33.99326061995999
     }

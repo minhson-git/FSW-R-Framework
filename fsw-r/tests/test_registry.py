@@ -17,7 +17,9 @@ def test_category_symbol_has_all_five_implemented_categories() -> None:
 def test_symbol_from_fsw_builds_index() -> None:
     symbol = symbol_from_fsw("S10012")
     assert isinstance(symbol, HandSymbol)
-    assert symbol.symbol_id == "01-01-001"
+    # "-01": Index (0x100) has exactly one ISWA variation -- see
+    # PROGRESS.md's "Sửa symbol_id dùng symidArr chuẩn" entry.
+    assert symbol.symbol_id == "01-01-001-01"
     assert symbol.fill == 1
     assert symbol.rotation == 2
     assert symbol.hand_side == HandSide.RIGHT
@@ -26,7 +28,7 @@ def test_symbol_from_fsw_builds_index() -> None:
 def test_symbol_from_fsw_builds_index_bent() -> None:
     symbol = symbol_from_fsw("S1061a")
     assert isinstance(symbol, HandSymbol)
-    assert symbol.symbol_id == "01-01-007"
+    assert symbol.symbol_id == "01-01-007-01"
     assert symbol.fill == 1
     assert symbol.rotation == 10
     assert symbol.hand_side == HandSide.LEFT

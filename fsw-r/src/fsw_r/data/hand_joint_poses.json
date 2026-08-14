@@ -7,7 +7,7 @@
     "generated_by": "scripts/export_joint_poses.py"
   },
   "100": {
-    "symbol_id": "01-01-001",
+    "symbol_id": "01-01-001-01",
     "name": "Index",
     "thumb": {
       "cmc": {
@@ -81,7 +81,7 @@
     }
   },
   "101": {
-    "symbol_id": "01-01-002",
+    "symbol_id": "01-01-002-01",
     "name": "Index on Circle",
     "thumb": {
       "cmc": {
@@ -155,7 +155,7 @@
     }
   },
   "102": {
-    "symbol_id": "01-01-003",
+    "symbol_id": "01-01-003-01",
     "name": "Index on Cup",
     "thumb": {
       "cmc": {
@@ -229,7 +229,7 @@
     }
   },
   "103": {
-    "symbol_id": "01-01-004",
+    "symbol_id": "01-01-004-01",
     "name": "Index on Oval",
     "thumb": {
       "cmc": {
@@ -303,7 +303,7 @@
     }
   },
   "104": {
-    "symbol_id": "01-01-005",
+    "symbol_id": "01-01-005-01",
     "name": "Index on Hinge",
     "thumb": {
       "cmc": {
@@ -377,7 +377,7 @@
     }
   },
   "105": {
-    "symbol_id": "01-01-006",
+    "symbol_id": "01-01-006-01",
     "name": "Index on Angle",
     "thumb": {
       "cmc": {
@@ -451,7 +451,7 @@
     }
   },
   "106": {
-    "symbol_id": "01-01-007",
+    "symbol_id": "01-01-007-01",
     "name": "Index Bent",
     "thumb": {
       "cmc": {
@@ -525,7 +525,7 @@
     }
   },
   "107": {
-    "symbol_id": "01-01-008",
+    "symbol_id": "01-01-008-01",
     "name": "Index Bent on Circle",
     "thumb": {
       "cmc": {
@@ -599,7 +599,7 @@
     }
   },
   "108": {
-    "symbol_id": "01-01-009",
+    "symbol_id": "01-01-009-01",
     "name": "Index Bent on Fist, Thumb Under",
     "thumb": {
       "cmc": {
@@ -673,7 +673,7 @@
     }
   },
   "109": {
-    "symbol_id": "01-01-010",
+    "symbol_id": "01-01-010-01",
     "name": "Index Cup",
     "thumb": {
       "cmc": {
@@ -747,7 +747,7 @@
     }
   },
   "10a": {
-    "symbol_id": "01-01-011",
+    "symbol_id": "01-01-011-01",
     "name": "Index Cup",
     "thumb": {
       "cmc": {
@@ -821,7 +821,7 @@
     }
   },
   "10b": {
-    "symbol_id": "01-01-012",
+    "symbol_id": "01-01-012-01",
     "name": "Index Hinge",
     "thumb": {
       "cmc": {
@@ -895,7 +895,7 @@
     }
   },
   "10c": {
-    "symbol_id": "01-01-013",
+    "symbol_id": "01-01-013-01",
     "name": "Index Hinge Low",
     "thumb": {
       "cmc": {
@@ -969,7 +969,7 @@
     }
   },
   "10d": {
-    "symbol_id": "01-01-014",
+    "symbol_id": "01-01-014-01",
     "name": "Index Hinge on Circle",
     "thumb": {
       "cmc": {
@@ -1043,7 +1043,7 @@
     }
   },
   "10e": {
-    "symbol_id": "01-02-001",
+    "symbol_id": "01-02-001-01",
     "name": "Index Middle",
     "thumb": {
       "cmc": {
@@ -1117,7 +1117,7 @@
     }
   },
   "10f": {
-    "symbol_id": "01-02-002",
+    "symbol_id": "01-02-002-01",
     "name": "Index Middle on Circle",
     "thumb": {
       "cmc": {
@@ -1191,7 +1191,7 @@
     }
   },
   "110": {
-    "symbol_id": "01-02-003",
+    "symbol_id": "01-02-003-01",
     "name": "Index Middle Bent",
     "thumb": {
       "cmc": {
@@ -1265,7 +1265,7 @@
     }
   },
   "111": {
-    "symbol_id": "01-02-004",
+    "symbol_id": "01-02-004-01",
     "name": "Index Middle Raised Knuckles",
     "thumb": {
       "cmc": {
@@ -1339,7 +1339,7 @@
     }
   },
   "112": {
-    "symbol_id": "01-02-005",
+    "symbol_id": "01-02-005-01",
     "name": "Index Middle Hinge",
     "thumb": {
       "cmc": {
@@ -1413,7 +1413,7 @@
     }
   },
   "113": {
-    "symbol_id": "01-02-006",
+    "symbol_id": "01-02-006-01",
     "name": "Index Up, Middle Hinge",
     "thumb": {
       "cmc": {
@@ -1487,7 +1487,7 @@
     }
   },
   "114": {
-    "symbol_id": "01-02-007",
+    "symbol_id": "01-02-007-01",
     "name": "Index Hinge, Middle Up",
     "thumb": {
       "cmc": {
@@ -1561,7 +1561,7 @@
     }
   },
   "115": {
-    "symbol_id": "01-02-008",
+    "symbol_id": "01-02-008-01",
     "name": "Index Middle Unit",
     "thumb": {
       "cmc": {
@@ -1635,7 +1635,7 @@
     }
   },
   "116": {
-    "symbol_id": "01-02-009",
+    "symbol_id": "01-02-009-01",
     "name": "Index Middle Unit, Index Bent",
     "thumb": {
       "cmc": {
@@ -1709,7 +1709,7 @@
     }
   },
   "117": {
-    "symbol_id": "01-02-010",
+    "symbol_id": "01-02-010-01",
     "name": "Index Middle Unit, Middle Bent",
     "thumb": {
       "cmc": {
@@ -1783,7 +1783,7 @@
     }
   },
   "118": {
-    "symbol_id": "01-02-011",
+    "symbol_id": "01-02-011-01",
     "name": "Index Middle Unit Cup",
     "thumb": {
       "cmc": {
@@ -1857,7 +1857,7 @@
     }
   },
   "119": {
-    "symbol_id": "01-02-012",
+    "symbol_id": "01-02-012-01",
     "name": "Index Middle Unit Hinge",
     "thumb": {
       "cmc": {
@@ -1931,7 +1931,7 @@
     }
   },
   "11a": {
-    "symbol_id": "01-02-013",
+    "symbol_id": "01-02-013-01",
     "name": "Index Middle Cross",
     "thumb": {
       "cmc": {
@@ -2005,7 +2005,7 @@
     }
   },
   "11b": {
-    "symbol_id": "01-02-014",
+    "symbol_id": "01-02-014-01",
     "name": "Index Middle Cross On Circle",
     "thumb": {
       "cmc": {
@@ -2079,7 +2079,7 @@
     }
   },
   "11c": {
-    "symbol_id": "01-02-015",
+    "symbol_id": "01-02-015-01",
     "name": "Middle Bent Over Index",
     "thumb": {
       "cmc": {
@@ -2153,7 +2153,7 @@
     }
   },
   "11d": {
-    "symbol_id": "01-02-016",
+    "symbol_id": "01-02-016-01",
     "name": "Index Bent Over Middle",
     "thumb": {
       "cmc": {
@@ -2227,7 +2227,7 @@
     }
   },
   "11e": {
-    "symbol_id": "01-03-001",
+    "symbol_id": "01-03-001-01",
     "name": "Index Middle Thumb",
     "thumb": {
       "cmc": {
@@ -2301,7 +2301,7 @@
     }
   },
   "11f": {
-    "symbol_id": "01-03-002",
+    "symbol_id": "01-03-002-01",
     "name": "Index Middle Thumb on Circle",
     "thumb": {
       "cmc": {
@@ -2375,7 +2375,7 @@
     }
   },
   "120": {
-    "symbol_id": "01-03-003",
+    "symbol_id": "01-03-003-01",
     "name": "Index Middle Straight, Thumb Bent",
     "thumb": {
       "cmc": {
@@ -2449,7 +2449,7 @@
     }
   },
   "121": {
-    "symbol_id": "01-03-004",
+    "symbol_id": "01-03-004-01",
     "name": "Index Middle Bent, Thumb Straight",
     "thumb": {
       "cmc": {
@@ -2523,7 +2523,7 @@
     }
   },
   "122": {
-    "symbol_id": "01-03-005",
+    "symbol_id": "01-03-005-01",
     "name": "Index Middle Thumb Bent",
     "thumb": {
       "cmc": {
@@ -2597,7 +2597,7 @@
     }
   },
   "123": {
-    "symbol_id": "01-03-006",
+    "symbol_id": "01-03-006-01",
     "name": "Index Middle Hinge Spread, Thumb Side",
     "thumb": {
       "cmc": {
@@ -2671,7 +2671,7 @@
     }
   },
   "124": {
-    "symbol_id": "01-03-007",
+    "symbol_id": "01-03-007-01",
     "name": "Index Up, Middle Hinge, Thumb Side",
     "thumb": {
       "cmc": {
@@ -2745,7 +2745,7 @@
     }
   },
   "125": {
-    "symbol_id": "01-03-008",
+    "symbol_id": "01-03-008-01",
     "name": "Index Up, Middle Hinge, Thumb Tight",
     "thumb": {
       "cmc": {
@@ -2819,7 +2819,7 @@
     }
   },
   "126": {
-    "symbol_id": "01-03-009",
+    "symbol_id": "01-03-009-01",
     "name": "Index Hinge, Middle Up, Thumb Side",
     "thumb": {
       "cmc": {
@@ -2893,7 +2893,7 @@
     }
   },
   "127": {
-    "symbol_id": "01-03-010",
+    "symbol_id": "01-03-010-01",
     "name": "Index Middle Up Spread, Thumb Forward",
     "thumb": {
       "cmc": {
@@ -2967,7 +2967,7 @@
     }
   },
   "128": {
-    "symbol_id": "01-03-011",
+    "symbol_id": "01-03-011-01",
     "name": "Index Middle Thumb Cup",
     "thumb": {
       "cmc": {
@@ -3041,7 +3041,7 @@
     }
   },
   "129": {
-    "symbol_id": "01-03-012",
+    "symbol_id": "01-03-012-01",
     "name": "Index Middle Thumb Circle",
     "thumb": {
       "cmc": {
@@ -3115,7 +3115,7 @@
     }
   },
   "12a": {
-    "symbol_id": "01-03-013",
+    "symbol_id": "01-03-013-01",
     "name": "Index Middle Thumb Hook",
     "thumb": {
       "cmc": {
@@ -3189,7 +3189,7 @@
     }
   },
   "12b": {
-    "symbol_id": "01-03-014",
+    "symbol_id": "01-03-014-01",
     "name": "Index Middle Thumb Hinge",
     "thumb": {
       "cmc": {
@@ -3263,7 +3263,7 @@
     }
   },
   "12c": {
-    "symbol_id": "01-03-015",
+    "symbol_id": "01-03-015-01",
     "name": "Thumb Between Index Middle",
     "thumb": {
       "cmc": {
@@ -3337,7 +3337,7 @@
     }
   },
   "12d": {
-    "symbol_id": "01-03-016",
+    "symbol_id": "01-03-016-01",
     "name": "Index Middle Unit, Thumb Side",
     "thumb": {
       "cmc": {
@@ -3411,7 +3411,7 @@
     }
   },
   "12e": {
-    "symbol_id": "01-03-017",
+    "symbol_id": "01-03-017-01",
     "name": "Index Middle Unit, Thumb Tight",
     "thumb": {
       "cmc": {
@@ -3485,7 +3485,7 @@
     }
   },
   "12f": {
-    "symbol_id": "01-03-018",
+    "symbol_id": "01-03-018-01",
     "name": "Index Middle Unit, Thumb Bent",
     "thumb": {
       "cmc": {
@@ -3559,7 +3559,7 @@
     }
   },
   "130": {
-    "symbol_id": "01-03-019",
+    "symbol_id": "01-03-019-01",
     "name": "Middle Thumb Hook, Index Up",
     "thumb": {
       "cmc": {
@@ -3633,7 +3633,7 @@
     }
   },
   "131": {
-    "symbol_id": "01-03-020",
+    "symbol_id": "01-03-020-01",
     "name": "Index Thumb Hook, Middle Up",
     "thumb": {
       "cmc": {
@@ -3707,7 +3707,7 @@
     }
   },
   "132": {
-    "symbol_id": "01-03-021",
+    "symbol_id": "01-03-021-01",
     "name": "Index Middle Unit Hinge, Thumb Side",
     "thumb": {
       "cmc": {
@@ -3781,7 +3781,7 @@
     }
   },
   "133": {
-    "symbol_id": "01-03-022",
+    "symbol_id": "01-03-022-01",
     "name": "Index Middle Cross, Thumb Side",
     "thumb": {
       "cmc": {
@@ -3855,7 +3855,7 @@
     }
   },
   "134": {
-    "symbol_id": "01-03-023",
+    "symbol_id": "01-03-023-01",
     "name": "Index Middle Unit, Thumb Forward",
     "thumb": {
       "cmc": {
@@ -3929,7 +3929,7 @@
     }
   },
   "135": {
-    "symbol_id": "01-03-024",
+    "symbol_id": "01-03-024-01",
     "name": "Index Middle Unit Cup, Thumb Forward",
     "thumb": {
       "cmc": {
@@ -4003,7 +4003,7 @@
     }
   },
   "136": {
-    "symbol_id": "01-03-025",
+    "symbol_id": "01-03-025-01",
     "name": "Middle Thumb Cup, Index Up",
     "thumb": {
       "cmc": {
@@ -4077,7 +4077,7 @@
     }
   },
   "137": {
-    "symbol_id": "01-03-026",
+    "symbol_id": "01-03-026-01",
     "name": "Index Thumb Cup, Middle Up",
     "thumb": {
       "cmc": {
@@ -4151,7 +4151,7 @@
     }
   },
   "138": {
-    "symbol_id": "01-03-027",
+    "symbol_id": "01-03-027-01",
     "name": "Middle Thumb Circle, Index Up",
     "thumb": {
       "cmc": {
@@ -4225,7 +4225,7 @@
     }
   },
   "139": {
-    "symbol_id": "01-03-028",
+    "symbol_id": "01-03-028-01",
     "name": "Middle Thumb Circle, Index Hinge",
     "thumb": {
       "cmc": {
@@ -4299,7 +4299,7 @@
     }
   },
   "13a": {
-    "symbol_id": "01-03-029",
+    "symbol_id": "01-03-029-01",
     "name": "Index Thumb Angle Out, Middle Up",
     "thumb": {
       "cmc": {
@@ -4373,7 +4373,7 @@
     }
   },
   "13b": {
-    "symbol_id": "01-03-030",
+    "symbol_id": "01-03-030-01",
     "name": "Index Thumb Angle In, Middle Up",
     "thumb": {
       "cmc": {
@@ -4447,7 +4447,7 @@
     }
   },
   "13c": {
-    "symbol_id": "01-03-031",
+    "symbol_id": "01-03-031-01",
     "name": "Index Thumb Circle, Middle Up",
     "thumb": {
       "cmc": {
@@ -4521,7 +4521,7 @@
     }
   },
   "13d": {
-    "symbol_id": "01-03-032",
+    "symbol_id": "01-03-032-01",
     "name": "Index Middle Thumb, Unit Hinge",
     "thumb": {
       "cmc": {
@@ -4595,7 +4595,7 @@
     }
   },
   "13e": {
-    "symbol_id": "01-03-033",
+    "symbol_id": "01-03-033-01",
     "name": "Index Middle Thumb, Angle Out",
     "thumb": {
       "cmc": {
@@ -4669,7 +4669,7 @@
     }
   },
   "13f": {
-    "symbol_id": "01-03-034",
+    "symbol_id": "01-03-034-01",
     "name": "Index Middle Thumb Angle",
     "thumb": {
       "cmc": {
@@ -4743,7 +4743,7 @@
     }
   },
   "140": {
-    "symbol_id": "01-03-035",
+    "symbol_id": "01-03-035-01",
     "name": "Middle Thumb Angle Out, Index Up",
     "thumb": {
       "cmc": {
@@ -4817,7 +4817,7 @@
     }
   },
   "141": {
-    "symbol_id": "01-03-036",
+    "symbol_id": "01-03-036-01",
     "name": "Middle Thumb Angle Out, Index Crossed",
     "thumb": {
       "cmc": {
@@ -4891,7 +4891,7 @@
     }
   },
   "142": {
-    "symbol_id": "01-03-037",
+    "symbol_id": "01-03-037-01",
     "name": "Middle Thumb Angle, Index Up",
     "thumb": {
       "cmc": {
@@ -4965,7 +4965,7 @@
     }
   },
   "143": {
-    "symbol_id": "01-03-038",
+    "symbol_id": "01-03-038-01",
     "name": "Index Thumb Hook, Middle Angle",
     "thumb": {
       "cmc": {
@@ -5039,7 +5039,7 @@
     }
   },
   "144": {
-    "symbol_id": "01-04-001",
+    "symbol_id": "01-04-001-01",
     "name": "Four Fingers",
     "thumb": {
       "cmc": {
@@ -5113,7 +5113,7 @@
     }
   },
   "145": {
-    "symbol_id": "01-04-002",
+    "symbol_id": "01-04-002-01",
     "name": "Four Fingers Bent",
     "thumb": {
       "cmc": {
@@ -5187,7 +5187,7 @@
     }
   },
   "146": {
-    "symbol_id": "01-04-003",
+    "symbol_id": "01-04-003-01",
     "name": "Four Fingers Hinge",
     "thumb": {
       "cmc": {
@@ -5261,7 +5261,7 @@
     }
   },
   "147": {
-    "symbol_id": "01-04-004",
+    "symbol_id": "01-04-004-01",
     "name": "Four Fingers Unit",
     "thumb": {
       "cmc": {
@@ -5335,7 +5335,7 @@
     }
   },
   "148": {
-    "symbol_id": "01-04-005",
+    "symbol_id": "01-04-005-01",
     "name": "Four Fingers Unit Split",
     "thumb": {
       "cmc": {
@@ -5409,7 +5409,7 @@
     }
   },
   "149": {
-    "symbol_id": "01-04-006",
+    "symbol_id": "01-04-006-01",
     "name": "Four Fingers Unit Claw",
     "thumb": {
       "cmc": {
@@ -5483,7 +5483,7 @@
     }
   },
   "14a": {
-    "symbol_id": "01-04-007",
+    "symbol_id": "01-04-007-01",
     "name": "Four Fingers Unit Bent",
     "thumb": {
       "cmc": {
@@ -5557,7 +5557,7 @@
     }
   },
   "14b": {
-    "symbol_id": "01-04-008",
+    "symbol_id": "01-04-008-01",
     "name": "Four Fingers Unit Hinge",
     "thumb": {
       "cmc": {
@@ -5631,7 +5631,7 @@
     }
   },
   "14c": {
-    "symbol_id": "01-05-001",
+    "symbol_id": "01-05-001-01",
     "name": "Five Fingers Spread",
     "thumb": {
       "cmc": {
@@ -5705,7 +5705,7 @@
     }
   },
   "14d": {
-    "symbol_id": "01-05-002",
+    "symbol_id": "01-05-002-01",
     "name": "Five Fingers Spread Heel",
     "thumb": {
       "cmc": {
@@ -5779,7 +5779,7 @@
     }
   },
   "14e": {
-    "symbol_id": "01-05-003",
+    "symbol_id": "01-05-003-01",
     "name": "Five Fingers Spread, 4-Bent",
     "thumb": {
       "cmc": {
@@ -5853,7 +5853,7 @@
     }
   },
   "14f": {
-    "symbol_id": "01-05-004",
+    "symbol_id": "01-05-004-01",
     "name": "Five Fingers Spread Four Bent Heel",
     "thumb": {
       "cmc": {
@@ -5927,7 +5927,7 @@
     }
   },
   "150": {
-    "symbol_id": "01-05-005",
+    "symbol_id": "01-05-005-01",
     "name": "Five Fingers Spread All Bent",
     "thumb": {
       "cmc": {
@@ -6001,7 +6001,7 @@
     }
   },
   "151": {
-    "symbol_id": "01-05-006",
+    "symbol_id": "01-05-006-01",
     "name": "Five Fingers Spread All Bent Heel",
     "thumb": {
       "cmc": {
@@ -6075,7 +6075,7 @@
     }
   },
   "152": {
-    "symbol_id": "01-05-007",
+    "symbol_id": "01-05-007-01",
     "name": "Five Fingers Spread Thumb Forward",
     "thumb": {
       "cmc": {
@@ -6149,7 +6149,7 @@
     }
   },
   "153": {
-    "symbol_id": "01-05-008",
+    "symbol_id": "01-05-008-01",
     "name": "Five Fingers Spread Cup",
     "thumb": {
       "cmc": {
@@ -6223,7 +6223,7 @@
     }
   },
   "154": {
-    "symbol_id": "01-05-009",
+    "symbol_id": "01-05-009-01",
     "name": "Five Fingers Spread Cup Open",
     "thumb": {
       "cmc": {
@@ -6297,7 +6297,7 @@
     }
   },
   "155": {
-    "symbol_id": "01-05-010",
+    "symbol_id": "01-05-010-01",
     "name": "Five Fingers Spread Hinge Open",
     "thumb": {
       "cmc": {
@@ -6371,7 +6371,7 @@
     }
   },
   "156": {
-    "symbol_id": "01-05-011",
+    "symbol_id": "01-05-011-01",
     "name": "Five Fingers Spread Oval",
     "thumb": {
       "cmc": {
@@ -6445,7 +6445,7 @@
     }
   },
   "157": {
-    "symbol_id": "01-05-012",
+    "symbol_id": "01-05-012-01",
     "name": "Five Fingers Spread Hinge",
     "thumb": {
       "cmc": {
@@ -6519,7 +6519,7 @@
     }
   },
   "158": {
-    "symbol_id": "01-05-013",
+    "symbol_id": "01-05-013-01",
     "name": "Five Fingers Spread Hinge, Thumb Side",
     "thumb": {
       "cmc": {
@@ -6593,7 +6593,7 @@
     }
   },
   "159": {
-    "symbol_id": "01-05-014",
+    "symbol_id": "01-05-014-01",
     "name": "Five Fingers Spread Hinge, No Thumb",
     "thumb": {
       "cmc": {
@@ -6667,7 +6667,7 @@
     }
   },
   "15a": {
-    "symbol_id": "01-05-015",
+    "symbol_id": "01-05-015-01",
     "name": "Flat Hand",
     "thumb": {
       "cmc": {
@@ -6741,7 +6741,7 @@
     }
   },
   "15b": {
-    "symbol_id": "01-05-016",
+    "symbol_id": "01-05-016-01",
     "name": "Flat Hand, In-Between Palm Facings",
     "thumb": {
       "cmc": {
@@ -6815,7 +6815,7 @@
     }
   },
   "15c": {
-    "symbol_id": "01-05-017",
+    "symbol_id": "01-05-017-01",
     "name": "Flat Hand, Heel",
     "thumb": {
       "cmc": {
@@ -6889,7 +6889,7 @@
     }
   },
   "15d": {
-    "symbol_id": "01-05-018",
+    "symbol_id": "01-05-018-01",
     "name": "Flat Thumb Side",
     "thumb": {
       "cmc": {
@@ -6963,7 +6963,7 @@
     }
   },
   "15e": {
-    "symbol_id": "01-05-019",
+    "symbol_id": "01-05-019-01",
     "name": "Flat Thumb Side, Heel",
     "thumb": {
       "cmc": {
@@ -7037,7 +7037,7 @@
     }
   },
   "15f": {
-    "symbol_id": "01-05-020",
+    "symbol_id": "01-05-020-01",
     "name": "Flat Thumb Bent",
     "thumb": {
       "cmc": {
@@ -7111,7 +7111,7 @@
     }
   },
   "160": {
-    "symbol_id": "01-05-021",
+    "symbol_id": "01-05-021-01",
     "name": "Flat Thumb Forward",
     "thumb": {
       "cmc": {
@@ -7185,7 +7185,7 @@
     }
   },
   "161": {
-    "symbol_id": "01-05-022",
+    "symbol_id": "01-05-022-01",
     "name": "Flat Split, Index Thumb Side",
     "thumb": {
       "cmc": {
@@ -7259,7 +7259,7 @@
     }
   },
   "162": {
-    "symbol_id": "01-05-023",
+    "symbol_id": "01-05-023-01",
     "name": "Flat Split Center",
     "thumb": {
       "cmc": {
@@ -7333,7 +7333,7 @@
     }
   },
   "163": {
-    "symbol_id": "01-05-024",
+    "symbol_id": "01-05-024-01",
     "name": "Flat Split Center Thumb Side",
     "thumb": {
       "cmc": {
@@ -7407,7 +7407,7 @@
     }
   },
   "164": {
-    "symbol_id": "01-05-025",
+    "symbol_id": "01-05-025-01",
     "name": "Flat Split Center Thumb Side Bent",
     "thumb": {
       "cmc": {
@@ -7481,7 +7481,7 @@
     }
   },
   "165": {
-    "symbol_id": "01-05-026",
+    "symbol_id": "01-05-026-01",
     "name": "Flat Split Baby",
     "thumb": {
       "cmc": {
@@ -7555,7 +7555,7 @@
     }
   },
   "166": {
-    "symbol_id": "01-05-027",
+    "symbol_id": "01-05-027-01",
     "name": "Claw",
     "thumb": {
       "cmc": {
@@ -7629,7 +7629,7 @@
     }
   },
   "167": {
-    "symbol_id": "01-05-028",
+    "symbol_id": "01-05-028-01",
     "name": "Claw Thumb Side",
     "thumb": {
       "cmc": {
@@ -7703,7 +7703,7 @@
     }
   },
   "168": {
-    "symbol_id": "01-05-029",
+    "symbol_id": "01-05-029-01",
     "name": "Claw No Thumb",
     "thumb": {
       "cmc": {
@@ -7777,7 +7777,7 @@
     }
   },
   "169": {
-    "symbol_id": "01-05-030",
+    "symbol_id": "01-05-030-01",
     "name": "Claw Thumb Forward",
     "thumb": {
       "cmc": {
@@ -7851,7 +7851,7 @@
     }
   },
   "16a": {
-    "symbol_id": "01-05-031",
+    "symbol_id": "01-05-031-01",
     "name": "Hook Curlicue",
     "thumb": {
       "cmc": {
@@ -7925,7 +7925,7 @@
     }
   },
   "16b": {
-    "symbol_id": "01-05-032",
+    "symbol_id": "01-05-032-01",
     "name": "Hook",
     "thumb": {
       "cmc": {
@@ -7999,7 +7999,7 @@
     }
   },
   "16c": {
-    "symbol_id": "01-05-033",
+    "symbol_id": "01-05-033-01",
     "name": "Open Cup",
     "thumb": {
       "cmc": {
@@ -8073,7 +8073,7 @@
     }
   },
   "16d": {
-    "symbol_id": "01-05-034",
+    "symbol_id": "01-05-034-01",
     "name": "Cup",
     "thumb": {
       "cmc": {
@@ -8147,7 +8147,7 @@
     }
   },
   "16e": {
-    "symbol_id": "01-05-035",
+    "symbol_id": "01-05-035-01",
     "name": "Open Cup Thumb Side",
     "thumb": {
       "cmc": {
@@ -8221,7 +8221,7 @@
     }
   },
   "16f": {
-    "symbol_id": "01-05-036",
+    "symbol_id": "01-05-036-01",
     "name": "Cup Thumb Side",
     "thumb": {
       "cmc": {
@@ -8295,7 +8295,7 @@
     }
   },
   "170": {
-    "symbol_id": "01-05-037",
+    "symbol_id": "01-05-037-01",
     "name": "Open Cup No Thumb",
     "thumb": {
       "cmc": {
@@ -8369,7 +8369,7 @@
     }
   },
   "171": {
-    "symbol_id": "01-05-038",
+    "symbol_id": "01-05-038-01",
     "name": "Cup No Thumb",
     "thumb": {
       "cmc": {
@@ -8443,7 +8443,7 @@
     }
   },
   "172": {
-    "symbol_id": "01-05-039",
+    "symbol_id": "01-05-039-01",
     "name": "Open Cup Thumb Forward",
     "thumb": {
       "cmc": {
@@ -8517,7 +8517,7 @@
     }
   },
   "173": {
-    "symbol_id": "01-05-040",
+    "symbol_id": "01-05-040-01",
     "name": "Cup Thumb Forward",
     "thumb": {
       "cmc": {
@@ -8591,7 +8591,7 @@
     }
   },
   "174": {
-    "symbol_id": "01-05-041",
+    "symbol_id": "01-05-041-01",
     "name": "Open Curlicue",
     "thumb": {
       "cmc": {
@@ -8665,7 +8665,7 @@
     }
   },
   "175": {
-    "symbol_id": "01-05-042",
+    "symbol_id": "01-05-042-01",
     "name": "Curlicue",
     "thumb": {
       "cmc": {
@@ -8739,7 +8739,7 @@
     }
   },
   "176": {
-    "symbol_id": "01-05-043",
+    "symbol_id": "01-05-043-01",
     "name": "Circle",
     "thumb": {
       "cmc": {
@@ -8813,7 +8813,7 @@
     }
   },
   "177": {
-    "symbol_id": "01-05-044",
+    "symbol_id": "01-05-044-01",
     "name": "Oval",
     "thumb": {
       "cmc": {
@@ -8887,7 +8887,7 @@
     }
   },
   "178": {
-    "symbol_id": "01-05-045",
+    "symbol_id": "01-05-045-01",
     "name": "Oval Thumb Side",
     "thumb": {
       "cmc": {
@@ -8961,7 +8961,7 @@
     }
   },
   "179": {
-    "symbol_id": "01-05-046",
+    "symbol_id": "01-05-046-01",
     "name": "Oval No Thumb",
     "thumb": {
       "cmc": {
@@ -9035,7 +9035,7 @@
     }
   },
   "17a": {
-    "symbol_id": "01-05-047",
+    "symbol_id": "01-05-047-01",
     "name": "Oval Thumb Forward",
     "thumb": {
       "cmc": {
@@ -9109,7 +9109,7 @@
     }
   },
   "17b": {
-    "symbol_id": "01-05-048",
+    "symbol_id": "01-05-048-01",
     "name": "Open Hinge",
     "thumb": {
       "cmc": {
@@ -9183,7 +9183,7 @@
     }
   },
   "17c": {
-    "symbol_id": "01-05-049",
+    "symbol_id": "01-05-049-01",
     "name": "Open Hinge Thumb Forward",
     "thumb": {
       "cmc": {
@@ -9257,7 +9257,7 @@
     }
   },
   "17d": {
-    "symbol_id": "01-05-050",
+    "symbol_id": "01-05-050-01",
     "name": "Hinge",
     "thumb": {
       "cmc": {
@@ -9331,7 +9331,7 @@
     }
   },
   "17e": {
-    "symbol_id": "01-05-051",
+    "symbol_id": "01-05-051-01",
     "name": "Small Hinge",
     "thumb": {
       "cmc": {
@@ -9405,7 +9405,7 @@
     }
   },
   "17f": {
-    "symbol_id": "01-05-052",
+    "symbol_id": "01-05-052-01",
     "name": "Open Hinge Thumb Side",
     "thumb": {
       "cmc": {
@@ -9479,7 +9479,7 @@
     }
   },
   "180": {
-    "symbol_id": "01-05-053",
+    "symbol_id": "01-05-053-01",
     "name": "Hinge Thumb Side",
     "thumb": {
       "cmc": {
@@ -9553,7 +9553,7 @@
     }
   },
   "181": {
-    "symbol_id": "01-05-054",
+    "symbol_id": "01-05-054-01",
     "name": "Open Hinge No Thumb",
     "thumb": {
       "cmc": {
@@ -9627,7 +9627,7 @@
     }
   },
   "182": {
-    "symbol_id": "01-05-055",
+    "symbol_id": "01-05-055-01",
     "name": "Hinge No Thumb",
     "thumb": {
       "cmc": {
@@ -9701,7 +9701,7 @@
     }
   },
   "183": {
-    "symbol_id": "01-05-056",
+    "symbol_id": "01-05-056-01",
     "name": "Hinge Thumb Side Touches Index",
     "thumb": {
       "cmc": {
@@ -9775,7 +9775,7 @@
     }
   },
   "184": {
-    "symbol_id": "01-05-057",
+    "symbol_id": "01-05-057-01",
     "name": "Hinge Thumb Between Middle Ring",
     "thumb": {
       "cmc": {
@@ -9849,7 +9849,7 @@
     }
   },
   "185": {
-    "symbol_id": "01-05-058",
+    "symbol_id": "01-05-058-01",
     "name": "Angle",
     "thumb": {
       "cmc": {
@@ -9923,7 +9923,7 @@
     }
   },
   "186": {
-    "symbol_id": "01-06-001",
+    "symbol_id": "01-06-001-01",
     "name": "Index Middle Ring",
     "thumb": {
       "cmc": {
@@ -9997,7 +9997,7 @@
     }
   },
   "187": {
-    "symbol_id": "01-06-002",
+    "symbol_id": "01-06-002-01",
     "name": "Index Middle Ring on Circle",
     "thumb": {
       "cmc": {
@@ -10071,7 +10071,7 @@
     }
   },
   "188": {
-    "symbol_id": "01-06-003",
+    "symbol_id": "01-06-003-01",
     "name": "Index Middle Ring on Hinge",
     "thumb": {
       "cmc": {
@@ -10145,7 +10145,7 @@
     }
   },
   "189": {
-    "symbol_id": "01-06-004",
+    "symbol_id": "01-06-004-01",
     "name": "Index Middle Ring on Angle",
     "thumb": {
       "cmc": {
@@ -10219,7 +10219,7 @@
     }
   },
   "18a": {
-    "symbol_id": "01-06-005",
+    "symbol_id": "01-06-005-01",
     "name": "Baby Hinge",
     "thumb": {
       "cmc": {
@@ -10293,7 +10293,7 @@
     }
   },
   "18b": {
-    "symbol_id": "01-06-006",
+    "symbol_id": "01-06-006-01",
     "name": "Index Middle Ring, Bent",
     "thumb": {
       "cmc": {
@@ -10367,7 +10367,7 @@
     }
   },
   "18c": {
-    "symbol_id": "01-06-007",
+    "symbol_id": "01-06-007-01",
     "name": "Index Middle Ring, Unit",
     "thumb": {
       "cmc": {
@@ -10441,7 +10441,7 @@
     }
   },
   "18d": {
-    "symbol_id": "01-06-008",
+    "symbol_id": "01-06-008-01",
     "name": "Index Middle Ring, Unit Hinge",
     "thumb": {
       "cmc": {
@@ -10515,7 +10515,7 @@
     }
   },
   "18e": {
-    "symbol_id": "01-06-009",
+    "symbol_id": "01-06-009-01",
     "name": "Baby Down",
     "thumb": {
       "cmc": {
@@ -10589,7 +10589,7 @@
     }
   },
   "18f": {
-    "symbol_id": "01-06-010",
+    "symbol_id": "01-06-010-01",
     "name": "Baby Down, Ripple Straight",
     "thumb": {
       "cmc": {
@@ -10663,7 +10663,7 @@
     }
   },
   "190": {
-    "symbol_id": "01-06-011",
+    "symbol_id": "01-06-011-01",
     "name": "Baby Down, Ripple Curved",
     "thumb": {
       "cmc": {
@@ -10737,7 +10737,7 @@
     }
   },
   "191": {
-    "symbol_id": "01-06-012",
+    "symbol_id": "01-06-012-01",
     "name": "Baby Down, Others Circle",
     "thumb": {
       "cmc": {
@@ -10811,7 +10811,7 @@
     }
   },
   "192": {
-    "symbol_id": "01-06-013",
+    "symbol_id": "01-06-013-01",
     "name": "Baby Up",
     "thumb": {
       "cmc": {
@@ -10885,7 +10885,7 @@
     }
   },
   "193": {
-    "symbol_id": "01-06-014",
+    "symbol_id": "01-06-014-01",
     "name": "Baby Up On Fist Thumb Under",
     "thumb": {
       "cmc": {
@@ -10959,7 +10959,7 @@
     }
   },
   "194": {
-    "symbol_id": "01-06-015",
+    "symbol_id": "01-06-015-01",
     "name": "Baby Up On Circle",
     "thumb": {
       "cmc": {
@@ -11033,7 +11033,7 @@
     }
   },
   "195": {
-    "symbol_id": "01-06-016",
+    "symbol_id": "01-06-016-01",
     "name": "Baby Up On Oval",
     "thumb": {
       "cmc": {
@@ -11107,7 +11107,7 @@
     }
   },
   "196": {
-    "symbol_id": "01-06-017",
+    "symbol_id": "01-06-017-01",
     "name": "Baby Up On Angle",
     "thumb": {
       "cmc": {
@@ -11181,7 +11181,7 @@
     }
   },
   "197": {
-    "symbol_id": "01-06-018",
+    "symbol_id": "01-06-018-01",
     "name": "Baby Raised Knuckle",
     "thumb": {
       "cmc": {
@@ -11255,7 +11255,7 @@
     }
   },
   "198": {
-    "symbol_id": "01-06-019",
+    "symbol_id": "01-06-019-01",
     "name": "Baby Bent",
     "thumb": {
       "cmc": {
@@ -11329,7 +11329,7 @@
     }
   },
   "199": {
-    "symbol_id": "01-06-020",
+    "symbol_id": "01-06-020-01",
     "name": "Baby Touches Thumb",
     "thumb": {
       "cmc": {
@@ -11403,7 +11403,7 @@
     }
   },
   "19a": {
-    "symbol_id": "01-06-021",
+    "symbol_id": "01-06-021-01",
     "name": "Baby Thumb",
     "thumb": {
       "cmc": {
@@ -11477,7 +11477,7 @@
     }
   },
   "19b": {
-    "symbol_id": "01-06-022",
+    "symbol_id": "01-06-022-01",
     "name": "Baby Thumb on Hinge",
     "thumb": {
       "cmc": {
@@ -11551,7 +11551,7 @@
     }
   },
   "19c": {
-    "symbol_id": "01-06-023",
+    "symbol_id": "01-06-023-01",
     "name": "Baby Index Thumb",
     "thumb": {
       "cmc": {
@@ -11625,7 +11625,7 @@
     }
   },
   "19d": {
-    "symbol_id": "01-06-024",
+    "symbol_id": "01-06-024-01",
     "name": "Baby Index Thumb on Hinge",
     "thumb": {
       "cmc": {
@@ -11699,7 +11699,7 @@
     }
   },
   "19e": {
-    "symbol_id": "01-06-025",
+    "symbol_id": "01-06-025-01",
     "name": "Baby Index Thumb, Angle Out",
     "thumb": {
       "cmc": {
@@ -11773,7 +11773,7 @@
     }
   },
   "19f": {
-    "symbol_id": "01-06-026",
+    "symbol_id": "01-06-026-01",
     "name": "Baby Index Thumb, Index Thumb Angle",
     "thumb": {
       "cmc": {
@@ -11847,7 +11847,7 @@
     }
   },
   "1a0": {
-    "symbol_id": "01-06-027",
+    "symbol_id": "01-06-027-01",
     "name": "Baby Index",
     "thumb": {
       "cmc": {
@@ -11921,7 +11921,7 @@
     }
   },
   "1a1": {
-    "symbol_id": "01-06-028",
+    "symbol_id": "01-06-028-01",
     "name": "Baby Index On Circle",
     "thumb": {
       "cmc": {
@@ -11995,7 +11995,7 @@
     }
   },
   "1a2": {
-    "symbol_id": "01-06-029",
+    "symbol_id": "01-06-029-01",
     "name": "Baby Index On Hinge",
     "thumb": {
       "cmc": {
@@ -12069,7 +12069,7 @@
     }
   },
   "1a3": {
-    "symbol_id": "01-06-030",
+    "symbol_id": "01-06-030-01",
     "name": "Baby Index On Angle",
     "thumb": {
       "cmc": {
@@ -12143,7 +12143,7 @@
     }
   },
   "1a4": {
-    "symbol_id": "01-07-001",
+    "symbol_id": "01-07-001-01",
     "name": "Index Middle Baby",
     "thumb": {
       "cmc": {
@@ -12217,7 +12217,7 @@
     }
   },
   "1a5": {
-    "symbol_id": "01-07-002",
+    "symbol_id": "01-07-002-01",
     "name": "Index Middle Baby on Circle",
     "thumb": {
       "cmc": {
@@ -12291,7 +12291,7 @@
     }
   },
   "1a6": {
-    "symbol_id": "01-07-003",
+    "symbol_id": "01-07-003-01",
     "name": "Index Middle Baby on Hinge",
     "thumb": {
       "cmc": {
@@ -12365,7 +12365,7 @@
     }
   },
   "1a7": {
-    "symbol_id": "01-07-004",
+    "symbol_id": "01-07-004-01",
     "name": "Ring Hinge",
     "thumb": {
       "cmc": {
@@ -12439,7 +12439,7 @@
     }
   },
   "1a8": {
-    "symbol_id": "01-07-005",
+    "symbol_id": "01-07-005-01",
     "name": "Index Middle Baby on Angle",
     "thumb": {
       "cmc": {
@@ -12513,7 +12513,7 @@
     }
   },
   "1a9": {
-    "symbol_id": "01-07-006",
+    "symbol_id": "01-07-006-01",
     "name": "Index Middle Cross with Baby",
     "thumb": {
       "cmc": {
@@ -12587,7 +12587,7 @@
     }
   },
   "1aa": {
-    "symbol_id": "01-07-007",
+    "symbol_id": "01-07-007-01",
     "name": "Index Middle Cross with Baby on Circle",
     "thumb": {
       "cmc": {
@@ -12661,7 +12661,7 @@
     }
   },
   "1ab": {
-    "symbol_id": "01-07-008",
+    "symbol_id": "01-07-008-01",
     "name": "Ring Down",
     "thumb": {
       "cmc": {
@@ -12735,7 +12735,7 @@
     }
   },
   "1ac": {
-    "symbol_id": "01-07-009",
+    "symbol_id": "01-07-009-01",
     "name": "Ring Down, Index Thumb Hook, Middle Hinge",
     "thumb": {
       "cmc": {
@@ -12809,7 +12809,7 @@
     }
   },
   "1ad": {
-    "symbol_id": "01-07-010",
+    "symbol_id": "01-07-010-01",
     "name": "Ring Down, Middle Thumb Angle, Index Cross",
     "thumb": {
       "cmc": {
@@ -12883,7 +12883,7 @@
     }
   },
   "1ae": {
-    "symbol_id": "01-07-011",
+    "symbol_id": "01-07-011-01",
     "name": "Ring Up",
     "thumb": {
       "cmc": {
@@ -12957,7 +12957,7 @@
     }
   },
   "1af": {
-    "symbol_id": "01-07-012",
+    "symbol_id": "01-07-012-01",
     "name": "Ring Raised Knuckle",
     "thumb": {
       "cmc": {
@@ -13031,7 +13031,7 @@
     }
   },
   "1b0": {
-    "symbol_id": "01-07-013",
+    "symbol_id": "01-07-013-01",
     "name": "Ring Baby",
     "thumb": {
       "cmc": {
@@ -13105,7 +13105,7 @@
     }
   },
   "1b1": {
-    "symbol_id": "01-07-014",
+    "symbol_id": "01-07-014-01",
     "name": "Ring Baby on Circle",
     "thumb": {
       "cmc": {
@@ -13179,7 +13179,7 @@
     }
   },
   "1b2": {
-    "symbol_id": "01-07-015",
+    "symbol_id": "01-07-015-01",
     "name": "Ring Baby on Oval",
     "thumb": {
       "cmc": {
@@ -13253,7 +13253,7 @@
     }
   },
   "1b3": {
-    "symbol_id": "01-07-016",
+    "symbol_id": "01-07-016-01",
     "name": "Ring Baby on Angle",
     "thumb": {
       "cmc": {
@@ -13327,7 +13327,7 @@
     }
   },
   "1b4": {
-    "symbol_id": "01-07-017",
+    "symbol_id": "01-07-017-01",
     "name": "Ring Middle",
     "thumb": {
       "cmc": {
@@ -13401,7 +13401,7 @@
     }
   },
   "1b5": {
-    "symbol_id": "01-07-018",
+    "symbol_id": "01-07-018-01",
     "name": "Ring Middle Unit",
     "thumb": {
       "cmc": {
@@ -13475,7 +13475,7 @@
     }
   },
   "1b6": {
-    "symbol_id": "01-07-019",
+    "symbol_id": "01-07-019-01",
     "name": "Ring Middle Raised Knuckles",
     "thumb": {
       "cmc": {
@@ -13549,7 +13549,7 @@
     }
   },
   "1b7": {
-    "symbol_id": "01-07-020",
+    "symbol_id": "01-07-020-01",
     "name": "Ring Index",
     "thumb": {
       "cmc": {
@@ -13623,7 +13623,7 @@
     }
   },
   "1b8": {
-    "symbol_id": "01-07-021",
+    "symbol_id": "01-07-021-01",
     "name": "Ring Thumb",
     "thumb": {
       "cmc": {
@@ -13697,7 +13697,7 @@
     }
   },
   "1b9": {
-    "symbol_id": "01-07-022",
+    "symbol_id": "01-07-022-01",
     "name": "Ring Thumb Hook",
     "thumb": {
       "cmc": {
@@ -13771,7 +13771,7 @@
     }
   },
   "1ba": {
-    "symbol_id": "01-08-001",
+    "symbol_id": "01-08-001-01",
     "name": "Index Ring Baby",
     "thumb": {
       "cmc": {
@@ -13845,7 +13845,7 @@
     }
   },
   "1bb": {
-    "symbol_id": "01-08-002",
+    "symbol_id": "01-08-002-01",
     "name": "Index Ring Baby on Circle",
     "thumb": {
       "cmc": {
@@ -13919,7 +13919,7 @@
     }
   },
   "1bc": {
-    "symbol_id": "01-08-003",
+    "symbol_id": "01-08-003-01",
     "name": "Index Ring Baby on Curlicue",
     "thumb": {
       "cmc": {
@@ -13993,7 +13993,7 @@
     }
   },
   "1bd": {
-    "symbol_id": "01-08-004",
+    "symbol_id": "01-08-004-01",
     "name": "Index Ring Baby on Hook Out",
     "thumb": {
       "cmc": {
@@ -14067,7 +14067,7 @@
     }
   },
   "1be": {
-    "symbol_id": "01-08-005",
+    "symbol_id": "01-08-005-01",
     "name": "Index Ring Baby on Hook In",
     "thumb": {
       "cmc": {
@@ -14141,7 +14141,7 @@
     }
   },
   "1bf": {
-    "symbol_id": "01-08-006",
+    "symbol_id": "01-08-006-01",
     "name": "Index Ring Baby on Hook Under",
     "thumb": {
       "cmc": {
@@ -14215,7 +14215,7 @@
     }
   },
   "1c0": {
-    "symbol_id": "01-08-007",
+    "symbol_id": "01-08-007-01",
     "name": "Index Ring Baby on Cup",
     "thumb": {
       "cmc": {
@@ -14289,7 +14289,7 @@
     }
   },
   "1c1": {
-    "symbol_id": "01-08-008",
+    "symbol_id": "01-08-008-01",
     "name": "Index Ring Baby on Hinge",
     "thumb": {
       "cmc": {
@@ -14363,7 +14363,7 @@
     }
   },
   "1c2": {
-    "symbol_id": "01-08-009",
+    "symbol_id": "01-08-009-01",
     "name": "Index Ring Baby on Angle Out",
     "thumb": {
       "cmc": {
@@ -14437,7 +14437,7 @@
     }
   },
   "1c3": {
-    "symbol_id": "01-08-010",
+    "symbol_id": "01-08-010-01",
     "name": "Index Ring Baby on Angle",
     "thumb": {
       "cmc": {
@@ -14511,7 +14511,7 @@
     }
   },
   "1c4": {
-    "symbol_id": "01-08-011",
+    "symbol_id": "01-08-011-01",
     "name": "Middle Down",
     "thumb": {
       "cmc": {
@@ -14585,7 +14585,7 @@
     }
   },
   "1c5": {
-    "symbol_id": "01-08-012",
+    "symbol_id": "01-08-012-01",
     "name": "Middle Hinge",
     "thumb": {
       "cmc": {
@@ -14659,7 +14659,7 @@
     }
   },
   "1c6": {
-    "symbol_id": "01-08-013",
+    "symbol_id": "01-08-013-01",
     "name": "Middle Up",
     "thumb": {
       "cmc": {
@@ -14733,7 +14733,7 @@
     }
   },
   "1c7": {
-    "symbol_id": "01-08-014",
+    "symbol_id": "01-08-014-01",
     "name": "Middle Up on Circle",
     "thumb": {
       "cmc": {
@@ -14807,7 +14807,7 @@
     }
   },
   "1c8": {
-    "symbol_id": "01-08-015",
+    "symbol_id": "01-08-015-01",
     "name": "Middle Raised Knuckle",
     "thumb": {
       "cmc": {
@@ -14881,7 +14881,7 @@
     }
   },
   "1c9": {
-    "symbol_id": "01-08-016",
+    "symbol_id": "01-08-016-01",
     "name": "Middle Up, Thumb Side",
     "thumb": {
       "cmc": {
@@ -14955,7 +14955,7 @@
     }
   },
   "1ca": {
-    "symbol_id": "01-08-017",
+    "symbol_id": "01-08-017-01",
     "name": "Middle Thumb Hook",
     "thumb": {
       "cmc": {
@@ -15029,7 +15029,7 @@
     }
   },
   "1cb": {
-    "symbol_id": "01-08-018",
+    "symbol_id": "01-08-018-01",
     "name": "Middle Thumb Baby",
     "thumb": {
       "cmc": {
@@ -15103,7 +15103,7 @@
     }
   },
   "1cc": {
-    "symbol_id": "01-08-019",
+    "symbol_id": "01-08-019-01",
     "name": "Middle Baby",
     "thumb": {
       "cmc": {
@@ -15177,7 +15177,7 @@
     }
   },
   "1cd": {
-    "symbol_id": "01-09-001",
+    "symbol_id": "01-09-001-01",
     "name": "Middle Ring Baby",
     "thumb": {
       "cmc": {
@@ -15251,7 +15251,7 @@
     }
   },
   "1ce": {
-    "symbol_id": "01-09-002",
+    "symbol_id": "01-09-002-01",
     "name": "Middle Ring Baby on Circle",
     "thumb": {
       "cmc": {
@@ -15325,7 +15325,7 @@
     }
   },
   "1cf": {
-    "symbol_id": "01-09-003",
+    "symbol_id": "01-09-003-01",
     "name": "Middle Ring Baby on Curlicue",
     "thumb": {
       "cmc": {
@@ -15399,7 +15399,7 @@
     }
   },
   "1d0": {
-    "symbol_id": "01-09-004",
+    "symbol_id": "01-09-004-01",
     "name": "Middle Ring Baby on Cup",
     "thumb": {
       "cmc": {
@@ -15473,7 +15473,7 @@
     }
   },
   "1d1": {
-    "symbol_id": "01-09-005",
+    "symbol_id": "01-09-005-01",
     "name": "Middle Ring Baby on Hinge",
     "thumb": {
       "cmc": {
@@ -15547,7 +15547,7 @@
     }
   },
   "1d2": {
-    "symbol_id": "01-09-006",
+    "symbol_id": "01-09-006-01",
     "name": "Middle Ring Baby on Angle Out",
     "thumb": {
       "cmc": {
@@ -15621,7 +15621,7 @@
     }
   },
   "1d3": {
-    "symbol_id": "01-09-007",
+    "symbol_id": "01-09-007-01",
     "name": "Middle Ring Baby on Angle In",
     "thumb": {
       "cmc": {
@@ -15695,7 +15695,7 @@
     }
   },
   "1d4": {
-    "symbol_id": "01-09-008",
+    "symbol_id": "01-09-008-01",
     "name": "Middle Ring Baby on Angle",
     "thumb": {
       "cmc": {
@@ -15769,7 +15769,7 @@
     }
   },
   "1d5": {
-    "symbol_id": "01-09-009",
+    "symbol_id": "01-09-009-01",
     "name": "Middle Ring Baby Bent",
     "thumb": {
       "cmc": {
@@ -15843,7 +15843,7 @@
     }
   },
   "1d6": {
-    "symbol_id": "01-09-010",
+    "symbol_id": "01-09-010-01",
     "name": "Middle Ring Baby Unit on Claw",
     "thumb": {
       "cmc": {
@@ -15917,7 +15917,7 @@
     }
   },
   "1d7": {
-    "symbol_id": "01-09-011",
+    "symbol_id": "01-09-011-01",
     "name": "Middle Ring Baby Unit on Claw Side",
     "thumb": {
       "cmc": {
@@ -15991,7 +15991,7 @@
     }
   },
   "1d8": {
-    "symbol_id": "01-09-012",
+    "symbol_id": "01-09-012-01",
     "name": "Middle Ring Baby Unit on Hook Out",
     "thumb": {
       "cmc": {
@@ -16065,7 +16065,7 @@
     }
   },
   "1d9": {
-    "symbol_id": "01-09-013",
+    "symbol_id": "01-09-013-01",
     "name": "Middle Ring Baby Unit on Hook In",
     "thumb": {
       "cmc": {
@@ -16139,7 +16139,7 @@
     }
   },
   "1da": {
-    "symbol_id": "01-09-014",
+    "symbol_id": "01-09-014-01",
     "name": "Middle Ring Baby Unit on Hook",
     "thumb": {
       "cmc": {
@@ -16213,7 +16213,7 @@
     }
   },
   "1db": {
-    "symbol_id": "01-09-015",
+    "symbol_id": "01-09-015-01",
     "name": "Index Hinge",
     "thumb": {
       "cmc": {
@@ -16287,7 +16287,7 @@
     }
   },
   "1dc": {
-    "symbol_id": "01-09-016",
+    "symbol_id": "01-09-016-01",
     "name": "Index Thumb Side",
     "thumb": {
       "cmc": {
@@ -16361,7 +16361,7 @@
     }
   },
   "1dd": {
-    "symbol_id": "01-09-017",
+    "symbol_id": "01-09-017-01",
     "name": "Index Thumb Side on Hinge",
     "thumb": {
       "cmc": {
@@ -16435,7 +16435,7 @@
     }
   },
   "1de": {
-    "symbol_id": "01-09-018",
+    "symbol_id": "01-09-018-01",
     "name": "Index Thumb Side, Thumb Diagonal",
     "thumb": {
       "cmc": {
@@ -16509,7 +16509,7 @@
     }
   },
   "1df": {
-    "symbol_id": "01-09-019",
+    "symbol_id": "01-09-019-01",
     "name": "Index Thumb Side, Thumb Unit",
     "thumb": {
       "cmc": {
@@ -16583,7 +16583,7 @@
     }
   },
   "1e0": {
-    "symbol_id": "01-09-020",
+    "symbol_id": "01-09-020-01",
     "name": "Index Thumb Side, Thumb Bent",
     "thumb": {
       "cmc": {
@@ -16657,7 +16657,7 @@
     }
   },
   "1e1": {
-    "symbol_id": "01-09-021",
+    "symbol_id": "01-09-021-01",
     "name": "Index Thumb Side, Index Bent",
     "thumb": {
       "cmc": {
@@ -16731,7 +16731,7 @@
     }
   },
   "1e2": {
-    "symbol_id": "01-09-022",
+    "symbol_id": "01-09-022-01",
     "name": "Index Thumb Side, Both Bent",
     "thumb": {
       "cmc": {
@@ -16805,7 +16805,7 @@
     }
   },
   "1e3": {
-    "symbol_id": "01-09-023",
+    "symbol_id": "01-09-023-01",
     "name": "Index Thumb Side, Index Hinge",
     "thumb": {
       "cmc": {
@@ -16879,7 +16879,7 @@
     }
   },
   "1e4": {
-    "symbol_id": "01-09-024",
+    "symbol_id": "01-09-024-01",
     "name": "Index Thumb Forward, Index Straight",
     "thumb": {
       "cmc": {
@@ -16953,7 +16953,7 @@
     }
   },
   "1e5": {
-    "symbol_id": "01-09-025",
+    "symbol_id": "01-09-025-01",
     "name": "Index Thumb Forward, Index Bent",
     "thumb": {
       "cmc": {
@@ -17027,7 +17027,7 @@
     }
   },
   "1e6": {
-    "symbol_id": "01-09-026",
+    "symbol_id": "01-09-026-01",
     "name": "Index Thumb Hook",
     "thumb": {
       "cmc": {
@@ -17101,7 +17101,7 @@
     }
   },
   "1e7": {
-    "symbol_id": "01-09-027",
+    "symbol_id": "01-09-027-01",
     "name": "Index Thumb Curlicue",
     "thumb": {
       "cmc": {
@@ -17175,7 +17175,7 @@
     }
   },
   "1e8": {
-    "symbol_id": "01-09-028",
+    "symbol_id": "01-09-028-01",
     "name": "Index Thumb Curve, Thumb Side",
     "thumb": {
       "cmc": {
@@ -17249,7 +17249,7 @@
     }
   },
   "1e9": {
-    "symbol_id": "01-09-029",
+    "symbol_id": "01-09-029-01",
     "name": "Index Thumb Curve, Thumb Inside on Claw",
     "thumb": {
       "cmc": {
@@ -17323,7 +17323,7 @@
     }
   },
   "1ea": {
-    "symbol_id": "01-09-030",
+    "symbol_id": "01-09-030-01",
     "name": "Index Thumb Curve, Thumb Under",
     "thumb": {
       "cmc": {
@@ -17397,7 +17397,7 @@
     }
   },
   "1eb": {
-    "symbol_id": "01-09-031",
+    "symbol_id": "01-09-031-01",
     "name": "Index Thumb Circle",
     "thumb": {
       "cmc": {
@@ -17471,7 +17471,7 @@
     }
   },
   "1ec": {
-    "symbol_id": "01-09-032",
+    "symbol_id": "01-09-032-01",
     "name": "Index Thumb Cup",
     "thumb": {
       "cmc": {
@@ -17545,7 +17545,7 @@
     }
   },
   "1ed": {
-    "symbol_id": "01-09-033",
+    "symbol_id": "01-09-033-01",
     "name": "Index Thumb Cup Open",
     "thumb": {
       "cmc": {
@@ -17619,7 +17619,7 @@
     }
   },
   "1ee": {
-    "symbol_id": "01-09-034",
+    "symbol_id": "01-09-034-01",
     "name": "Index Thumb Hinge Open",
     "thumb": {
       "cmc": {
@@ -17693,7 +17693,7 @@
     }
   },
   "1ef": {
-    "symbol_id": "01-09-035",
+    "symbol_id": "01-09-035-01",
     "name": "Index Thumb Hinge Large",
     "thumb": {
       "cmc": {
@@ -17767,7 +17767,7 @@
     }
   },
   "1f0": {
-    "symbol_id": "01-09-036",
+    "symbol_id": "01-09-036-01",
     "name": "Index Thumb Hinge",
     "thumb": {
       "cmc": {
@@ -17841,7 +17841,7 @@
     }
   },
   "1f1": {
-    "symbol_id": "01-09-037",
+    "symbol_id": "01-09-037-01",
     "name": "Index Thumb Hinge Small",
     "thumb": {
       "cmc": {
@@ -17915,7 +17915,7 @@
     }
   },
   "1f2": {
-    "symbol_id": "01-09-038",
+    "symbol_id": "01-09-038-01",
     "name": "Index Thumb Angle Out",
     "thumb": {
       "cmc": {
@@ -17989,7 +17989,7 @@
     }
   },
   "1f3": {
-    "symbol_id": "01-09-039",
+    "symbol_id": "01-09-039-01",
     "name": "Index Thumb Angle In",
     "thumb": {
       "cmc": {
@@ -18063,7 +18063,7 @@
     }
   },
   "1f4": {
-    "symbol_id": "01-09-040",
+    "symbol_id": "01-09-040-01",
     "name": "Index Thumb Angle",
     "thumb": {
       "cmc": {
@@ -18137,7 +18137,7 @@
     }
   },
   "1f5": {
-    "symbol_id": "01-10-001",
+    "symbol_id": "01-10-001-01",
     "name": "Thumb",
     "thumb": {
       "cmc": {
@@ -18211,7 +18211,7 @@
     }
   },
   "1f6": {
-    "symbol_id": "01-10-002",
+    "symbol_id": "01-10-002-01",
     "name": "Thumb Heel",
     "thumb": {
       "cmc": {
@@ -18285,7 +18285,7 @@
     }
   },
   "1f7": {
-    "symbol_id": "01-10-003",
+    "symbol_id": "01-10-003-01",
     "name": "Thumb Side Diagonal",
     "thumb": {
       "cmc": {
@@ -18359,7 +18359,7 @@
     }
   },
   "1f8": {
-    "symbol_id": "01-10-004",
+    "symbol_id": "01-10-004-01",
     "name": "Thumb Side Unit",
     "thumb": {
       "cmc": {
@@ -18433,7 +18433,7 @@
     }
   },
   "1f9": {
-    "symbol_id": "01-10-005",
+    "symbol_id": "01-10-005-01",
     "name": "Thumb Side Bent",
     "thumb": {
       "cmc": {
@@ -18507,7 +18507,7 @@
     }
   },
   "1fa": {
-    "symbol_id": "01-10-006",
+    "symbol_id": "01-10-006-01",
     "name": "Thumb Forward",
     "thumb": {
       "cmc": {
@@ -18581,7 +18581,7 @@
     }
   },
   "1fb": {
-    "symbol_id": "01-10-007",
+    "symbol_id": "01-10-007-01",
     "name": "Thumb Between Index Middle",
     "thumb": {
       "cmc": {
@@ -18655,7 +18655,7 @@
     }
   },
   "1fc": {
-    "symbol_id": "01-10-008",
+    "symbol_id": "01-10-008-01",
     "name": "Thumb Between Middle Ring",
     "thumb": {
       "cmc": {
@@ -18729,7 +18729,7 @@
     }
   },
   "1fd": {
-    "symbol_id": "01-10-009",
+    "symbol_id": "01-10-009-01",
     "name": "Thumb Between Ring Baby",
     "thumb": {
       "cmc": {
@@ -18803,7 +18803,7 @@
     }
   },
   "1fe": {
-    "symbol_id": "01-10-010",
+    "symbol_id": "01-10-010-01",
     "name": "Thumb Under Two Fingers",
     "thumb": {
       "cmc": {
@@ -18877,7 +18877,7 @@
     }
   },
   "1ff": {
-    "symbol_id": "01-10-011",
+    "symbol_id": "01-10-011-01",
     "name": "Thumb Over Two Fingers",
     "thumb": {
       "cmc": {
@@ -18951,7 +18951,7 @@
     }
   },
   "200": {
-    "symbol_id": "01-10-012",
+    "symbol_id": "01-10-012-01",
     "name": "Thumb Under Three Fingers",
     "thumb": {
       "cmc": {
@@ -19025,7 +19025,7 @@
     }
   },
   "201": {
-    "symbol_id": "01-10-013",
+    "symbol_id": "01-10-013-01",
     "name": "Thumb Under Four Fingers",
     "thumb": {
       "cmc": {
@@ -19099,7 +19099,7 @@
     }
   },
   "202": {
-    "symbol_id": "01-10-014",
+    "symbol_id": "01-10-014-01",
     "name": "Thumb Over Four Raised Knuckles",
     "thumb": {
       "cmc": {
@@ -19173,7 +19173,7 @@
     }
   },
   "203": {
-    "symbol_id": "01-10-015",
+    "symbol_id": "01-10-015-01",
     "name": "Fist",
     "thumb": {
       "cmc": {
@@ -19247,7 +19247,7 @@
     }
   },
   "204": {
-    "symbol_id": "01-10-016",
+    "symbol_id": "01-10-016-01",
     "name": "Fist Heel",
     "thumb": {
       "cmc": {
