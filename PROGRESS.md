@@ -3037,6 +3037,168 @@ cần mở `iswa_base_symbol_names.json` riêng.
    `core/types.py`, `core/movement_paths.py`, `scripts/`, `tests/` đổi).
 5. `_meta` ghi đúng nguồn mới (xem mục trên).
 
+## Pha 21 — `amplitude` từ variation + kích thước glyph (ưu tiên 3/3 —
+hoàn tất chuỗi `symbol_id` → `path_type` → `amplitude`)
+
+### Phần 0 — Vấn đề
+
+`movement_paths.json` gán `amplitude = 10.0` cho **cả 242 base symbol**,
+trong khi ISWA phân biệt kích thước rất rõ qua trường **variation** (Pha 19
+khôi phục) — vd `S22a` "...Small" = `02-03-001-01`, `S22c` "...Large" =
+`02-03-001-03`, cùng base `001`, khác variation. Đây là lý do task này phải
+làm SAU CÙNG: cần variation (Pha 19) để biết đâu là "anh em cùng base", và
+cần `path_type` đúng (Pha 20) để không so kích thước NGANG giữa các dạng
+quỹ đạo khác nhau (bẫy Phần 0: 1 glyph Zigzag rộng vì nó zigzag, không phải
+vì đi xa).
+
+### Phần A1 — Kiểm chứng: variation CÓ nhất quán là kích thước không?
+
+**Đo trực tiếp trên cả 242 base** (không giả định): gom theo
+`base_symbol_id` (3 phần đầu Symbol ID), có **58/129 base_symbol_id có
+>1 variation**. Phân loại tên của từng nhóm (so khớp từ khoá kích thước
+Small/Medium/Large/Largest trong tên, kiểm phần còn lại của tên có giống
+hệt nhau không, kiểm thứ tự variation có tăng theo kích thước không):
+
+| Loại | Số nhóm | Ý nghĩa |
+|---|---|---|
+| `PURE_SIZE_MONOTONIC` | 27 | Chỉ khác 1 từ kích thước, variation tăng đúng theo kích thước tăng |
+| `PURE_SIZE_NONMONOTONIC` | 6 | Chỉ khác 1 từ kích thước, nhưng **variation KHÔNG tăng theo kích thước** (vd `S216`="Squeeze **Large** Single" là variation 1, `S217`="Squeeze **Small** Single" là variation 2 — Large đứng TRƯỚC Small) |
+| `SIZE_WORD_BUT_DIFFERENT_STEM` | 6 | Có từ kích thước, nhưng lẫn thêm 1 trục khác cùng lúc (vd "Hump...**2 Humps** Small/Large" và "...**3 Humps** Small/Large" — kích thước × số lượng hump) |
+| `NOT_PURE_SIZE` | 19 | **Variation dùng cho ý nghĩa KHÁC kích thước hẳn** — đổi hướng (`S223`="Up Sequential" vs `S224`="Down Sequential"), đổi số lần lặp (`S252/253/254`="Travel Arm Spiral Single/Double/Triple"), hoặc đổi hẳn DẠNG quỹ đạo trong cùng 1 base_symbol_id (`02-03-001` variation 1-4 = "Single Straight..." (path_type STRAIGHT), variation 5 = "Single Wrist Flex" (path_type FLEX) — không phải kích thước của Straight, mà là 1 dạng khác hẳn), hoặc nhãn không khớp mẫu chuẩn (`S2d9`="Curve Floor Plane **Combined**", `S2dc`="Wave Floor Plane **Snake**") |
+
+**Kết luận A1 (ghi trước khi gán số, đúng yêu cầu brief):** variation
+**KHÔNG** phải một thang kích thước thuần nhất, đơn điệu, áp dụng chung cho
+mọi base — nhưng cũng **KHÔNG** phải hoàn toàn không liên quan đến kích
+thước (39/58 = 67,2% nhóm CÓ tín hiệu kích thước thật, dù không phải lúc
+nào cũng đơn điệu theo số variation). Đây KHÔNG phải trường hợp "variation
+vô nghĩa với kích thước" mà brief's điều kiện dừng-và-báo nhắm tới (đọc kỹ
+Phần A1 của brief: các câu hỏi "có bao nhiêu mức", "base nào chỉ có 1
+variation dùng mặc định nào" đã tự ngầm định trước là sẽ có trường hợp
+không đơn giản, cần xử lý có ghi chú chứ không phải dấu hiệu để bỏ cuộc) —
+nên **không dừng**, chuyển sang đo trực tiếp kích thước GLYPH thật (cách 2,
+brief tự nêu là ưu tiên) thay vì cố phân loại/parse tên tiếng Anh, vì cách
+đó né được HOÀN TOÀN việc phải phân loại 4 nhóm trên.
+
+### Phần A2 — Chọn "cách 2": tỉ lệ kích thước glyph, so TRONG CÙNG 1 base
+
+**Đã tự kiểm chứng bằng số đo thật trước khi quyết định** (không chỉ tin
+theo trực giác) — đọc glyph thật từ font ISWA
+(`@sutton-signwriting/font-ttf`, cùng font `gen_valid_combinations.py` đã
+dùng) cho vài trường hợp "khó" ở A1:
+
+| `base_hex` | Tên | `max(width,height)` glyph thật |
+|---|---|---|
+| `0x22a` | ...Small | 147 |
+| `0x22b` | ...Medium | 297 |
+| `0x22c` | ...Large | 417 |
+| `0x22d` | ...Largest | 497 |
+| `0x22e` | Single Wrist Flex (KHÔNG phải kích thước của Straight) | 180 (nằm NGOÀI thang Straight — đúng, vì đây là path_type khác) |
+| `0x216` | Squeeze **Large** Single (variation 1) | 79 |
+| `0x217` | Squeeze **Small** Single (variation 2) | 63 |
+| `0x223` | Hinge...Up Sequential | 348 |
+| `0x224` | Hinge...Down Sequential (KHÔNG phải khác kích thước, chỉ đổi hướng) | 347 (gần bằng nhau — đúng, KHÔNG có khác biệt kích thước giả tạo) |
+
+**Glyph thật tự động cho kết quả đúng ở CẢ 4 loại A1** — kể cả loại
+`PURE_SIZE_NONMONOTONIC` (Large ở variation 1 vẫn to hơn Small ở variation 2
+— vì đo trực tiếp pixel, không dựa vào thứ tự variation) và loại
+`NOT_PURE_SIZE` (Up/Down cho ra kích thước gần như bằng nhau — không bịa ra
+khác biệt không có thật). **Không cần phân loại tên bằng tay nữa** — công
+thức tổng quát dùng được cho cả 242 base, không cần case-by-case.
+
+**Công thức cuối (`scripts/gen_movement_paths.py::amplitudes_for_group()`):**
+nhóm base theo `(base_symbol_id, path_type)` — **path_type** (không chỉ
+base_symbol_id) mới là ranh giới nhóm đúng, để tách `0x22e` (Wrist Flex)
+khỏi 4 anh em Straight của nó dù chung `base_symbol_id`. Trong mỗi nhóm,
+`amplitude = 10.0 × (kích_thước_glyph_của_base / kích_thước_glyph_trung_bình_cả_nhóm)`
+— **chỉ tỉ lệ TRONG nhóm mới là dữ liệu thật (derived)**, còn mức tuyệt đối
+10.0 là lựa chọn CŨ giữ nguyên (không đổi thang, đúng ràng buộc A3). Nhóm
+chỉ có 1 thành viên (base 1-variation, hoặc 1 variation lẻ loi khác
+path_type — như `0x22e`) tự động chuẩn hoá về ĐÚNG 10.0 (own/own = 1) —
+đây chính là câu trả lời cho câu hỏi A1 "base chỉ có 1 variation dùng giá
+trị mặc định nào".
+
+`scripts/gen_movement_glyph_sizes.py` (mới): fetch font qua `npm pack`
+(cùng cách `gen_valid_combinations.py`), đo `max(width, height)` glyph ở
+fill hợp lệ ĐẦU TIÊN (`valid_combinations_for()`, cùng quy ước
+`test_iswa_data.py` đã dùng cho Category 1), rotation=0, cho cả 242 base
+Category 2, ghi `data/iswa_movement_glyph_sizes.json`. Tự verify: đúng
+242 entry, 4 spot-check khớp số đo tay ở trên. Chạy 2 lần cho byte-identical
+(kiểm tay, không phải pytest test — cần mạng, cùng lý do D6/C7 trước đó).
+
+### Test B1-B8
+
+`tests/test_amplitude_from_glyph_sizes.py` (mới, 14 test case):
+- B1: amplitude không đồng nhất (142/242 giá trị khác nhau), thang
+  Small<Medium<Large<Largest (`0x22a`→`0x22d`) đúng thứ tự. ✅
+- B2: 5 cặp Large/Small (khác path_type, gồm CẢ cặp variation-order-ngược
+  `0x216`/`0x217`) — Large luôn > Small. ✅
+- B3: base 1-variation (`0x205` "Touch Single") có amplitude hợp lệ,
+  đúng bằng 10.0 (giá trị mặc định — câu trả lời A1). Toàn bộ 242 base đều
+  >0. ✅
+- B4: trung bình 242 base = **10,00000** (chính xác 10.0 theo lý thuyết —
+  mỗi nhóm tự chuẩn hoá về đúng 10.0, trung bình có trọng số của các số
+  10.0 vẫn là 10.0; số ghi trong `_meta` là 10,0000 sau làm tròn 4 chữ số
+  thập phân từng entry). ✅ (dư rất xa so ngưỡng ±20%)
+- B5: 4 cặp Large/Small (loại 2 path_type suy biến CONTACT/FINGER, vì
+  quỹ đạo của chúng luôn là 1 điểm — "chiều dài đường đi" không có ý nghĩa
+  cho chúng, xem docstring trong test) — tổng chiều dài `sample_trajectory()`
+  của Large > Small cho cả 4 cặp. ✅
+- B6 (byte-identical khi sinh lại): kiểm tay, không phải pytest test (cần
+  mạng) — 2 lần chạy `gen_movement_glyph_sizes.py` VÀ `gen_movement_paths.py`
+  diff rỗng cả 2.
+- B7: **verify được — 0 test cũ assert `amplitude` cụ thể của 1 `base_hex`
+  thật** (`test_movement_paths.py` chỉ dựng `MotionPath` qua fixture với
+  `amplitude` mặc định riêng của fixture, không đọc bảng thật) — 0 test cần
+  sửa, giống hệt tình huống C8 ở Pha 20.
+- B8: `reports/fk_accuracy.md` không đụng — task này chỉ sửa
+  `movement_paths.json` + file mới, không đụng `hand_joint_poses.json`/Cat 1
+  (xác nhận bằng `git status`, xem Kiểm chứng cuối).
+
+`pytest` **1.539/1.539** (1.525 cũ + 14 test mới). `mypy --strict` sạch
+**100 file** (98 trước + `gen_movement_glyph_sizes.py` mới + 1 lỗi biến
+dùng lại tên `key` giữa `tuple[str,PathType]` và `str` trong
+`gen_movement_paths.py::main()`, đổi tên `sibling_key`, không đổi công
+thức).
+
+### Phần C — Sản phẩm: GIF Small vs Large
+
+`fsw-r-viz/demo/amplitude_fix_small_0x22a.gif` (chiều dài đo được 4,33 đơn
+vị) và `amplitude_fix_large_0x22c.gif` (12,28 đơn vị) — **đã xem bằng mắt**
+(khung hình cuối cả 2 GIF): đường Large dài hơn Small rõ rệt (~2,8×), KHÔNG
+bị nén mất khác biệt ở tầng `MotionPath` (GIF render trước khi nhân
+`SIGNBOX_TO_BODY_SCALE`, đúng tầng `sample_trajectory()` hoạt động) — không
+cần dừng-và-báo về nén tỉ lệ.
+
+### `_meta` của `movement_paths.json`
+
+`amplitude` giờ tầng `derived` (từ font ISWA thật), KHÔNG phải `AUTHORED` —
+đúng ưu tiên "cách 2" của brief. Xoá mục `unverified_assumptions` cũ về
+"amplitude constant per path_type, task 3's job" (không còn đúng); thêm ghi
+chú mới: tỉ lệ glyph là proxy cho khoảng cách di chuyển, chưa đối chiếu số
+đo sinh cơ học thật (vẫn là 1 xấp xỉ, dù có căn cứ hình học thật, không
+phải suy đoán). Thêm `amplitude_overall_mean` vào `_meta` (10,0000).
+
+### Kiểm chứng cuối (6 tiêu chí nghiệm thu)
+
+1. `mypy --strict` sạch (100 file); `pytest` xanh (1.539/1.539, xem B7: 0
+   test cũ cần sửa).
+2. B1, B2, B5 pass (xem mục Test ở trên).
+3. B4 pass — trung bình 10,0000, lệch 0% (dư xa ±20%).
+4. GIF Small/Large đã commit (`fsw-r-viz/demo/amplitude_fix_*.gif`), đã xem
+   bằng mắt.
+5. `_meta` ghi đúng nguồn (font ISWA thật) và tầng (`derived`).
+6. Kết quả kiểm chứng A1 (bảng 4 loại, 58/129 base có >1 variation, 39/58
+   có tín hiệu kích thước) đã ghi ở mục "Phần A1" TRƯỚC mục "Phần A2" gán
+   số — đúng thứ tự brief yêu cầu.
+
+`git status` xác nhận phạm vi: `movement_paths.json` (sửa),
+`iswa_movement_glyph_sizes.json` (mới), `gen_movement_paths.py` (sửa),
+`gen_movement_glyph_sizes.py` (mới), `tests/test_amplitude_from_glyph_sizes.py`
+(mới), `pyproject.toml` (thêm 1 dòng mypy files), `fsw-r-viz/demo/*.gif`
+(mới) — **không đụng** `hand_joint_poses.json`, `reports/`, `core/types.py`,
+`core/movement_paths.py` (path_type sample() không đổi, chỉ amplitude thay
+đổi giá trị nạp vào).
+
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)

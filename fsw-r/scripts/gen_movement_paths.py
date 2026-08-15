@@ -23,6 +23,27 @@ symbol's real name doesn't match any rule in ``_PATH_TYPE_RULES`` --
 verified empirically against all 242 real names before this table was
 written (every one matches exactly one rule; see PROGRESS.md).
 
+**``amplitude`` comes from each base symbol's own real ISWA GLYPH size**
+(``data/iswa_movement_glyph_sizes.json``, ``scripts/gen_movement_glyph_sizes.py``
+-- the "`amplitude` từ variation + kích thước glyph" task), compared ONLY
+within the same ``(base_symbol_id, path_type)`` group -- i.e. only against
+its own sibling variations, never across different base symbols or
+different path_types (see Part 0's own warning: a Zigzag glyph is wide
+because it zigzags, not because it travels far -- comparing across shapes
+would be exactly that mistake). ``variation_of()`` (Task 1) is what makes a
+base's siblings identifiable in the first place; ``path_type_for_name()``
+(this same script, Task 2) is what excludes a same-numbered but
+differently-shaped "variation" (e.g. 02-03-001's variation 5, "Single
+Wrist Flex", is FLEX, not STRAIGHT like variations 1-4) from being averaged
+in with a shape it doesn't share. Every group's OWN amplitude values are
+normalized so the group's own mean is exactly 10.0 (this project's
+established average -- see ``timeline/anchor.py``'s
+``SIGNBOX_TO_BODY_SCALE``, unchanged by this task) -- a singleton group
+(no siblings, or the only member of its own shape-family within a base)
+trivially normalizes to exactly 10.0, which doubles as the answer to this
+task's brief's own Part A1 question ("base nào chỉ có một variation dùng
+giá trị mặc định nào" -- 10.0, unchanged from before this task).
+
 ** UNVERIFIED ASSUMPTIONS ** -- also recorded in the generated JSON's own
 ``_meta`` and in PROGRESS.md's entry for this task, not silently treated as
 fact:
@@ -36,18 +57,22 @@ fact:
   Wall") -- discovered while fetching real names for this task, but fixing
   ``is_hit`` is out of THIS task's scope (only ``path_type`` was in the
   brief) -- flagged here for a future task, not fixed.
-- ``curvature``/``amplitude``/``repeat`` are still constant per path_type
-  across all symbols that share it -- the real names literally spell out
-  Small/Medium/Large/Largest (amplitude, task 3's job) and
-  Single/Double/Triple/Alternating (repeat -- not in scope for either this
-  task or task 3, since the brief's Part 0 only diagnosed path_type and
-  amplitude as wrong) that this script still does not use.
+- ``curvature``/``repeat`` are still constant per path_type across all
+  symbols that share it -- the real names literally spell out
+  Single/Double/Triple/Alternating (repeat) that this script still does
+  not use (out of scope for every task in this 3-task chain, see
+  PROGRESS.md's entry for this task).
+- the glyph-size ratio is a proxy for "how far the movement travels", not
+  a direct measurement of it -- this project's own reading of what a
+  bigger glyph implies, spot-checked against several cases (see
+  PROGRESS.md) but not against any biomechanical ground truth.
 """
 
 from __future__ import annotations
 
 import json
 import sys
+from collections import defaultdict
 from importlib import resources
 from pathlib import Path
 
@@ -58,8 +83,10 @@ from fsw_r.core.types import PathType  # noqa: E402
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent / "src" / "fsw_r" / "data" / "movement_paths.json"
 NAMES_RESOURCE = "iswa_base_symbol_names.json"
+GLYPH_SIZES_RESOURCE = "iswa_movement_glyph_sizes.json"
 
 EXPECTED_TOTAL = 242
+_AMPLITUDE_GROUP_MEAN = 10.0  # this project's established average -- see timeline/anchor.py
 
 # Global group number (11-20, from core/iswa_data.py's GROUP_START indices
 # 10-19) -> (real name, plane, is_hit). Names from ISWA Manual Chapter 2;
@@ -156,7 +183,6 @@ _DEFAULT_CURVATURE_BY_PATH_TYPE: dict[PathType, float] = {
     PathType.CURVED_CROSS: 0.3,
     PathType.ARROWHEAD: 0.3,
 }
-_DEFAULT_AMPLITUDE = 10.0
 _DEFAULT_REPEAT = 1
 
 
@@ -169,6 +195,31 @@ def _load_names() -> dict[int, dict[str, str]]:
             continue
         names[int(key, 16)] = entry
     return names
+
+
+def _load_glyph_sizes() -> dict[int, int]:
+    """``base_hex -> max_dimension`` (see ``gen_movement_glyph_sizes.py``'s
+    own docstring for why ``max(width, height)`` is the chosen scalar)."""
+    raw_text = resources.files("fsw_r.data").joinpath(GLYPH_SIZES_RESOURCE).read_text(encoding="utf-8")
+    raw = json.loads(raw_text)
+    sizes: dict[int, int] = {}
+    for key, entry in raw.items():
+        if key == "_meta":
+            continue
+        sizes[int(key, 16)] = entry["max_dimension"]
+    return sizes
+
+
+def amplitudes_for_group(base_hexes: list[int], glyph_sizes: dict[int, int]) -> dict[int, float]:
+    """Normalizes ``glyph_sizes`` for one ``(base_symbol_id, path_type)``
+    sibling group so the GROUP's own mean lands on ``_AMPLITUDE_GROUP_MEAN``
+    -- i.e. only the RATIO between siblings' glyph sizes matters, never
+    their absolute size relative to a different base/path_type (Part 0's
+    trap). A singleton group trivially normalizes to exactly
+    ``_AMPLITUDE_GROUP_MEAN`` (own_size / own_size == 1)."""
+    sizes = [glyph_sizes[b] for b in base_hexes]
+    mean_size = sum(sizes) / len(sizes)
+    return {b: _AMPLITUDE_GROUP_MEAN * (glyph_sizes[b] / mean_size) for b in base_hexes}
 
 
 def path_type_for_name(name: str, base_hex: int) -> PathType:
@@ -190,11 +241,42 @@ def main() -> None:
     names = _load_names()
     if len(names) != EXPECTED_TOTAL:
         raise RuntimeError(f"{NAMES_RESOURCE} has {len(names)} entries, expected {EXPECTED_TOTAL}")
+    glyph_sizes = _load_glyph_sizes()
+    if len(glyph_sizes) != EXPECTED_TOTAL:
+        raise RuntimeError(f"{GLYPH_SIZES_RESOURCE} has {len(glyph_sizes)} entries, expected {EXPECTED_TOTAL}")
 
     missing_curvature = [pt for pt in PathType if pt not in _DEFAULT_CURVATURE_BY_PATH_TYPE]
     if missing_curvature:
         raise RuntimeError(f"_DEFAULT_CURVATURE_BY_PATH_TYPE is missing entries for: {missing_curvature}")
 
+    # Pass 1: path_type + which (base_symbol_id, path_type) sibling group
+    # each base belongs to -- amplitude (pass 2) can only be computed once
+    # every base's real path_type is known (Part 0: the whole reason this
+    # task waited for Task 2).
+    path_type_by_base: dict[int, PathType] = {}
+    base_symbol_id_by_base: dict[int, str] = {}
+    for group in range(11, 21):
+        start = GROUP_START[group - 1]
+        end = GROUP_START[group] - 1  # inclusive
+        for base_hex in range(start, end + 1):
+            name_entry = names.get(base_hex)
+            if name_entry is None:
+                raise RuntimeError(f"base 0x{base_hex:x}: no entry in {NAMES_RESOURCE}")
+            path_type_by_base[base_hex] = path_type_for_name(name_entry["name"], base_hex)
+            category, grp, base, _variation = name_entry["symbol_id"].split("-")
+            base_symbol_id_by_base[base_hex] = f"{category}-{grp}-{base}"
+
+    sibling_groups: dict[tuple[str, PathType], list[int]] = defaultdict(list)
+    for base_hex in path_type_by_base:
+        sibling_key = (base_symbol_id_by_base[base_hex], path_type_by_base[base_hex])
+        sibling_groups[sibling_key].append(base_hex)
+
+    amplitude_by_base: dict[int, float] = {}
+    for base_hexes in sibling_groups.values():
+        amplitude_by_base.update(amplitudes_for_group(base_hexes, glyph_sizes))
+
+    # Pass 2: build the full entries, now that path_type/amplitude are known
+    # for every base.
     entries: dict[str, object] = {}
     path_type_counts: dict[str, int] = {}
     for group in range(11, 21):
@@ -203,11 +285,8 @@ def main() -> None:
         end = GROUP_START[group] - 1  # inclusive
         for base_hex in range(start, end + 1):
             key = format(base_hex, "x")
-            name_entry = names.get(base_hex)
-            if name_entry is None:
-                raise RuntimeError(f"base 0x{base_hex:x}: no entry in {NAMES_RESOURCE}")
-            name = name_entry["name"]
-            path_type = path_type_for_name(name, base_hex)
+            name = names[base_hex]["name"]
+            path_type = path_type_by_base[base_hex]
             path_type_counts[path_type.value] = path_type_counts.get(path_type.value, 0) + 1
             entries[key] = {
                 "symbol_id": symbol_id_of(base_hex),
@@ -216,13 +295,26 @@ def main() -> None:
                 "path_type": path_type.value,
                 "plane": plane,
                 "curvature": _DEFAULT_CURVATURE_BY_PATH_TYPE[path_type],
-                "amplitude": _DEFAULT_AMPLITUDE,
+                "amplitude": round(amplitude_by_base[base_hex], 4),
                 "repeat": _DEFAULT_REPEAT,
                 "is_hit": is_hit,
             }
 
     if len(entries) != EXPECTED_TOTAL:
         raise RuntimeError(f"expected {EXPECTED_TOTAL} entries, got {len(entries)}")
+
+    # B4 (this task's brief): overall mean amplitude must stay within +/-20%
+    # of 10.0 -- guards against the per-group normalization somehow drifting
+    # in aggregate (it shouldn't, by construction, but checked rather than
+    # assumed).
+    overall_mean = sum(amplitude_by_base.values()) / len(amplitude_by_base)
+    if not (0.8 * _AMPLITUDE_GROUP_MEAN <= overall_mean <= 1.2 * _AMPLITUDE_GROUP_MEAN):
+        raise RuntimeError(
+            f"overall mean amplitude = {overall_mean:.3f}, outside +/-20% of {_AMPLITUDE_GROUP_MEAN} "
+            "(this task's brief, A3/B4) -- would shift the global animation scale calibrated in "
+            "earlier phases (see timeline/anchor.py's SIGNBOX_TO_BODY_SCALE)."
+        )
+    print(f"overall mean amplitude = {overall_mean:.4f} (target {_AMPLITUDE_GROUP_MEAN}, +/-20% allowed)")
 
     # C4/C5 (this task's brief): at least one non-STRAIGHT base in group
     # 02-03 (0x22a-0x24e), and (by construction, via path_type_for_name's
@@ -247,15 +339,32 @@ def main() -> None:
                 "path_type: each base symbol's own real ISWA name "
                 "(data/iswa_base_symbol_names.json, signbank.org) via the ordered "
                 "keyword table in this script's _PATH_TYPE_RULES -- NOT the group name "
-                "anymore (see this task's brief, \"path_type từ tên BASE SYMBOL\", Part 0). "
+                "anymore (see \"path_type từ tên BASE SYMBOL\" task, Part 0). "
+                "amplitude: each base symbol's own real ISWA glyph bounding-box size "
+                "(data/iswa_movement_glyph_sizes.json, the real ISWA font), compared ONLY "
+                "against its own sibling variations (same base_symbol_id AND path_type) -- "
+                "see \"amplitude từ variation + kích thước glyph\" task, Part 0/A2. "
                 "plane/is_hit: still ISWA Manual Chapter 2 group names, unchanged from before."
+            ),
+            "layer": (
+                "path_type: derived (real ISWA name, exact keyword match, no numeric estimation). "
+                "amplitude: derived (real ISWA font glyph size), NOT AUTHORED -- chosen over an "
+                "authored small/medium/large/largest numeric scale because it needed no assumption "
+                "about how many size levels exist or what order they're named in (this task's own "
+                "A1 finding: variation is not a single consistent size scale across all base "
+                "symbols -- see PROGRESS.md). Every group's own mean is normalized to 10.0, so only "
+                "the RELATIVE ratio between sibling glyphs is real derived data; the absolute scale "
+                "(10.0) is this project's own choice, carried over unchanged from before this task."
             ),
             "method": (
                 "path_type generated by looking up each base symbol's real name against an "
                 "ordered keyword table (fail-loud: raises if no rule matches, never falls back "
-                "to a default -- see path_type_for_name()). plane/is_hit/curvature/amplitude/"
-                "repeat generated by formula from a 10-row (group -> plane/is_hit) table plus a "
-                "constant-per-path_type table, NOT measured from any per-symbol dataset."
+                "to a default -- see path_type_for_name()). amplitude generated by grouping base "
+                "symbols by (base_symbol_id, path_type) -- i.e. only symbols that are real siblings "
+                "AND share a real trajectory shape -- then scaling each sibling's own glyph "
+                "max(width, height) so the group's mean is exactly 10.0 (see amplitudes_for_group()). "
+                "plane/is_hit/curvature/repeat generated by formula from a 10-row (group -> "
+                "plane/is_hit) table plus a constant-per-path_type table, NOT measured."
             ),
             "unverified_assumptions": [
                 "plane for groups 11 (Contact), 12 (Finger Movement), 20 (Circles) is not stated "
@@ -264,17 +373,21 @@ def main() -> None:
                 "is_hit is still a per-GROUP flag (unchanged by this task) even though real names "
                 "show 'Hits Wall/Floor/Ceiling/Chest' varies WITHIN some groups too (e.g. group 20's "
                 "'Arm Circle Wall' vs 'Arm Circle Hits Wall') -- discovered while fetching real names "
-                "for this task, out of THIS task's scope (only path_type was), flagged for later",
-                "curvature/amplitude/repeat are constant per path_type, not derived from the real "
-                "names' own Small/Medium/Large/Largest (amplitude -- task 3's job) or "
-                "Single/Double/Triple/Alternating (repeat -- not yet in scope for any task) qualifiers",
-                "the 17 new PathType values' sample() geometry (core/movement_paths.py) is this "
-                "project's own approximation of what each name family's shape implies, not derived "
-                "from any ISWA glyph measurement -- see PathType's own docstring",
+                "for the path_type task, still out of scope, flagged for later",
+                "curvature/repeat are still constant per path_type, not derived from the real names' "
+                "own Single/Double/Triple/Alternating qualifiers (repeat) -- discovered but not in "
+                "scope for any of the 3 tasks in this chain, flagged for a future task",
+                "the 17 non-original PathType values' sample() geometry (core/movement_paths.py) is "
+                "this project's own approximation of what each name family's shape implies, not "
+                "derived from any ISWA glyph measurement -- see PathType's own docstring",
+                "glyph size ratio is a proxy for travel distance, not a direct biomechanical "
+                "measurement -- spot-checked against several cases (see PROGRESS.md), not exhaustively",
             ],
             "count": EXPECTED_TOTAL,
             "path_type_distribution": dict(sorted(path_type_counts.items(), key=lambda kv: -kv[1])),
-            "generated_by": "scripts/gen_movement_paths.py (path_type), scripts/fetch_base_symbol_names.py (names)",
+            "amplitude_overall_mean": round(overall_mean, 4),
+            "generated_by": "scripts/gen_movement_paths.py (path_type, amplitude), "
+            "scripts/fetch_base_symbol_names.py (names), scripts/gen_movement_glyph_sizes.py (glyph sizes)",
         },
         **entries,
     }

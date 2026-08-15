@@ -219,7 +219,7 @@ chiếu thêm Lessons in SignWriting chương 6 trước khi chốt. Đây là l
 `HandSide` cần thêm `BOTH` (giá trị ISWA fill code 2 ám chỉ) thay vì chỉ
 RIGHT/LEFT nhị phân.
 
-#### Chuỗi sửa 3 lỗi nguồn dữ liệu Category 2 (2/3 xong): `symbol_id` →
+#### Chuỗi sửa 3 lỗi nguồn dữ liệu Category 2 (3/3 — HOÀN TẤT): `symbol_id` →
 `path_type` → `amplitude`
 
 3 việc này BẮT BUỘC làm THEO ĐÚNG THỨ TỰ trên (không đổi chỗ, không làm song
@@ -244,21 +244,32 @@ song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới
   tên thật cho thấy `is_hit` CŨNG biến thiên trong 1 số group, ví dụ "Arm
   Circle Wall" vs "Arm Circle Hits Wall" cùng group 02-10 — ghi nhận, chưa
   sửa, ngoài phạm vi task đó).
-- **3/3 — `amplitude` cứng 10.0 cho toàn bộ 242 base Category 2 (chưa
-  làm, PHẢI làm SAU 2/3 — 2/3 nay đã xong, việc này có thể bắt đầu):** nên
-  suy ra từ kích thước bounding-box thật của glyph (qua `fontTools`, đọc
-  font ISWA đã có sẵn cho việc lấy `iswa_valid_combinations.json`), không
-  phải hằng số đoán. **Lý do bắt buộc làm sau `path_type`:** bề rộng glyph
-  phản ánh ĐỘ PHỨC TẠP hình dạng, không phải khoảng cách di chuyển — 1
-  glyph Zigzag rộng vì nó ngoằn ngoèo, không phải vì nó đi xa. Nếu đo
-  `amplitude` từ bounding-box TRƯỚC khi `path_type` đúng, sẽ không tách
-  được "rộng vì zigzag" khỏi "rộng vì đi xa" — con số `amplitude` đo ra sẽ
-  lẫn cả 2 nguyên nhân, vô nghĩa để dùng làm biên độ chuyển động thật. Cơ
-  hội phát hiện thêm khi làm 2/3 (chưa trong phạm vi 3/3, ghi lại cho việc
-  sau nữa): tên base thật cũng nêu rõ Single/Double/Triple/Alternating —
-  đây là trường `repeat` (hiện luôn hằng số 1), một trục dữ liệu KHÁC cả
-  `path_type` lẫn `amplitude`, chưa task nào trong chuỗi 3 việc này nhận
-  làm.
+- **3/3 — `amplitude` cứng 10.0 cho toàn bộ 242 base: ĐÃ XONG**
+  (`PROGRESS.md` mục "Pha 21"). Kiểm chứng trước (A1, không giả định):
+  variation KHÔNG phải 1 thang kích thước thuần nhất/đơn điệu (chỉ 39/58
+  base có >1 variation là có tín hiệu kích thước trong TÊN, và ngay cả khi
+  có thì thứ tự variation không phải lúc nào cũng tăng theo kích thước) —
+  nên bỏ hẳn việc parse tên, đo trực tiếp **kích thước glyph THẬT** từ font
+  ISWA (`@sutton-signwriting/font-ttf`, cùng font `iswa_valid_combinations.json`
+  đã dùng), chỉ so sánh TRONG cùng `(base_symbol_id, path_type)` — không
+  bao giờ so giữa các base/dạng quỹ đạo khác nhau (đúng bẫy Phần 0). Mỗi
+  nhóm anh em tự chuẩn hoá về trung bình 10.0 (giữ đúng thang cũ, không phá
+  `SIGNBOX_TO_BODY_SCALE`) — trung bình toàn cục đo lại đúng 10,0000, lệch
+  0% so ±20% cho phép.
+
+**Bài học chung rút ra sau cả 3 task (đúng yêu cầu ghi lại của task 3's
+brief, Part D3):** kiểm tra xem MỘT nguồn có đang bị dùng để suy ra NHIỀU
+thứ khác nhau không, trước khi tin nó. Ở đây: tên GROUP chỉ cho biết
+**mặt phẳng** (Wall/Floor/Diagonal), tên BASE SYMBOL cho biết **dạng quỹ
+đạo** (Zigzag/Box/Corner/...), trường VARIATION cho biết **kích thước** (và
+đôi khi hướng/số lần lặp) — ba thông tin, ba nguồn khác nhau, dù cả ba đều
+"nằm trong ISWA". Framework ban đầu gộp cả ba vào MỘT nguồn (tên group) rồi
+suy diễn — sai không phải vì tên group SAI, mà vì nó bị hỏi những câu nó
+không trả lời được. Thứ tự sửa 3 task theo đúng thứ tự "unlock" dữ liệu:
+task 1 mở khoá variation, task 2 dùng variation (gián tiếp, qua
+`base_symbol_id`) + tên base để tách path_type khỏi group, task 3 dùng cả
+path_type (đã đúng) lẫn variation (đã có) để tách amplitude khỏi cả hai
+nguồn còn lại.
 
 ### SignTimeline (MVP-1) — ĐÃ XONG
 

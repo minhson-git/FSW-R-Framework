@@ -72,6 +72,8 @@ files = [
     # path_type task (2/3):
     "scripts/fetch_base_symbol_names.py",
     "scripts/gen_movement_paths.py",
+    # amplitude task (3/3):
+    "scripts/gen_movement_glyph_sizes.py",
 ]
 
 [[tool.mypy.overrides]]
