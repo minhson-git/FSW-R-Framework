@@ -16,7 +16,7 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 1.0,
-      "seconds": 11.217,
+      "seconds": 11.416,
       "failure_reasons": {}
     },
     {
@@ -26,7 +26,7 @@
       "failed": 24843,
       "success_rate_of_attempted": 0.903635,
       "success_rate_of_corpus": 0.903635,
-      "seconds": 38.097,
+      "seconds": 35.184,
       "failure_reasons": {
         "at least one symbol unmapped": 24843
       }
@@ -38,7 +38,7 @@
       "failed": 196879,
       "success_rate_of_attempted": 0.154873,
       "success_rate_of_corpus": 0.139949,
-      "seconds": 35.302,
+      "seconds": 33.854,
       "failure_reasons": {
         "symbol outside Categories 1-2": 135362,
         "not 1-2 hand symbols": 23986,
@@ -53,7 +53,7 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 0.139949,
-      "seconds": 478.851,
+      "seconds": 437.491,
       "failure_reasons": {}
     }
   ],
