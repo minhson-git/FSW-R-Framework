@@ -4,11 +4,7 @@
 **``path_type`` comes from each base symbol's own real ISWA NAME**
 (``data/iswa_base_symbol_names.json``, ``scripts/fetch_base_symbol_names.py``
 -- the "`path_type` từ tên BASE SYMBOL" task), via the ordered keyword table
-``_PATH_TYPE_RULES`` below. ``plane``/``is_hit`` are still derived from the
-10-row (group -> plane/is_hit) table this script used to derive
-``path_type`` from too -- Part 0 of that task's brief found only
-``path_type`` wrong (a group name states the *plane*, not the *shape*);
-``plane``/``is_hit`` were not shown to be wrong, so they're untouched here.
+``_PATH_TYPE_RULES`` below.
 
 Why this was broken before: group 02-03 ("Straight Wall Plane") alone has
 43 base symbols named Single Straight, Bend, Corner, Check, Box, Zigzag,
@@ -44,33 +40,58 @@ trivially normalizes to exactly 10.0, which doubles as the answer to this
 task's brief's own Part A1 question ("base nào chỉ có một variation dùng
 giá trị mặc định nào" -- 10.0, unchanged from before this task).
 
+**``plane`` prefers each base symbol's own real ISWA NAME, falls back to
+its GROUP's plane when the name doesn't say** (the "`plane` và `is_hit` từ
+tên BASE SYMBOL" task, task 4/4 closing the Category 2 source-fidelity
+chain): Task 2 fixed ``path_type`` but left ``plane``/``is_hit`` on the old
+group-derived table, which that task's own ``_meta`` flagged as unverified.
+Checked against the real names: 11 base symbols had a ``plane`` that
+contradicted their own name (6 of them a complete WALL<->FLOOR swap --
+group "Travel Rotation...Floor Plane" bases were tagged ``wall`` and vice
+versa), and 13 had an ``is_hit`` that contradicted their name (the "Arm/
+Wrist/Finger Circle(s) Hits Wall" family in group 20, which has no "Hit" in
+its GROUP name so lost the flag entirely). See ``plane_for_name()``/
+``is_hit_for_name()`` and PROGRESS.md's entry for this task for the full
+tables, the corpus-impact numbers, and the A1 verification that group 12
+(Finger Movement) -- assumed group-name-silent-on-plane like groups 11/20
+-- actually has 2 base symbols whose OWN names do state a plane, discovered
+only by checking A1's rule literally rather than trusting the Part 0 table.
+
+**``is_hit`` comes ENTIRELY from each base symbol's own real ISWA NAME, no
+group fallback** (unlike ``plane``): "Hit"/"Hits" appears explicitly in a
+base symbol's own name whenever it applies, so there is no unlabeled case
+to fall back for (see ``is_hit_for_name()``). Verified before switching:
+groups 17/18 ("Curves Hit Wall/Floor Plane") have 46 combined base symbols,
+43 of which say "Hit(s)" in their own name; the 3 that don't
+(0x2b4-0x2b6, "Wave Diagonal Path") are exactly the ones Part 0 already
+identified as mis-flagged (they're Diagonal-plane, non-hit symbols
+stranded in a "Hit Wall Plane" group) -- not a sign the naming convention
+itself is unreliable, so this did not trigger the brief's "dừng và báo"
+guard.
+
 ** UNVERIFIED ASSUMPTIONS ** -- also recorded in the generated JSON's own
 ``_meta`` and in PROGRESS.md's entry for this task, not silently treated as
 fact:
-- ``plane`` for groups 11 (Contact), 12 (Finger Movement), and 20
-  (Circles) isn't stated by their group names the way groups 13-19's are
-  -- left as ``None`` here; ``core/movement_paths.py`` decides what to do
-  with that at render time (currently: fall back to WALL).
-- ``is_hit`` is still a per-GROUP flag (True for groups 17/18 only), even
-  though the real names show "Hits Wall/Floor/Ceiling/Chest" varies WITHIN
-  some groups too (e.g. group 20's "Arm Circle Wall" vs "Arm Circle Hits
-  Wall") -- discovered while fetching real names for this task, but fixing
-  ``is_hit`` is out of THIS task's scope (only ``path_type`` was in the
-  brief) -- flagged here for a future task, not fixed.
+- ``plane`` for the 102 base symbols whose name says nothing about plane
+  (mostly groups 11/12/20, where the GROUP name doesn't state one either)
+  still falls back to the OLD group-derived value (``None`` for most of
+  groups 11/12/20, the per-group value for the rest) -- ``core/movement_paths.py``
+  still falls back to WALL at render time when ``plane`` is ``None``.
 - ``curvature``/``repeat`` are still constant per path_type across all
   symbols that share it -- the real names literally spell out
   Single/Double/Triple/Alternating (repeat) that this script still does
-  not use (out of scope for every task in this 3-task chain, see
-  PROGRESS.md's entry for this task).
-- the glyph-size ratio is a proxy for "how far the movement travels", not
-  a direct measurement of it -- this project's own reading of what a
-  bigger glyph implies, spot-checked against several cases (see
-  PROGRESS.md) but not against any biomechanical ground truth.
+  not use (out of scope for every task in this chain, see PROGRESS.md).
+- the glyph-size ratio ``amplitude`` is derived from is a proxy for "how
+  far the movement travels", not a direct measurement of it -- this
+  project's own reading of what a bigger glyph implies, spot-checked
+  against several cases (see PROGRESS.md) but not against any
+  biomechanical ground truth.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import defaultdict
 from importlib import resources
@@ -89,20 +110,23 @@ EXPECTED_TOTAL = 242
 _AMPLITUDE_GROUP_MEAN = 10.0  # this project's established average -- see timeline/anchor.py
 
 # Global group number (11-20, from core/iswa_data.py's GROUP_START indices
-# 10-19) -> (real name, plane, is_hit). Names from ISWA Manual Chapter 2;
-# plane/is_hit are this project's own reading of what each GROUP name
-# implies -- unaffected by this task (path_type no longer comes from here).
-_GROUP_TABLE: dict[int, tuple[str, str | None, bool]] = {
-    11: ("Contact", None, False),
-    12: ("Finger Movement", None, False),
-    13: ("Straight Wall Plane", "wall", False),
-    14: ("Straight Diagonal Plane", "diagonal", False),
-    15: ("Straight Floor Plane", "floor", False),
-    16: ("Curves Wall Plane", "wall", False),
-    17: ("Curves Hit Wall Plane", "wall", True),
-    18: ("Curves Hit Floor Plane", "floor", True),
-    19: ("Curves Floor Plane", "floor", False),
-    20: ("Circles", None, False),
+# 10-19) -> (real name, plane fallback). Names from ISWA Manual Chapter 2;
+# plane fallback is this project's own reading of what each GROUP name
+# implies, used ONLY when a base's own name doesn't state one (see
+# plane_for_name()). No is_hit column anymore -- is_hit no longer has a
+# group-level fallback at all (see is_hit_for_name()'s own docstring for why
+# none is needed).
+_GROUP_TABLE: dict[int, tuple[str, str | None]] = {
+    11: ("Contact", None),
+    12: ("Finger Movement", None),
+    13: ("Straight Wall Plane", "wall"),
+    14: ("Straight Diagonal Plane", "diagonal"),
+    15: ("Straight Floor Plane", "floor"),
+    16: ("Curves Wall Plane", "wall"),
+    17: ("Curves Hit Wall Plane", "wall"),
+    18: ("Curves Hit Floor Plane", "floor"),
+    19: ("Curves Floor Plane", "floor"),
+    20: ("Circles", None),
 }
 
 # Ordered (keyword, PathType) rules -- checked in order, first
@@ -237,6 +261,39 @@ def path_type_for_name(name: str, base_hex: int) -> PathType:
     )
 
 
+# Verified before use (see module docstring): no real name contains more
+# than one of these three phrases, so checking all three and asserting at
+# most one match is a real safety check, not defensive dead code.
+_PLANE_PHRASES: list[tuple[str, str]] = [
+    ("floor plane", "floor"),
+    ("wall plane", "wall"),
+    ("diagonal", "diagonal"),
+]
+
+
+def plane_for_name(name: str, base_hex: int) -> str | None:
+    """``None`` if ``name`` doesn't state a plane -- the caller falls back
+    to the base's GROUP plane in that case (this task's brief, Part A1:
+    "tên base symbol có plane -> dùng nó; không có -> giữ giá trị group").
+    Raises if a name somehow matches more than one plane phrase (would mean
+    _PLANE_PHRASES itself is wrong, not a real ISWA name -- see the module
+    docstring's note that this was verified never to happen across all 242
+    real names before being trusted here)."""
+    lowered = name.lower()
+    matches = [plane for phrase, plane in _PLANE_PHRASES if phrase in lowered]
+    if len(matches) > 1:
+        raise RuntimeError(f"base 0x{base_hex:x} ({name!r}): name matches more than one plane phrase: {matches}")
+    return matches[0] if matches else None
+
+
+def is_hit_for_name(name: str) -> bool:
+    """No fallback needed (unlike ``plane_for_name()``) -- "Hit"/"Hits"
+    appears explicitly in a base symbol's own name whenever ``is_hit``
+    applies (verified across all 242 real names before this replaced the
+    old per-GROUP flag -- see module docstring and PROGRESS.md)."""
+    return re.search(r"\bhits?\b", name.lower()) is not None
+
+
 def main() -> None:
     names = _load_names()
     if len(names) != EXPECTED_TOTAL:
@@ -279,8 +336,11 @@ def main() -> None:
     # for every base.
     entries: dict[str, object] = {}
     path_type_counts: dict[str, int] = {}
+    plane_from_name_count = 0
+    plane_from_group_fallback_count = 0
+    is_hit_true_count = 0
     for group in range(11, 21):
-        group_name, plane, is_hit = _GROUP_TABLE[group]
+        group_name, group_plane_fallback = _GROUP_TABLE[group]
         start = GROUP_START[group - 1]
         end = GROUP_START[group] - 1  # inclusive
         for base_hex in range(start, end + 1):
@@ -288,6 +348,20 @@ def main() -> None:
             name = names[base_hex]["name"]
             path_type = path_type_by_base[base_hex]
             path_type_counts[path_type.value] = path_type_counts.get(path_type.value, 0) + 1
+
+            plane_from_name = plane_for_name(name, base_hex)
+            plane: str | None
+            if plane_from_name is not None:
+                plane = plane_from_name
+                plane_from_name_count += 1
+            else:
+                plane = group_plane_fallback
+                plane_from_group_fallback_count += 1
+
+            is_hit = is_hit_for_name(name)
+            if is_hit:
+                is_hit_true_count += 1
+
             entries[key] = {
                 "symbol_id": symbol_id_of(base_hex),
                 "name": name,
@@ -302,6 +376,30 @@ def main() -> None:
 
     if len(entries) != EXPECTED_TOTAL:
         raise RuntimeError(f"expected {EXPECTED_TOTAL} entries, got {len(entries)}")
+    print(
+        f"plane: {plane_from_name_count} from the base's own name, "
+        f"{plane_from_group_fallback_count} fell back to the group's plane"
+    )
+    print(f"is_hit: {is_hit_true_count}/{EXPECTED_TOTAL} True (all from the base's own name, no fallback)")
+
+    # B3/B4 (this task's brief): after the switch, 0 bases may still
+    # disagree with their own name -- re-verify with the SAME independent
+    # check used to find the original 11/13 mismatches (see PROGRESS.md),
+    # not just trust that the code above did the right thing.
+    plane_mismatches = []
+    is_hit_mismatches = []
+    for key, entry in entries.items():
+        name = entry["name"]  # type: ignore[index]
+        assert isinstance(name, str)
+        name_plane = plane_for_name(name, int(key, 16))
+        if name_plane is not None and name_plane != entry["plane"]:  # type: ignore[index]
+            plane_mismatches.append(key)
+        if is_hit_for_name(name) != entry["is_hit"]:  # type: ignore[index]
+            is_hit_mismatches.append(key)
+    if plane_mismatches:
+        raise RuntimeError(f"{len(plane_mismatches)} base symbols still disagree with their own name's plane: {plane_mismatches}")
+    if is_hit_mismatches:
+        raise RuntimeError(f"{len(is_hit_mismatches)} base symbols still disagree with their own name's is_hit: {is_hit_mismatches}")
 
     # B4 (this task's brief): overall mean amplitude must stay within +/-20%
     # of 10.0 -- guards against the per-group normalization somehow drifting
@@ -344,7 +442,11 @@ def main() -> None:
                 "(data/iswa_movement_glyph_sizes.json, the real ISWA font), compared ONLY "
                 "against its own sibling variations (same base_symbol_id AND path_type) -- "
                 "see \"amplitude từ variation + kích thước glyph\" task, Part 0/A2. "
-                "plane/is_hit: still ISWA Manual Chapter 2 group names, unchanged from before."
+                "plane: each base symbol's own real ISWA name FIRST (floor plane/wall plane/"
+                "diagonal), falls back to the base's GROUP plane only when the name doesn't "
+                "state one -- see \"plane và is_hit từ tên BASE SYMBOL\" task (task 4/4), "
+                "plane_for_name(). is_hit: ENTIRELY from each base symbol's own real ISWA "
+                "name (Hit/Hits), no group fallback -- see is_hit_for_name()."
             ),
             "layer": (
                 "path_type: derived (real ISWA name, exact keyword match, no numeric estimation). "
@@ -354,7 +456,11 @@ def main() -> None:
                 "A1 finding: variation is not a single consistent size scale across all base "
                 "symbols -- see PROGRESS.md). Every group's own mean is normalized to 10.0, so only "
                 "the RELATIVE ratio between sibling glyphs is real derived data; the absolute scale "
-                "(10.0) is this project's own choice, carried over unchanged from before this task."
+                "(10.0) is this project's own choice, carried over unchanged from before this task. "
+                "plane: derived where the base's own name states one (140/242 -- see "
+                "plane_from_name_count below), otherwise still this project's own reading of the "
+                "GROUP name (102/242, unchanged fallback). is_hit: fully derived (real ISWA name, "
+                "exact 'Hit'/'Hits' match, no numeric estimation, no fallback)."
             ),
             "method": (
                 "path_type generated by looking up each base symbol's real name against an "
@@ -363,20 +469,21 @@ def main() -> None:
                 "symbols by (base_symbol_id, path_type) -- i.e. only symbols that are real siblings "
                 "AND share a real trajectory shape -- then scaling each sibling's own glyph "
                 "max(width, height) so the group's mean is exactly 10.0 (see amplitudes_for_group()). "
-                "plane/is_hit/curvature/repeat generated by formula from a 10-row (group -> "
-                "plane/is_hit) table plus a constant-per-path_type table, NOT measured."
+                "plane generated by plane_for_name() (checks the base's own name for 'floor plane'/"
+                "'wall plane'/'diagonal'; None if absent) falling back to the old per-GROUP table "
+                "only when None. is_hit generated by is_hit_for_name() (checks the base's own name "
+                "for 'hit'/'hits' as a whole word) with NO fallback. Both re-verified after "
+                "generation against the same independent check used to find the original mismatches "
+                "-- main() raises if either comes up nonzero (see PROGRESS.md's B3/B4)."
             ),
             "unverified_assumptions": [
-                "plane for groups 11 (Contact), 12 (Finger Movement), 20 (Circles) is not stated "
-                "by the group name; stored as null, core/movement_paths.py falls back to WALL at "
-                "render time",
-                "is_hit is still a per-GROUP flag (unchanged by this task) even though real names "
-                "show 'Hits Wall/Floor/Ceiling/Chest' varies WITHIN some groups too (e.g. group 20's "
-                "'Arm Circle Wall' vs 'Arm Circle Hits Wall') -- discovered while fetching real names "
-                "for the path_type task, still out of scope, flagged for later",
+                "plane for the 102 base symbols whose own name says nothing about plane still "
+                "falls back to the OLD group-derived value (None for most of groups 11/12/20, "
+                "the per-group value for the rest); core/movement_paths.py falls back to WALL at "
+                "render time when plane is None",
                 "curvature/repeat are still constant per path_type, not derived from the real names' "
                 "own Single/Double/Triple/Alternating qualifiers (repeat) -- discovered but not in "
-                "scope for any of the 3 tasks in this chain, flagged for a future task",
+                "scope for any task in this chain, flagged for a future task",
                 "the 17 non-original PathType values' sample() geometry (core/movement_paths.py) is "
                 "this project's own approximation of what each name family's shape implies, not "
                 "derived from any ISWA glyph measurement -- see PathType's own docstring",
@@ -386,7 +493,10 @@ def main() -> None:
             "count": EXPECTED_TOTAL,
             "path_type_distribution": dict(sorted(path_type_counts.items(), key=lambda kv: -kv[1])),
             "amplitude_overall_mean": round(overall_mean, 4),
-            "generated_by": "scripts/gen_movement_paths.py (path_type, amplitude), "
+            "plane_from_name_count": plane_from_name_count,
+            "plane_from_group_fallback_count": plane_from_group_fallback_count,
+            "is_hit_true_count": is_hit_true_count,
+            "generated_by": "scripts/gen_movement_paths.py (path_type, amplitude, plane, is_hit), "
             "scripts/fetch_base_symbol_names.py (names), scripts/gen_movement_glyph_sizes.py (glyph sizes)",
         },
         **entries,
