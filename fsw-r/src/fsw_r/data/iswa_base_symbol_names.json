@@ -1,0 +1,991 @@
+{
+  "_meta": {
+    "source": "https://www.signbank.org/iswa/ (per-group BaseSymbol Table pages)",
+    "source_urls": [
+      "https://www.signbank.org/iswa/205_sg.html",
+      "https://www.signbank.org/iswa/216_sg.html",
+      "https://www.signbank.org/iswa/22a_sg.html",
+      "https://www.signbank.org/iswa/255_sg.html",
+      "https://www.signbank.org/iswa/265_sg.html",
+      "https://www.signbank.org/iswa/288_sg.html",
+      "https://www.signbank.org/iswa/2a6_sg.html",
+      "https://www.signbank.org/iswa/2b7_sg.html",
+      "https://www.signbank.org/iswa/2d5_sg.html",
+      "https://www.signbank.org/iswa/2e3_sg.html"
+    ],
+    "fetched": "2026-08-15",
+    "layer": "derived -- from the real ISWA reference (signbank.org), not measured/authored by this project (same tier as data/iswa_symbol_ids.json, different source)",
+    "format": "base_hex (3 hex chars) -> {name, symbol_id} -- symbol_id is signbank's own column, cross-checked against symbol_id_of() at generation time (see verify())",
+    "scope": "Category 2 (Movement) only, 242 base symbols -- see this task's brief's Part A2 for exactly which 10 groups. Reusable for other categories later at similar cost (same fetch/parse mechanism), not done here to stay in this task's scope.",
+    "count": 242,
+    "generated_by": "scripts/fetch_base_symbol_names.py"
+  },
+  "205": {
+    "name": "Touch Single",
+    "symbol_id": "02-01-001-01"
+  },
+  "206": {
+    "name": "Touch Multiple",
+    "symbol_id": "02-01-002-01"
+  },
+  "207": {
+    "name": "Touch Between",
+    "symbol_id": "02-01-003-01"
+  },
+  "208": {
+    "name": "Grasp Single",
+    "symbol_id": "02-01-004-01"
+  },
+  "209": {
+    "name": "Grasp Multiple",
+    "symbol_id": "02-01-005-01"
+  },
+  "20a": {
+    "name": "Grasp Between",
+    "symbol_id": "02-01-006-01"
+  },
+  "20b": {
+    "name": "Strike Single",
+    "symbol_id": "02-01-007-01"
+  },
+  "20c": {
+    "name": "Strike Multiple",
+    "symbol_id": "02-01-008-01"
+  },
+  "20d": {
+    "name": "Strike Between",
+    "symbol_id": "02-01-009-01"
+  },
+  "20e": {
+    "name": "Brush Single",
+    "symbol_id": "02-01-010-01"
+  },
+  "20f": {
+    "name": "Brush Multiple",
+    "symbol_id": "02-01-011-01"
+  },
+  "210": {
+    "name": "Brush Between",
+    "symbol_id": "02-01-012-01"
+  },
+  "211": {
+    "name": "Rub Single",
+    "symbol_id": "02-01-013-01"
+  },
+  "212": {
+    "name": "Rub Multiple",
+    "symbol_id": "02-01-014-01"
+  },
+  "213": {
+    "name": "Rub Between",
+    "symbol_id": "02-01-015-01"
+  },
+  "214": {
+    "name": "Surface Symbols",
+    "symbol_id": "02-01-016-01"
+  },
+  "215": {
+    "name": "Surface Between",
+    "symbol_id": "02-01-017-01"
+  },
+  "216": {
+    "name": "Squeeze Large Single",
+    "symbol_id": "02-02-001-01"
+  },
+  "217": {
+    "name": "Squeeze Small Single",
+    "symbol_id": "02-02-001-02"
+  },
+  "218": {
+    "name": "Squeeze Large Multiple",
+    "symbol_id": "02-02-002-01"
+  },
+  "219": {
+    "name": "Squeeze Small Multiple",
+    "symbol_id": "02-02-002-02"
+  },
+  "21a": {
+    "name": "Squeeze Sequential",
+    "symbol_id": "02-02-003-01"
+  },
+  "21b": {
+    "name": "Flick Large Single",
+    "symbol_id": "02-02-004-01"
+  },
+  "21c": {
+    "name": "Flick Small Single",
+    "symbol_id": "02-02-004-02"
+  },
+  "21d": {
+    "name": "Flick Large Multiple",
+    "symbol_id": "02-02-005-01"
+  },
+  "21e": {
+    "name": "Flick Small Multiple",
+    "symbol_id": "02-02-005-02"
+  },
+  "21f": {
+    "name": "Flick Sequential",
+    "symbol_id": "02-02-006-01"
+  },
+  "220": {
+    "name": "Squeeze Flick Alternating",
+    "symbol_id": "02-02-007-01"
+  },
+  "221": {
+    "name": "Hinge Movement, Up Down Large",
+    "symbol_id": "02-02-008-01"
+  },
+  "222": {
+    "name": "Hinge Movement, Up Down Small",
+    "symbol_id": "02-02-008-02"
+  },
+  "223": {
+    "name": "Hinge Movement, Up Sequential",
+    "symbol_id": "02-02-009-01"
+  },
+  "224": {
+    "name": "Hinge Movement, Down Sequential",
+    "symbol_id": "02-02-009-02"
+  },
+  "225": {
+    "name": "Hinge Movement, Up Down Alternating Large",
+    "symbol_id": "02-02-010-01"
+  },
+  "226": {
+    "name": "Hinge Movement, Up Down Alternating Small",
+    "symbol_id": "02-02-010-02"
+  },
+  "227": {
+    "name": "Hinge Movement, Side to Side Scissors",
+    "symbol_id": "02-02-011-01"
+  },
+  "228": {
+    "name": "Finger Contact Movement, Wall Plane",
+    "symbol_id": "02-02-012-01"
+  },
+  "229": {
+    "name": "Finger Contact Movement, Floor Plane",
+    "symbol_id": "02-02-013-01"
+  },
+  "22a": {
+    "name": "Single Straight Movement, Wall Plane Small",
+    "symbol_id": "02-03-001-01"
+  },
+  "22b": {
+    "name": "Single Straight Movement, Wall Plane Medium",
+    "symbol_id": "02-03-001-02"
+  },
+  "22c": {
+    "name": "Single Straight Movement, Wall Plane Large",
+    "symbol_id": "02-03-001-03"
+  },
+  "22d": {
+    "name": "Single Straight Movement, Wall Plane Largest",
+    "symbol_id": "02-03-001-04"
+  },
+  "22e": {
+    "name": "Single Wrist Flex, Wall Plane",
+    "symbol_id": "02-03-001-05"
+  },
+  "22f": {
+    "name": "Double Straight Movement, Wall Plane",
+    "symbol_id": "02-03-002-01"
+  },
+  "230": {
+    "name": "Double Wrist Flex, Wall Plane",
+    "symbol_id": "02-03-002-02"
+  },
+  "231": {
+    "name": "Double Alternating Movement, Wall Plane",
+    "symbol_id": "02-03-003-01"
+  },
+  "232": {
+    "name": "Double Alternating Wrist Flex, Wall Plane",
+    "symbol_id": "02-03-003-02"
+  },
+  "233": {
+    "name": "Cross Movement, Wall Plane",
+    "symbol_id": "02-03-004-01"
+  },
+  "234": {
+    "name": "Triple Straight Movement, Wall Plane",
+    "symbol_id": "02-03-005-01"
+  },
+  "235": {
+    "name": "Triple Wrist Flex, Wall Plane",
+    "symbol_id": "02-03-005-02"
+  },
+  "236": {
+    "name": "Triple Alternating Movement, Wall Plane",
+    "symbol_id": "02-03-006-01"
+  },
+  "237": {
+    "name": "Triple Alternating Wrist Flex, Wall Plane",
+    "symbol_id": "02-03-006-02"
+  },
+  "238": {
+    "name": "Bend, Wall Plane Small",
+    "symbol_id": "02-03-007-01"
+  },
+  "239": {
+    "name": "Bend, Wall Plane Medium",
+    "symbol_id": "02-03-007-02"
+  },
+  "23a": {
+    "name": "Bend, Wall Plane Large",
+    "symbol_id": "02-03-007-03"
+  },
+  "23b": {
+    "name": "Corner, Wall Plane Small",
+    "symbol_id": "02-03-008-01"
+  },
+  "23c": {
+    "name": "Corner, Wall Plane Medium",
+    "symbol_id": "02-03-008-02"
+  },
+  "23d": {
+    "name": "Corner, Wall Plane Large",
+    "symbol_id": "02-03-008-03"
+  },
+  "23e": {
+    "name": "Corner, Wall Plane with Rotation",
+    "symbol_id": "02-03-008-04"
+  },
+  "23f": {
+    "name": "Check, Wall Plane Small",
+    "symbol_id": "02-03-009-01"
+  },
+  "240": {
+    "name": "Check, Wall Plane Medium",
+    "symbol_id": "02-03-009-02"
+  },
+  "241": {
+    "name": "Check, Wall Plane Large",
+    "symbol_id": "02-03-009-03"
+  },
+  "242": {
+    "name": "Box, Wall Plane Small",
+    "symbol_id": "02-03-010-01"
+  },
+  "243": {
+    "name": "Box, Wall Plane Medium",
+    "symbol_id": "02-03-010-02"
+  },
+  "244": {
+    "name": "Box, Wall Plane Large",
+    "symbol_id": "02-03-010-03"
+  },
+  "245": {
+    "name": "Zigzag, Wall Plane Small",
+    "symbol_id": "02-03-011-01"
+  },
+  "246": {
+    "name": "Zigzag, Wall Plane Medium",
+    "symbol_id": "02-03-011-02"
+  },
+  "247": {
+    "name": "Zigzag, Wall Plane Large",
+    "symbol_id": "02-03-011-03"
+  },
+  "248": {
+    "name": "Peaks, Wall Plane Small",
+    "symbol_id": "02-03-012-01"
+  },
+  "249": {
+    "name": "Peaks, Wall Plane Medium",
+    "symbol_id": "02-03-012-02"
+  },
+  "24a": {
+    "name": "Peaks, Wall Plane Large",
+    "symbol_id": "02-03-012-03"
+  },
+  "24b": {
+    "name": "Travel Rotation, Single Wall Plane",
+    "symbol_id": "02-03-013-01"
+  },
+  "24c": {
+    "name": "Travel Rotation, Double Wall Plane",
+    "symbol_id": "02-03-014-01"
+  },
+  "24d": {
+    "name": "Travel Rotation, Alternating Wall Plane",
+    "symbol_id": "02-03-015-01"
+  },
+  "24e": {
+    "name": "Travel Rotation, Single Floor Plane",
+    "symbol_id": "02-03-016-01"
+  },
+  "24f": {
+    "name": "Travel Rotation, Double Floor Plane",
+    "symbol_id": "02-03-017-01"
+  },
+  "250": {
+    "name": "Travel Rotation, Alternating Floor Plane",
+    "symbol_id": "02-03-018-01"
+  },
+  "251": {
+    "name": "Travel Shaking, Wall Plane",
+    "symbol_id": "02-03-019-01"
+  },
+  "252": {
+    "name": "Travel Arm Spiral, Wall Plane Single",
+    "symbol_id": "02-03-020-01"
+  },
+  "253": {
+    "name": "Travel Arm Spiral, Wall Plane Double",
+    "symbol_id": "02-03-020-02"
+  },
+  "254": {
+    "name": "Travel Arm Spiral, Wall Plane Triple",
+    "symbol_id": "02-03-020-03"
+  },
+  "255": {
+    "name": "Diagonal Away Movement Small",
+    "symbol_id": "02-04-001-01"
+  },
+  "256": {
+    "name": "Diagonal Away Movement Medium",
+    "symbol_id": "02-04-001-02"
+  },
+  "257": {
+    "name": "Diagonal Away Movement Large",
+    "symbol_id": "02-04-001-03"
+  },
+  "258": {
+    "name": "Diagonal Away Movement Largest",
+    "symbol_id": "02-04-001-04"
+  },
+  "259": {
+    "name": "Diagonal Towards Movement Small",
+    "symbol_id": "02-04-002-01"
+  },
+  "25a": {
+    "name": "Diagonal Towards Movement Medium",
+    "symbol_id": "02-04-002-02"
+  },
+  "25b": {
+    "name": "Diagonal Towards Movement Large",
+    "symbol_id": "02-04-002-03"
+  },
+  "25c": {
+    "name": "Diagonal Towards Movement Largest",
+    "symbol_id": "02-04-002-04"
+  },
+  "25d": {
+    "name": "Diagonal Between Away Small",
+    "symbol_id": "02-04-003-01"
+  },
+  "25e": {
+    "name": "Diagonal Between Away Medium",
+    "symbol_id": "02-04-003-02"
+  },
+  "25f": {
+    "name": "Diagonal Between Away Large",
+    "symbol_id": "02-04-003-03"
+  },
+  "260": {
+    "name": "Diagonal Between Away Largest",
+    "symbol_id": "02-04-003-04"
+  },
+  "261": {
+    "name": "Diagonal Between Towards Small",
+    "symbol_id": "02-04-004-01"
+  },
+  "262": {
+    "name": "Diagonal Between Towards Medium",
+    "symbol_id": "02-04-004-02"
+  },
+  "263": {
+    "name": "Diagonal Between Towards Large",
+    "symbol_id": "02-04-004-03"
+  },
+  "264": {
+    "name": "Diagonal Between Towards Largest",
+    "symbol_id": "02-04-004-04"
+  },
+  "265": {
+    "name": "Single Straight Movement, Floor Plane Small",
+    "symbol_id": "02-05-001-01"
+  },
+  "266": {
+    "name": "Single Straight Movement, Floor Plane Medium",
+    "symbol_id": "02-05-001-02"
+  },
+  "267": {
+    "name": "Single Straight Movement, Floor Plane Large",
+    "symbol_id": "02-05-001-03"
+  },
+  "268": {
+    "name": "Single Straight Movement, Floor Plane Largest",
+    "symbol_id": "02-05-001-04"
+  },
+  "269": {
+    "name": "Single Wrist Flex, Floor Plane",
+    "symbol_id": "02-05-001-05"
+  },
+  "26a": {
+    "name": "Double Straight Movement, Floor Plane",
+    "symbol_id": "02-05-002-01"
+  },
+  "26b": {
+    "name": "Double Wrist Flex, Floor Plane",
+    "symbol_id": "02-05-002-02"
+  },
+  "26c": {
+    "name": "Double Alternating Movement, Floor Plane",
+    "symbol_id": "02-05-003-01"
+  },
+  "26d": {
+    "name": "Double Alternating Wrist Flex, Floor Plane",
+    "symbol_id": "02-05-003-02"
+  },
+  "26e": {
+    "name": "Cross Movement, Floor Plane",
+    "symbol_id": "02-05-004-01"
+  },
+  "26f": {
+    "name": "Triple Straight Movement, Floor Plane",
+    "symbol_id": "02-05-005-01"
+  },
+  "270": {
+    "name": "Triple Wrist Flex, Floor Plane",
+    "symbol_id": "02-05-005-02"
+  },
+  "271": {
+    "name": "Triple Alternating Movement, Floor Plane",
+    "symbol_id": "02-05-006-01"
+  },
+  "272": {
+    "name": "Triple Alternating Wrist Flex, Floor Plane",
+    "symbol_id": "02-05-006-02"
+  },
+  "273": {
+    "name": "Bend, Floor Plane",
+    "symbol_id": "02-05-007-01"
+  },
+  "274": {
+    "name": "Corner, Floor Plane Small",
+    "symbol_id": "02-05-008-01"
+  },
+  "275": {
+    "name": "Corner, Floor Plane Medium",
+    "symbol_id": "02-05-008-02"
+  },
+  "276": {
+    "name": "Corner, Floor Plane Large",
+    "symbol_id": "02-05-008-03"
+  },
+  "277": {
+    "name": "Check, Floor Plane",
+    "symbol_id": "02-05-009-01"
+  },
+  "278": {
+    "name": "Box, Floor Plane Small",
+    "symbol_id": "02-05-010-01"
+  },
+  "279": {
+    "name": "Box, Floor Plane Medium",
+    "symbol_id": "02-05-010-02"
+  },
+  "27a": {
+    "name": "Box, Floor Plane Large",
+    "symbol_id": "02-05-010-03"
+  },
+  "27b": {
+    "name": "Zigzag, Floor Plane Small",
+    "symbol_id": "02-05-011-01"
+  },
+  "27c": {
+    "name": "Zigzag, Floor Plane Medium",
+    "symbol_id": "02-05-011-02"
+  },
+  "27d": {
+    "name": "Zigzag, Floor Plane Large",
+    "symbol_id": "02-05-011-03"
+  },
+  "27e": {
+    "name": "Peaks, Floor Plane Small",
+    "symbol_id": "02-05-012-01"
+  },
+  "27f": {
+    "name": "Peaks, Floor Plane Medium",
+    "symbol_id": "02-05-012-02"
+  },
+  "280": {
+    "name": "Peaks, Floor Plane Large",
+    "symbol_id": "02-05-012-03"
+  },
+  "281": {
+    "name": "Travel Rotation Single Floor Plane",
+    "symbol_id": "02-05-013-01"
+  },
+  "282": {
+    "name": "Travel Rotation Double Floor Plane",
+    "symbol_id": "02-05-014-01"
+  },
+  "283": {
+    "name": "Travel Rotation Alternating Floor Plane",
+    "symbol_id": "02-05-015-01"
+  },
+  "284": {
+    "name": "Travel Rotation Single Wall Plane",
+    "symbol_id": "02-05-016-01"
+  },
+  "285": {
+    "name": "Travel Rotation Double Wall Plane",
+    "symbol_id": "02-05-017-01"
+  },
+  "286": {
+    "name": "Travel Rotation Alternating Wall Plane",
+    "symbol_id": "02-05-018-01"
+  },
+  "287": {
+    "name": "Travel Shaking Floor Plane",
+    "symbol_id": "02-05-019-01"
+  },
+  "288": {
+    "name": "Curve Wall Plane, Quarter Small",
+    "symbol_id": "02-06-001-01"
+  },
+  "289": {
+    "name": "Curve Wall Plane, Quarter Medium",
+    "symbol_id": "02-06-001-02"
+  },
+  "28a": {
+    "name": "Curve Wall Plane, Quarter Large",
+    "symbol_id": "02-06-001-03"
+  },
+  "28b": {
+    "name": "Curve Wall Plane, Quarter Largest",
+    "symbol_id": "02-06-001-04"
+  },
+  "28c": {
+    "name": "Curve Wall Plane, Half Circle Small",
+    "symbol_id": "02-06-002-01"
+  },
+  "28d": {
+    "name": "Curve Wall Plane, Half Circle Medium",
+    "symbol_id": "02-06-002-02"
+  },
+  "28e": {
+    "name": "Curve Wall Plane, Half Circle Large",
+    "symbol_id": "02-06-002-03"
+  },
+  "28f": {
+    "name": "Curve Wall Plane, Half Circle Largest",
+    "symbol_id": "02-06-002-04"
+  },
+  "290": {
+    "name": "Curve Wall Plane, 3 Quarter Circle Small",
+    "symbol_id": "02-06-003-01"
+  },
+  "291": {
+    "name": "Curve Wall Plane, 3 Quarter Circle Medium",
+    "symbol_id": "02-06-003-02"
+  },
+  "292": {
+    "name": "Hump Wall Plane Small",
+    "symbol_id": "02-06-004-01"
+  },
+  "293": {
+    "name": "Hump Wall Plane Medium",
+    "symbol_id": "02-06-004-02"
+  },
+  "294": {
+    "name": "Hump Wall Plane Large",
+    "symbol_id": "02-06-004-03"
+  },
+  "295": {
+    "name": "Loop Wall Plane Small",
+    "symbol_id": "02-06-005-01"
+  },
+  "296": {
+    "name": "Loop Wall Plane Medium",
+    "symbol_id": "02-06-005-02"
+  },
+  "297": {
+    "name": "Loop Wall Plane Large",
+    "symbol_id": "02-06-005-03"
+  },
+  "298": {
+    "name": "Loop Wall Plane Small Double",
+    "symbol_id": "02-06-005-04"
+  },
+  "299": {
+    "name": "Wave Wall Plane 2 Curves Small",
+    "symbol_id": "02-06-006-01"
+  },
+  "29a": {
+    "name": "Wave Wall Plane 2 Curves Medium",
+    "symbol_id": "02-06-006-02"
+  },
+  "29b": {
+    "name": "Wave Wall Plane 2 Curves Large",
+    "symbol_id": "02-06-006-03"
+  },
+  "29c": {
+    "name": "Wave Wall Plane 3 Curves Small",
+    "symbol_id": "02-06-006-04"
+  },
+  "29d": {
+    "name": "Wave Wall Plane 3 Curves Medium",
+    "symbol_id": "02-06-006-05"
+  },
+  "29e": {
+    "name": "Wave Wall Plane 3 Curves Large",
+    "symbol_id": "02-06-006-06"
+  },
+  "29f": {
+    "name": "Curve Then Straight Movement Wall Plane",
+    "symbol_id": "02-06-007-01"
+  },
+  "2a0": {
+    "name": "Curved Cross Movement Wall Small",
+    "symbol_id": "02-06-007-02"
+  },
+  "2a1": {
+    "name": "Curved Cross Movement Wall Medium",
+    "symbol_id": "02-06-007-03"
+  },
+  "2a2": {
+    "name": "Rotation Single Wall Plane",
+    "symbol_id": "02-06-008-01"
+  },
+  "2a3": {
+    "name": "Rotation Double Wall Plane",
+    "symbol_id": "02-06-009-01"
+  },
+  "2a4": {
+    "name": "Rotation Alternate Wall Plane",
+    "symbol_id": "02-06-010-01"
+  },
+  "2a5": {
+    "name": "Shaking Wall Plane",
+    "symbol_id": "02-06-011-01"
+  },
+  "2a6": {
+    "name": "Curve Hits Front Wall",
+    "symbol_id": "02-07-001-01"
+  },
+  "2a7": {
+    "name": "Hump Hits Front Wall",
+    "symbol_id": "02-07-002-01"
+  },
+  "2a8": {
+    "name": "Loop Hits Front Wall",
+    "symbol_id": "02-07-003-01"
+  },
+  "2a9": {
+    "name": "Wave Hits Front Wall",
+    "symbol_id": "02-07-004-01"
+  },
+  "2aa": {
+    "name": "Rotation Single Hits Front Wall",
+    "symbol_id": "02-07-005-01"
+  },
+  "2ab": {
+    "name": "Rotation Double Hits Front Wall",
+    "symbol_id": "02-07-006-01"
+  },
+  "2ac": {
+    "name": "Rotation Alternating Hits Front Wall",
+    "symbol_id": "02-07-007-01"
+  },
+  "2ad": {
+    "name": "Curve Hits Chest",
+    "symbol_id": "02-07-009-01"
+  },
+  "2ae": {
+    "name": "Hump Hits Chest",
+    "symbol_id": "02-07-010-01"
+  },
+  "2af": {
+    "name": "Loop Hits Chest",
+    "symbol_id": "02-07-011-01"
+  },
+  "2b0": {
+    "name": "Wave Hits Chest",
+    "symbol_id": "02-07-012-01"
+  },
+  "2b1": {
+    "name": "Rotation Single Hits Chest",
+    "symbol_id": "02-07-013-01"
+  },
+  "2b2": {
+    "name": "Rotation Double Hits Chest",
+    "symbol_id": "02-07-014-01"
+  },
+  "2b3": {
+    "name": "Rotation Alternating Hits Chest",
+    "symbol_id": "02-07-015-01"
+  },
+  "2b4": {
+    "name": "Wave Diagonal Path Small",
+    "symbol_id": "02-07-016-01"
+  },
+  "2b5": {
+    "name": "Wave Diagonal Path Medium",
+    "symbol_id": "02-07-016-02"
+  },
+  "2b6": {
+    "name": "Wave Diagonal Path Large",
+    "symbol_id": "02-07-016-03"
+  },
+  "2b7": {
+    "name": "Curve Hits Ceiling Small",
+    "symbol_id": "02-08-001-01"
+  },
+  "2b8": {
+    "name": "Curve Hits Ceiling Large",
+    "symbol_id": "02-08-001-02"
+  },
+  "2b9": {
+    "name": "Hump Hits Ceiling 2 Humps Small",
+    "symbol_id": "02-08-002-01"
+  },
+  "2ba": {
+    "name": "Hump Hits Ceiling 2 Humps Large",
+    "symbol_id": "02-08-002-02"
+  },
+  "2bb": {
+    "name": "Hump Hits Ceiling 3 Humps Small",
+    "symbol_id": "02-08-002-03"
+  },
+  "2bc": {
+    "name": "Hump Hits Ceiling 3 Humps Large",
+    "symbol_id": "02-08-002-04"
+  },
+  "2bd": {
+    "name": "Loop Hits Ceiling Small Single",
+    "symbol_id": "02-08-003-01"
+  },
+  "2be": {
+    "name": "Loop Hits Ceiling Large Single",
+    "symbol_id": "02-08-003-02"
+  },
+  "2bf": {
+    "name": "Loop Hits Ceiling Small Double",
+    "symbol_id": "02-08-003-03"
+  },
+  "2c0": {
+    "name": "Loop Hits Ceiling Large Double",
+    "symbol_id": "02-08-003-04"
+  },
+  "2c1": {
+    "name": "Wave Hits Ceiling Small",
+    "symbol_id": "02-08-004-01"
+  },
+  "2c2": {
+    "name": "Wave Hits Ceiling Large",
+    "symbol_id": "02-08-004-02"
+  },
+  "2c3": {
+    "name": "Rotation Single Hits Ceiling",
+    "symbol_id": "02-08-005-01"
+  },
+  "2c4": {
+    "name": "Rotation Double Hits Ceiling",
+    "symbol_id": "02-08-006-01"
+  },
+  "2c5": {
+    "name": "Rotation Alternating Hits Ceiling",
+    "symbol_id": "02-08-007-01"
+  },
+  "2c6": {
+    "name": "Curve Hits Floor Small",
+    "symbol_id": "02-08-008-01"
+  },
+  "2c7": {
+    "name": "Curve Hits Floor Large",
+    "symbol_id": "02-08-008-02"
+  },
+  "2c8": {
+    "name": "Hump Hits Floor 2 Humps Small",
+    "symbol_id": "02-08-009-01"
+  },
+  "2c9": {
+    "name": "Hump Hits Floor 2 Humps Large",
+    "symbol_id": "02-08-009-02"
+  },
+  "2ca": {
+    "name": "Hump Hits Floor 3 Humps Small",
+    "symbol_id": "02-08-009-03"
+  },
+  "2cb": {
+    "name": "Hump Hits Floor 3 Humps Large",
+    "symbol_id": "02-08-009-04"
+  },
+  "2cc": {
+    "name": "Loop Hits Floor Small Single",
+    "symbol_id": "02-08-010-01"
+  },
+  "2cd": {
+    "name": "Loop Hits Floor Large Single",
+    "symbol_id": "02-08-010-02"
+  },
+  "2ce": {
+    "name": "Loop Hits Floor Small Double",
+    "symbol_id": "02-08-010-03"
+  },
+  "2cf": {
+    "name": "Loop Hits Floor Large Double",
+    "symbol_id": "02-08-010-04"
+  },
+  "2d0": {
+    "name": "Wave Hits Floor Small",
+    "symbol_id": "02-08-011-01"
+  },
+  "2d1": {
+    "name": "Wave Hits Floor Large",
+    "symbol_id": "02-08-011-02"
+  },
+  "2d2": {
+    "name": "Rotation Single Hits Floor",
+    "symbol_id": "02-08-012-01"
+  },
+  "2d3": {
+    "name": "Rotation Double Hits Floor",
+    "symbol_id": "02-08-013-01"
+  },
+  "2d4": {
+    "name": "Rotation Alternating Hits Floor",
+    "symbol_id": "02-08-014-01"
+  },
+  "2d5": {
+    "name": "Curve Floor Plane Small",
+    "symbol_id": "02-09-001-01"
+  },
+  "2d6": {
+    "name": "Curve Floor Plane Medium 1",
+    "symbol_id": "02-09-001-02"
+  },
+  "2d7": {
+    "name": "Curve Floor Plane Medium 2",
+    "symbol_id": "02-09-001-03"
+  },
+  "2d8": {
+    "name": "Curve Floor Plane Large",
+    "symbol_id": "02-09-001-04"
+  },
+  "2d9": {
+    "name": "Curve Floor Plane Combined",
+    "symbol_id": "02-09-001-05"
+  },
+  "2da": {
+    "name": "Hump Floor Plane Small",
+    "symbol_id": "02-09-002-01"
+  },
+  "2db": {
+    "name": "Loop Floor Plane Small",
+    "symbol_id": "02-09-003-01"
+  },
+  "2dc": {
+    "name": "Wave Floor Plane Snake",
+    "symbol_id": "02-09-004-01"
+  },
+  "2dd": {
+    "name": "Wave Floor Plane Small",
+    "symbol_id": "02-09-004-02"
+  },
+  "2de": {
+    "name": "Wave Floor Plane Large",
+    "symbol_id": "02-09-004-03"
+  },
+  "2df": {
+    "name": "Rotation Single Floor Plane",
+    "symbol_id": "02-09-005-01"
+  },
+  "2e0": {
+    "name": "Rotation Double Floor Plane",
+    "symbol_id": "02-09-006-01"
+  },
+  "2e1": {
+    "name": "Rotation Alternating Floor Plane",
+    "symbol_id": "02-09-007-01"
+  },
+  "2e2": {
+    "name": "Shaking Parallel Floor",
+    "symbol_id": "02-09-008-01"
+  },
+  "2e3": {
+    "name": "Arm Circle Wall Small Single",
+    "symbol_id": "02-10-001-01"
+  },
+  "2e4": {
+    "name": "Arm Circle Wall Medium Single",
+    "symbol_id": "02-10-001-02"
+  },
+  "2e5": {
+    "name": "Arm Circle Wall Small Double",
+    "symbol_id": "02-10-002-01"
+  },
+  "2e6": {
+    "name": "Arm Circle Wall Medium Double",
+    "symbol_id": "02-10-002-02"
+  },
+  "2e7": {
+    "name": "Arm Circle Hits Wall Small Single",
+    "symbol_id": "02-10-003-01"
+  },
+  "2e8": {
+    "name": "Arm Circle Hits Wall Medium Single",
+    "symbol_id": "02-10-003-02"
+  },
+  "2e9": {
+    "name": "Arm Circle Hits Wall Large Single",
+    "symbol_id": "02-10-003-03"
+  },
+  "2ea": {
+    "name": "Arm Circle Hits Wall Small Double",
+    "symbol_id": "02-10-004-01"
+  },
+  "2eb": {
+    "name": "Arm Circle Hits Wall Medium Double",
+    "symbol_id": "02-10-004-02"
+  },
+  "2ec": {
+    "name": "Arm Circle Hits Wall Large Double",
+    "symbol_id": "02-10-004-03"
+  },
+  "2ed": {
+    "name": "Wrist Circle Front Wall Single",
+    "symbol_id": "02-10-005-01"
+  },
+  "2ee": {
+    "name": "Wrist Circle Front Wall Double",
+    "symbol_id": "02-10-005-02"
+  },
+  "2ef": {
+    "name": "Wrist Circle Hits Wall Single",
+    "symbol_id": "02-10-006-01"
+  },
+  "2f0": {
+    "name": "Wrist Circle Hits Wall Double",
+    "symbol_id": "02-10-006-02"
+  },
+  "2f1": {
+    "name": "Finger Circles Wall Single",
+    "symbol_id": "02-10-007-01"
+  },
+  "2f2": {
+    "name": "Finger Circles Wall Double",
+    "symbol_id": "02-10-007-02"
+  },
+  "2f3": {
+    "name": "Finger Circles Hits Wall Single",
+    "symbol_id": "02-10-007-03"
+  },
+  "2f4": {
+    "name": "Finger Circles Hits Wall Double",
+    "symbol_id": "02-10-007-04"
+  },
+  "2f5": {
+    "name": "Arrowheads Small",
+    "symbol_id": "02-10-008-01"
+  },
+  "2f6": {
+    "name": "Arrowheads Large",
+    "symbol_id": "02-10-008-02"
+  }
+}

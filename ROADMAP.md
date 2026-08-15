@@ -219,7 +219,7 @@ chiếu thêm Lessons in SignWriting chương 6 trước khi chốt. Đây là l
 `HandSide` cần thêm `BOTH` (giá trị ISWA fill code 2 ám chỉ) thay vì chỉ
 RIGHT/LEFT nhị phân.
 
-#### Chuỗi sửa 3 lỗi nguồn dữ liệu Category 2 (1/3 xong): `symbol_id` →
+#### Chuỗi sửa 3 lỗi nguồn dữ liệu Category 2 (2/3 xong): `symbol_id` →
 `path_type` → `amplitude`
 
 3 việc này BẮT BUỘC làm THEO ĐÚNG THỨ TỰ trên (không đổi chỗ, không làm song
@@ -233,23 +233,32 @@ song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới
   `group_of()`/`GROUP_START` giữ nguyên KHÔNG đổi (việc này chỉ đổi trường
   hiển thị `symbol_id`, không đụng khoá tra cứu `base_hex` hay bảng
   `movement_paths`/`finger_articulations`).
-- **2/3 — `path_type` suy SAI nguồn (chưa làm):** hiện `path_type` suy từ
-  **TÊN GROUP** (vd cả 43 base trong group "Straight Wall Plane" đều nhận
-  `path_type="straight"`), trong khi nhiều base trong group đó thật ra vẽ
-  Zigzag/Box/Check/Corner/Peaks theo đúng TÊN BASE SYMBOL riêng của nó, không
-  phải theo tên group cha. Cần: mở rộng `PathType` enum, tra tên từng base
-  symbol (không phải tên group) trên signbank.org, gán lại `path_type` theo
-  đúng hình dạng thật của từng base.
+- **2/3 — `path_type` suy SAI nguồn: ĐÃ XONG** (`PROGRESS.md` mục "Pha 20").
+  `path_type` giờ suy từ **TÊN BASE SYMBOL thật** (signbank.org, qua
+  `data/iswa_base_symbol_names.json`), không còn từ TÊN GROUP nữa — sửa
+  134/242 (55,4%) base symbol có `path_type` sai (vd group "Straight Wall
+  Plane" từng gán `path_type="straight"` cho cả 43 base, kể cả những base
+  tên là Zigzag/Box/Check/Corner/Peaks). `PathType` mở rộng từ 5 lên 22 giá
+  trị. `plane`/`is_hit` vẫn suy từ tên GROUP như cũ (Part 0 của task đó chỉ
+  phát hiện `path_type` sai, không phát hiện 2 trường này sai — dù việc fetch
+  tên thật cho thấy `is_hit` CŨNG biến thiên trong 1 số group, ví dụ "Arm
+  Circle Wall" vs "Arm Circle Hits Wall" cùng group 02-10 — ghi nhận, chưa
+  sửa, ngoài phạm vi task đó).
 - **3/3 — `amplitude` cứng 10.0 cho toàn bộ 242 base Category 2 (chưa
-  làm, PHẢI làm SAU 2/3):** nên suy ra từ kích thước bounding-box thật của
-  glyph (qua `fontTools`, đọc font ISWA đã có sẵn cho việc lấy
-  `iswa_valid_combinations.json`), không phải hằng số đoán. **Lý do bắt buộc
-  làm sau `path_type`:** bề rộng glyph phản ánh ĐỘ PHỨC TẠP hình dạng, không
-  phải khoảng cách di chuyển — 1 glyph Zigzag rộng vì nó ngoằn ngoèo, không
-  phải vì nó đi xa. Nếu đo `amplitude` từ bounding-box TRƯỚC khi `path_type`
-  đúng, sẽ không tách được "rộng vì zigzag" khỏi "rộng vì đi xa" — con số
-  `amplitude` đo ra sẽ lẫn cả 2 nguyên nhân, vô nghĩa để dùng làm biên độ
-  chuyển động thật.
+  làm, PHẢI làm SAU 2/3 — 2/3 nay đã xong, việc này có thể bắt đầu):** nên
+  suy ra từ kích thước bounding-box thật của glyph (qua `fontTools`, đọc
+  font ISWA đã có sẵn cho việc lấy `iswa_valid_combinations.json`), không
+  phải hằng số đoán. **Lý do bắt buộc làm sau `path_type`:** bề rộng glyph
+  phản ánh ĐỘ PHỨC TẠP hình dạng, không phải khoảng cách di chuyển — 1
+  glyph Zigzag rộng vì nó ngoằn ngoèo, không phải vì nó đi xa. Nếu đo
+  `amplitude` từ bounding-box TRƯỚC khi `path_type` đúng, sẽ không tách
+  được "rộng vì zigzag" khỏi "rộng vì đi xa" — con số `amplitude` đo ra sẽ
+  lẫn cả 2 nguyên nhân, vô nghĩa để dùng làm biên độ chuyển động thật. Cơ
+  hội phát hiện thêm khi làm 2/3 (chưa trong phạm vi 3/3, ghi lại cho việc
+  sau nữa): tên base thật cũng nêu rõ Single/Double/Triple/Alternating —
+  đây là trường `repeat` (hiện luôn hằng số 1), một trục dữ liệu KHÁC cả
+  `path_type` lẫn `amplitude`, chưa task nào trong chuỗi 3 việc này nhận
+  làm.
 
 ### SignTimeline (MVP-1) — ĐÃ XONG
 

@@ -47,15 +47,48 @@ class HandJointPose:
 
 
 class PathType(Enum):
-    """The 5 movement primitives Category 2 (Movement)'s 242 base symbols
-    reduce to -- see core/movement_paths.py / PROGRESS.md's Phase 2 entry
-    for the (path_type x plane) table this was derived from."""
+    """The movement primitives Category 2 (Movement)'s 242 base symbols
+    reduce to. The first 5 (CONTACT..CIRCLE) were this project's original
+    (group name x plane) reading -- see ``core/movement_paths.py``/
+    PROGRESS.md's Phase 2 entry. The rest were added by the "`path_type` từ
+    tên BASE SYMBOL" task after discovering that GROUP name only states the
+    *plane*, not the *shape* -- e.g. group 02-03 ("Straight Wall Plane")
+    alone contains 43 base symbols named Zigzag, Box, Check, Corner, Bend,
+    Travel Rotation, ... that a group-name-only reading had all been
+    silently calling "straight". Each value below is grounded in a real
+    ISWA base-symbol NAME family from ``data/iswa_base_symbol_names.json``
+    (signbank.org) -- see ``scripts/gen_movement_paths.py``'s name->PathType
+    mapping table for the exact keyword each one comes from, and
+    PROGRESS.md's entry for that task for the full before/after counts.
+    Deliberately does NOT distinguish Small/Medium/Large/Largest or
+    Single/Double/Triple/Alternating variants of the same name family --
+    those are ``amplitude``/``repeat`` (a size or a rep count), not a
+    different trajectory *shape* (see that task's brief's own principle:
+    "hai tên chỉ khác nhau ở kích thước thì đó là amplitude, không phải
+    path_type")."""
 
     CONTACT = "contact"  # degenerate trajectory: a single point
     FINGER = "finger"  # local oscillation, no translation
-    STRAIGHT = "straight"
-    CURVED = "curved"
-    CIRCLE = "circle"
+    STRAIGHT = "straight"  # "(Single/Double/Triple/Alternating) Straight Movement", "Diagonal Away/Towards/Between"
+    CURVED = "curved"  # "Curve ... Quarter/Half/3 Quarter Circle/Combined", "Curve Hits ..."
+    CIRCLE = "circle"  # "Rotation (Single/Double/Alternating)", "Arm/Wrist/Finger Circle(s)"
+    FLEX = "flex"  # "(Single/Double/Triple/Alternating) Wrist Flex" -- mostly straight, hooks near the end
+    CROSS = "cross"  # "Cross Movement" -- path crosses the central travel axis
+    BEND = "bend"  # "Bend" -- one gentle direction change partway
+    CORNER = "corner"  # "Corner (with Rotation)" -- one sharp (near-right-angle) direction change
+    CHECK = "check"  # "Check" -- an asymmetric tick/checkmark (short stroke, then a longer one back)
+    BOX = "box"  # "Box" -- a closed 4-sided path
+    ZIGZAG = "zigzag"  # "Zigzag" -- several alternating diagonal segments while advancing
+    PEAKS = "peaks"  # "Peaks" -- a triangle-wave of up/down peaks while advancing
+    TRAVEL_ROTATION = "travel_rotation"  # "Travel Rotation" -- constant-radius loop while advancing (a helix)
+    SHAKE = "shake"  # "(Travel) Shaking", "Shaking Parallel Floor" -- a tight, high-frequency wiggle
+    SPIRAL = "spiral"  # "Travel Arm Spiral" -- an expanding-radius loop while advancing
+    HUMP = "hump"  # "Hump" -- a single bump that returns to baseline (unlike CURVED's smooth arc)
+    LOOP = "loop"  # "Loop" -- one small self-crossing loop with a little net travel
+    WAVE = "wave"  # "Wave ... 2/3 Curves", "Wave Diagonal Path", "Wave Floor Plane Snake"
+    CURVE_THEN_STRAIGHT = "curve_then_straight"  # "Curve Then Straight Movement" -- one compound path
+    CURVED_CROSS = "curved_cross"  # "Curved Cross Movement" -- CROSS traced with curved, not straight, strokes
+    ARROWHEAD = "arrowhead"  # "Arrowheads" -- a chevron/pointer shape (Circles group's one non-circular outlier)
 
 
 class MovementPlane(Enum):
@@ -71,7 +104,15 @@ class MotionPath:
     PROGRESS.md's Phase 2 entry for the derivation and, importantly, which
     parts of this are still unverified assumptions (``plane`` for groups
     11/12/20, ``is_hit``'s exact semantics, and the default
-    curvature/amplitude/repeat values)."""
+    curvature/amplitude/repeat values).
+
+    **``path_type`` comes from each base symbol's own real ISWA NAME**
+    (``data/iswa_base_symbol_names.json``, ``scripts/gen_movement_paths.py``
+    -- the "`path_type` từ tên BASE SYMBOL" task), NOT from its group name
+    anymore -- ``plane``/``is_hit`` are still derived from the group (Part 0
+    of that task's brief found only ``path_type`` wrong, not those two).
+    See PROGRESS.md's entry for that task for the full name->PathType
+    mapping and the before/after counts."""
 
     path_type: PathType
     plane: MovementPlane | None  # None = derive from rotation (see sample_trajectory())

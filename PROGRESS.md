@@ -2864,6 +2864,179 @@ rỗng trên cả `fk_accuracy.json` lẫn `anatomical.json`).
 7. `gen_symbol_ids.py` tự verify, `sys.exit(1)` nếu fail, đã commit kèm
    `data/iswa_symbol_ids.json`.
 
+## Pha 20 — `path_type` từ tên BASE SYMBOL, không phải tên group (ưu tiên
+2/3 trong chuỗi `symbol_id` → `path_type` → `amplitude`)
+
+### Phần 0 — Vấn đề: một nguồn (tên GROUP) bị dùng để suy ra hai thứ khác nhau
+
+`scripts/gen_movement_paths.py` (bản cũ) suy `path_type` từ **tên GROUP**
+(vd group 02-03 = "Straight Wall Plane" → mọi base trong group nhận
+`path_type="straight"`). Nhưng tên group chỉ nói lên **mặt phẳng**
+(Wall/Floor/Diagonal), dạng quỹ đạo thật nằm ở **tên riêng của từng base
+symbol** — group 02-03 có 43 base tên rất khác nhau (Single Straight, Bend,
+Corner, Check, Box, Zigzag, Peaks, Travel Rotation, ...) nhưng cả 43 đều bị
+gán cùng 1 `path_type`. Phạm vi ảnh hưởng trên corpus thật (số liệu TRÍCH từ
+brief của task này, KHÔNG tự đo lại trong task này — corpus
+`sign-language-processing/signbank-plus` không tải lại trong phiên làm việc
+này, xem ghi chú độ tin cậy ở cuối mục này): group 02-03 = 228.268 token
+(20,2% Cat 2); 6 base đầu (nhiều khả năng đúng là biến thể "straight") chiếm
+84,4%; phần bị gán path_type sai ước tính ≈ 15,6% của group ≈ 3,1% token
+Cat 2.
+
+**Số tự đo được (đáng tin hơn số trên vì đo trực tiếp trên TOÀN BỘ 242 base,
+không chỉ ước lượng theo corpus token cho riêng 1 group):** so sánh trực
+tiếp `path_type` cũ (suy theo group, chỉ 5 giá trị: contact/finger/
+straight/curved/circle) với `path_type` mới (suy theo tên, 22 giá trị) cho
+cả 242 base — **134/242 (55,4%) base symbol đổi `path_type`**. Theo group:
+02-03 đổi 35/43, 02-05 đổi 27/35, 02-06 đổi 20/30, 02-07 đổi 15/17, 02-08
+đổi 26/30, 02-09 đổi 9/14, 02-10 đổi 2/20 — group 02-01 (Contact), 02-02
+(Finger Movement), 02-04 (Diagonal Plane) đổi **0** (tên thật của mọi base
+trong 3 group này đã khớp đúng cách đọc group-level cũ, xác nhận group name
+KHÔNG sai cho MỌI trường hợp, chỉ sai cho các group "shape" phức tạp).
+
+### Phần A — Nguồn: signbank.org + bẫy parse (giống hệt dạng bẫy ở Pha 19)
+
+Nguồn: `https://www.signbank.org/iswa/<group_hex>_sg.html`, 10 trang group
+Category 2 (brief's Part A2, xác nhận đúng bằng `GROUP_START[10:20]` trước
+khi fetch, `sys.exit` nếu lệch). Mỗi trang có bảng "BaseSymbol Table":
+Name · Symbol ID · Symbol Key · Valid Fills · Valid Rotations.
+
+**Bẫy tự phát hiện bằng tay trước khi viết code (cùng hình dạng bẫy JSDoc
+example ở Pha 19, khác chỗ khác):** mỗi trang có 1 bảng chân trang cuối
+trang (credit "ISWA 2010 symbols designed by Valerie Sutton...") nằm SAU
+heading "BaseSymbol Table" trong văn bản. Parse ẩu bằng
+`re.findall(r"<tr>...</tr>", text_từ_heading_đến_hết_file)` khớp luôn cả
+`<tr>` của bảng chân trang đó → mỗi group thừa đúng 1 "dòng" (vd group
+02-03: 44 dòng thay vì 43 dòng thật). **Sửa: chỉ parse bên trong
+`<table>...</table>` đóng NGAY SAU heading, không parse tới hết file** —
+sau khi sửa, tổng đúng **242/242**, liên tục, khớp `GROUP_START`.
+
+`scripts/fetch_base_symbol_names.py` (mới): fetch 10 trang, parse đúng cách
+trên, **đối chiếu chéo cột "Symbol ID" của signbank với `symbol_id_of()`
+(Pha 19) cho cả 242/242** — khớp 100%, ghi `data/iswa_base_symbol_names.json`
+(`base_hex -> {name, symbol_id}`, `_meta` có ngày tải + 10 URL nguồn). Chạy
+lại 2 lần cho byte-identical (đã kiểm bằng tay, không phải pytest test — vì
+cần mạng, xem lý do ở mục Test bên dưới).
+
+### Phần B — Ánh xạ tên → `path_type`: 17 giá trị mới (22 tổng)
+
+**Nhóm tên trước, quyết định số giá trị sau (đúng khuyến nghị brief B1)** —
+đọc hết cả 242 tên thật (không chỉ group 02-03) rồi mới chốt danh sách:
+`FLEX`, `CROSS`, `BEND`, `CORNER`, `CHECK`, `BOX`, `ZIGZAG`, `PEAKS`,
+`TRAVEL_ROTATION`, `SHAKE`, `SPIRAL`, `HUMP`, `LOOP`, `WAVE`,
+`CURVE_THEN_STRAIGHT`, `CURVED_CROSS`, `ARROWHEAD` (cộng 5 giá trị cũ
+CONTACT/FINGER/STRAIGHT/CURVED/CIRCLE = 22). **Cố tình KHÔNG** thêm giá trị
+mới cho khác biệt Small/Medium/Large/Largest (đúng nguyên tắc brief — đó là
+`amplitude`, task 3) **lẫn** Single/Double/Triple/Alternating (đây là
+`repeat`, KHÔNG trong phạm vi brief này lẫn task 3 — ghi nhận là cơ hội
+chưa làm, xem "Việc còn để ngỏ").
+
+`scripts/gen_movement_paths.py::_PATH_TYPE_RULES`: bảng tra CÓ THỨ TỰ (từ
+khoá dài/cụ thể hơn kiểm trước — vd `"travel rotation"` phải kiểm trước
+`"rotation"`, `"curved cross"` phải kiểm trước cả `"curve"` lẫn `"cross"`)
+— **đã verify bằng tay trên cả 242 tên thật trước khi đưa vào code sản
+xuất**: 0 tên không khớp, 0 trường hợp khớp nhầm luật ngắn hơn trước luật
+dài hơn. `path_type_for_name()` **raise `ValueError`** (không âm thầm về
+mặc định) nếu có tên không khớp luật nào — đúng yêu cầu "fail-loud" B2;
+`main()` còn tự kiểm thêm: nếu SAU KHI áp luật mà group 02-03 vẫn 100%
+`straight`, coi như bug và `raise`.
+
+`core/movement_paths.py::_canonical_shape()`: viết `sample()` cho cả 17
+dạng mới, theo đúng phong cách hiện có (quỹ đạo chuẩn hoá trong mặt phẳng
+xy cục bộ, `t` chạy 0→1, xoay theo `rotation`/`plane` sau). **Mỗi công thức
+là xấp xỉ hình học TỰ ĐỌC của dự án** (khai rõ trong `PathType`'s docstring
+và `_canonical_shape()`'s docstring, không suy từ đo glyph ISWA thật) —
+BOX là hình chữ nhật khép kín thật (4 đoạn thẳng), CORNER là góc vuông thật
+(đổi trục giữa chừng), ZIGZAG dùng triangle-wave dấu đổi chiều còn PEAKS
+dùng one-sided (luôn cùng hướng) để 2 dạng KHÔNG giống hệt nhau dù cùng họ
+tam giác, TRAVEL_ROTATION/SHAKE/SPIRAL cùng họ "xoắn khi di chuyển" nhưng
+khác tần số/bán kính để phân biệt. Với "Travel Rotation" — brief nêu đích
+danh là hình học chưa rõ chính xác — ghi rõ trong `_meta` là xấp xỉ, chưa
+kiểm chứng.
+
+### Test C1-C9
+
+`tests/test_path_type_from_names.py` (mới, 29 test case — 6 D-style test +
+23 tham số hoá qua `PathType`):
+- C1: `_load_names()` đúng 242 entry, mọi `base_hex` trong dải Cat 2. ✅
+- C2: cột `symbol_id` của signbank khớp `symbol_id_of()` cho cả 242. ✅
+- C3: `0x22a` tên chứa "Single Straight", `path_type == STRAIGHT`. ✅
+- C4: group 02-03 có ít nhất 1 base `path_type != STRAIGHT`
+  (`0x245` "Zigzag" → `ZIGZAG`). ✅
+- C5: không base nào rơi mặc định — test cả 242 tên thật lẫn 1 tên GIẢ
+  ("Not A Real ISWA Name At All") để xác nhận nó `raise ValueError`, không
+  âm thầm trả về gì cả. ✅
+- C6: quỹ đạo mỗi `PathType` (kể cả 5 giá trị cũ) cách `STRAIGHT` >0.1 đơn
+  vị (đo bằng chuẩn Euclid giữa 2 chuỗi 24 điểm) — pass cả 22/22, khoảng
+  cách nhỏ nhất là `SHAKE` (0,509, cố tình biên độ nhỏ vì đúng ngữ nghĩa
+  "rung nhẹ"), lớn nhất là `BOX` (36,0). ✅
+- C7 (byte-identical khi sinh lại): kiểm bằng tay (2 lần chạy
+  `gen_movement_paths.py`, diff rỗng) — KHÔNG phải pytest test, vì
+  `fetch_base_symbol_names.py` cần mạng, giữ đúng tiền lệ Pha 19's D6.
+- C8: **verify được — KHÔNG có test cũ nào assert `path_type` cụ thể cho 1
+  `base_hex` thật trước task này** (`test_movement_paths.py` chỉ dựng
+  `MotionPath` trực tiếp qua fixture, không đọc bảng thật;
+  `test_movement_path_table.py` chỉ kiểm số lượng/dải/kiểu, không kiểm giá
+  trị `path_type`) — nên **0 test cũ cần sửa**, `pytest` xanh ngay sau khi
+  sinh lại `movement_paths.json`, không cần đổi gì thêm. Ghi nhận số 0 này
+  thẳng thắn thay vì tự tạo test giả để "có gì đó phải sửa".
+- C9: GIF so sánh trước/sau cho `0x245` ("Zigzag, Wall Plane Small"),
+  `fsw-r-viz/demo/path_type_fix_0x245_before.gif` (đường thẳng đứng, dựng
+  lại đúng công thức cũ: `path_type=straight, curvature=0.0`) và
+  `_after.gif` (đường zigzag góc cạnh rõ ràng, đọc trực tiếp từ
+  `MOVEMENT_PATH_TABLE` thật) — **đã xem bằng mắt (khung hình cuối của cả
+  2 GIF)**: BEFORE là 1 đoạn thẳng đứng trơn, AFTER là hình zigzag rõ nét,
+  không còn nhầm với đường thẳng.
+
+`pytest` **1.525/1.525** (1.496 cũ + 29 test mới). `mypy --strict`: 4 lỗi
+phát sinh khi viết code mới, đã sửa hết — 2 lỗi biến dùng lại tên (`bend`,
+`radius`) giữa 2 nhánh `if` khác kiểu (str/ndarray) trong
+`_canonical_shape()` (đổi tên biến, không đổi công thức), 1 lỗi
+`Any`-return ở `fetch_base_symbol_names.py` (thêm annotation `bytes`), 1 lỗi
+kiểu `Enum` khi `sorted(PathType, key=lambda...)` (đổi sang `list(PathType)`
+trực tiếp). Sạch 98 file sau khi sửa (92 trước Pha 19, +1 Pha 19 wiring
+thiếu sửa luôn ở đầu Pha 20, +5 Pha 20: `fetch_base_symbol_names.py`,
+`gen_movement_paths.py` thêm vào `pyproject.toml`'s mypy `files`, cộng các
+test/script mới).
+
+**Sửa kèm phát hiện khi bắt đầu Pha 20 (không phải lỗi Pha 20 gây ra):**
+`scripts/gen_symbol_ids.py`/`fix_hand_joint_poses_symbol_id.py` (viết ở
+Pha 19) đã sạch `mypy --strict` khi kiểm riêng lẻ nhưng KHÔNG có trong
+`pyproject.toml`'s mypy `files` list — nên lệnh trần `mypy --strict` (đúng
+câu chữ tiêu chí nghiệm thu) thực ra chưa từng thật sự kiểm 2 file đó. Đã
+thêm vào list ngay bây giờ, xác nhận vẫn sạch.
+
+### `_meta` của `movement_paths.json` — nguồn `path_type` đổi hẳn
+
+`_meta.source` giờ nói rõ: `path_type` từ tên base symbol thật
+(`data/iswa_base_symbol_names.json`, signbank.org) qua bảng tra có thứ tự,
+KHÔNG còn từ tên group; `plane`/`is_hit` vẫn từ bảng group cũ (Part 0 chỉ
+phát hiện `path_type` sai, không phát hiện `plane`/`is_hit` sai). Thêm
+`_meta.path_type_distribution` (đếm theo từng `path_type`, 22 giá trị) và
+giữ nguyên các mục `unverified_assumptions` cũ còn đúng (plane null cho
+group 11/12/20; curvature/amplitude/repeat hằng số theo `path_type`), thêm
+2 mục mới: (1) `is_hit` vẫn theo GROUP dù tên thật cho thấy nó cũng biến
+thiên TRONG group (vd group 02-10's "Arm Circle Wall" vs "Arm Circle Hits
+Wall") — phát hiện phụ khi fetch tên, ngoài phạm vi task này, ghi lại cho
+việc sau; (2) hình học 17 `path_type` mới là xấp xỉ tự đọc, chưa đối chiếu
+glyph ISWA thật. Mỗi entry giờ có thêm trường `"name"` (tên base symbol
+thật) — bổ sung có chủ đích (không có trong yêu cầu bắt buộc nhưng brief
+không cấm), giúp truy vết trực tiếp lý do 1 base có `path_type` gì mà không
+cần mở `iswa_base_symbol_names.json` riêng.
+
+### Kiểm chứng cuối (5 tiêu chí nghiệm thu)
+
+1. `mypy --strict` sạch (98 file); `pytest` xanh (1.525/1.525, xem C8: 0
+   test cũ cần sửa).
+2. C4 (có base đổi) và C5 (0 base rơi mặc định) pass.
+3. GIF trước/sau đã commit (`fsw-r-viz/demo/path_type_fix_0x245_*.gif`), đã
+   xem bằng mắt.
+4. `reports/fk_accuracy.md`: không đụng — task này không sửa gì thuộc
+   Category 1/`hand_joint_poses.json`, xác nhận bằng `git status` (chỉ
+   `movement_paths.json`, `iswa_base_symbol_names.json` (mới),
+   `core/types.py`, `core/movement_paths.py`, `scripts/`, `tests/` đổi).
+5. `_meta` ghi đúng nguồn mới (xem mục trên).
+
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)
