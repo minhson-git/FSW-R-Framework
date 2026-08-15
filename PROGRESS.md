@@ -3199,6 +3199,158 @@ phải suy đoán). Thêm `amplitude_overall_mean` vào `_meta` (10,0000).
 `core/movement_paths.py` (path_type sample() không đổi, chỉ amplitude thay
 đổi giá trị nạp vào).
 
+## Pha 22 — `plane` và `is_hit` từ tên BASE SYMBOL (task 4/4 — ĐÓNG chuỗi
+source-fidelity Category 2)
+
+### Phần 0 — Vấn đề: Pha 20 sửa chưa hết
+
+Pha 20 chuyển `path_type` sang nguồn per-symbol, nhưng tự khai trong `_meta`
+là CHƯA sửa `plane`/`is_hit` (còn suy từ tên GROUP). Đối chiếu 2 trường này
+với `iswa_base_symbol_names.json` (đã có từ Pha 20):
+
+**`plane` mâu thuẫn: đo được 11/242 (brief nêu 9 — xem "Số liệu không tái
+lập" bên dưới)** — 6 base là HOÁN VỊ HOÀN TOÀN (group Wall Plane chứa base
+tên Floor Plane và ngược lại: `0x24e`/`0x24f`/`0x250` "Travel
+Rotation...Floor Plane" đang gán `wall`; `0x284`/`0x285`/`0x286`
+"...Wall Plane" đang gán `floor`), 3 base tên "Wave **Diagonal** Path" đang
+gán `wall`.
+
+**`is_hit` mâu thuẫn: đo được đúng 13/242 (khớp brief)** — 3 base "Wave
+Diagonal Path" đang `True` (phải `False`); 10 base "Arm/Wrist/Finger
+Circle(s) **Hits** Wall" (group 20, Circles) đang `False` (phải `True`) —
+group 20 không có chữ "Hit" trong tên GROUP nên toàn bộ nhóm này bị bỏ cờ
+dù tên BASE nói rõ.
+
+**Tác động corpus (257.800 sign, 1.129.847 token Cat 2, số TRÍCH từ brief —
+không tự đo lại trong task này, cùng lý do đã ghi ở Pha 20):** `plane` sai
+1.717 token (0,15%), `is_hit` sai 23.846 token (2,11%).
+
+### Số liệu KHÔNG tái lập được từ brief: 11 không phải 9
+
+Đo lại toàn bộ 242 base bằng chính quy tắc A1 của brief (tên base có
+`"floor plane"`/`"wall plane"`/`"diagonal"` → dùng nó, không phân biệt
+group) — ra **11** mâu thuẫn `plane`, không phải 9. Hai base thêm:
+`0x228` "Finger Contact Movement, **Wall Plane**" và `0x229` "...**Floor
+Plane**" — cả hai thuộc **group 12 (Finger Movement)**, group mà brief's
+Phần A1 liệt kê là "không quy định plane" (cùng nhóm với group 11/20) dựa
+trên tên GROUP không nói plane. Đúng — tên GROUP không nói, nhưng tên
+BASE của 2 symbol này THÌ CÓ. Đây chính xác là loại lỗi task này đang sửa,
+chỉ là brief's bảng Phần 0 không liệt kê hết. Áp dụng ĐÚNG quy tắc A1 (ưu
+tiên tên base tuyệt đối, không có ngoại lệ theo group) tự nhiên bắt được cả
+2 case này — không cần thêm logic đặc biệt, chỉ cần không giả định trước
+group nào "chắc chắn null".
+
+### Kiểm tra A2 (group 17/18 có base nào mất cờ "Hit" không?)
+
+Quét tay TRƯỚC khi đổi (đúng yêu cầu brief): group 17 (Curves Hit Wall
+Plane, 17 base) + group 18 (Curves Hit Floor Plane, 29 base) = 46 base.
+**43/46 có "Hit"/"Hits" trong tên base** — 3 ngoại lệ là chính
+`0x2b4`-`0x2b6` ("Wave Diagonal Path"), đã được brief's Phần 0 xác định
+sẵn là cần đổi `True`→`False`. **Không phải trường hợp "quy ước đặt tên
+không nhất quán"** mà brief's cảnh báo dừng-và-báo nhắm tới — đây là 3 base
+bị đặt SAI GROUP (thực chất Diagonal-plane, không phải hit) chứ không phải
+dấu hiệu từ khoá "Hit" không đáng tin. **Không dừng, tiếp tục.**
+
+### Sửa: `plane_for_name()`/`is_hit_for_name()` (`scripts/gen_movement_paths.py`)
+
+- `plane_for_name(name)`: tên base có `"floor plane"`/`"wall plane"`/
+  `"diagonal"` → dùng nó; không có → `None` (caller fallback về bảng
+  group cũ, KHÔNG đổi). Tự verify trước khi tin: không base nào khớp
+  >1 cụm từ plane (0 xung đột trên cả 242 tên).
+- `is_hit_for_name(name)`: `\bhits?\b` trong tên → `True`/`False`, **không
+  fallback** (đúng A2 — brief xác nhận không cần).
+- **Fail-loud giống hệt Pha 20:** sau khi build xong 242 entry, `main()`
+  quét lại TOÀN BỘ bằng đúng 2 hàm trên (kiểm tra độc lập, không chỉ tin
+  logic gán) — `raise RuntimeError` nếu còn bất kỳ mâu thuẫn nào (B3/B4).
+  Chạy thật: **0 mâu thuẫn** cả 2 trường sau khi sửa.
+- `_GROUP_TABLE` bỏ cột `is_hit` (không còn dùng — không có fallback cho
+  is_hit nữa), giữ cột `plane` làm fallback DUY NHẤT khi tên không nói.
+
+### Test B1-B9
+
+`tests/test_plane_is_hit_from_names.py` (mới, 28 test case):
+- B1: 11 base ở bảng `plane` (9 từ brief + 2 tự đo thêm) đúng giá trị. ✅
+- B2: 13 base ở bảng `is_hit` đúng giá trị (khớp brief). ✅
+- B3: quét toàn bộ 242 base, đếm mâu thuẫn `plane` = **0**. ✅
+- B4: quét toàn bộ 242 base, đếm mâu thuẫn `is_hit` = **0**. ✅
+- B5: 102 base fallback (tên không nói plane) vẫn giữ đúng giá trị group
+  cũ — so trực tiếp với `_GROUP_TABLE`, không hồi quy. ✅
+- B6: group 11/20 (không phải 12 nữa — 12 có 2 ngoại lệ) vẫn `plane=null`
+  cho MỌI base; `plane=null` vẫn render giống hệt `plane=WALL` (so
+  `sample_trajectory()` 2 bên bằng nhau từng điểm). ✅
+- B7 (byte-identical): kiểm tay, không phải pytest test (cùng lý do D6 các
+  pha trước) — 2 lần chạy `gen_movement_paths.py` diff rỗng.
+- B8: `reports/fk_accuracy.md` không đụng — xác nhận bằng `git status`.
+- B9: **verify được — 0 test cũ assert `plane`/`is_hit` cụ thể của 1
+  `base_hex` thật** (mọi tham chiếu `plane=`/`is_hit=` trong test cũ là
+  tham số fixture dựng `MotionPath` trực tiếp, không đọc bảng thật) — 0
+  test cần sửa, `pytest` xanh ngay sau khi sinh lại `movement_paths.json`.
+
+`pytest` **1.567/1.567** (1.539 cũ + 28 test mới). `mypy --strict` sạch
+**101 file** — 4 lỗi phát sinh khi viết code mới: biến `plane` bị suy kiểu
+`str` (từ nhánh gán `plane_from_name` đã narrow `is not None`) rồi gán lại
+`str | None` ở nhánh else, sửa bằng khai kiểu tường minh
+`plane: str | None`; 3 lỗi index trên `object` (giống hệt pattern Pha 20
+đã gặp — `entries: dict[str, object]`, giá trị lồng bên trong không tự suy
+kiểu), sửa bằng `# type: ignore[index]` theo đúng tiền lệ đã có sẵn trong
+file.
+
+### Phần C — GIF trước/sau: `0x24e`
+
+`fsw-r-viz/demo/plane_fix_0x24e_before.gif` (`plane=wall` — SAI, dựng lại
+thủ công) và `_after.gif` (`plane=floor` — đúng, đọc từ bảng thật). Toạ độ
+điểm cuối quỹ đạo đo được: BEFORE `(≈0, 10, 0)` (mặt phẳng XY — "wall"),
+AFTER `(≈0, ≈0, -10)` (mặt phẳng XZ — "floor"). **Đã xem bằng mắt**: quỹ
+đạo BEFORE chạy dọc lên (trục y), AFTER chạy ngang theo chiều sâu (trục
+z) — khác biệt rõ ràng ở góc nhìn 3/4 mặc định của `animate_movement.py`,
+không cần dừng-và-báo về khả năng bị nén mất khác biệt.
+
+### `_meta` của `movement_paths.json`
+
+`source`/`method`/`layer` cập nhật cho cả `plane` (ưu tiên tên, fallback
+group — 140/242 từ tên, 102/242 fallback) và `is_hit` (hoàn toàn từ tên,
+không fallback). **Xoá mục `unverified_assumptions` "is_hit is still a
+per-GROUP flag"** — không còn đúng. Giữ lại mục về 102 base fallback
+(plane) vì vẫn đúng — chưa có nguồn nào khác cho các base thực sự không
+nói plane trong tên (chủ yếu group 11/20 toàn bộ, group 12 trừ 2 ngoại lệ).
+Thêm `plane_from_name_count`/`plane_from_group_fallback_count`/
+`is_hit_true_count` vào `_meta`.
+
+### Bảng audit source-fidelity (4 lỗi tự phát hiện + tự sửa, Category 2)
+
+| # | Trường | Nguồn SAI (cũ) | Nguồn ĐÚNG (mới) | Phạm vi sai đo được | Task |
+|---|---|---|---|---|---|
+| 1 | `symbol_id` | tự tính từ `GROUP_START` nội bộ | `symidArr` chuẩn ISWA | 328/652 base | Pha 19 |
+| 2 | `path_type` | tên GROUP | tên BASE SYMBOL | 134/242 base (55,4%) | Pha 20 |
+| 3 | `amplitude` | hằng số 10.0 cho mọi base | tỉ lệ glyph thật trong cùng base | 242/242 base (100% — trước đó KHÔNG có tín hiệu nào) | Pha 21 |
+| 4 | `plane` + `is_hit` | tên GROUP (`plane`), cờ per-group (`is_hit`) | tên BASE SYMBOL (ưu tiên), fallback group cho `plane` | `plane` 11/242, `is_hit` 13/242 | Pha 22 |
+
+Mẫu số chung cả 4 lỗi: **suy 1 trường dữ liệu per-symbol từ 1 nguồn chỉ
+đúng ở mức GROUP** (tên group, hoặc 1 bảng 10 dòng theo group) — đúng ở đa
+số trường hợp (group là 1 tín hiệu thật, không phải nhiễu), nhưng sai cho
+chính những base symbol mà ISWA cố tình đặt LỆCH group thường lệ (biệt lệ,
+outlier trong chính group của nó). Xem `ROADMAP.md`'s bài học chung.
+
+### Kiểm chứng cuối (7 tiêu chí nghiệm thu)
+
+1. `mypy --strict` sạch (101 file); `pytest` xanh (1.567/1.567, xem B9: 0
+   test cũ cần sửa).
+2. B3 và B4 đều đếm ra **0 mâu thuẫn**.
+3. B5 pass — 102 base fallback không đổi (xác nhận bằng test + so trực
+   tiếp `_GROUP_TABLE`).
+4. GIF `0x24e` đã commit, đã xem bằng mắt (XY→XZ rõ ràng).
+5. `reports/fk_accuracy.md` không đổi — không đụng, xác nhận `git status`.
+6. Mục `unverified_assumptions` "is_hit is still a per-GROUP flag" đã xoá
+   khỏi `_meta`.
+7. Bảng audit đủ **4** dòng lỗi tự phát hiện (ở trên).
+
+`git status` xác nhận phạm vi: `movement_paths.json` (sửa),
+`gen_movement_paths.py` (sửa), `tests/test_plane_is_hit_from_names.py`
+(mới), `fsw-r-viz/demo/plane_fix_0x24e_*.gif` (mới) — **không đụng**
+`hand_joint_poses.json`, `reports/`, `path_type`/`amplitude` (giá trị 2
+trường này trong `movement_paths.json` không đổi so với Pha 21, xác nhận
+bằng diff loại trừ dòng `plane`/`is_hit`/`_meta`).
+
 ## Việc còn để ngỏ / chưa làm
 
 - **Category 1 (Hands), 2 (Movement), 3 (Dynamics), 5 (Trunk & Limb / Body)

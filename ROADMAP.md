@@ -219,13 +219,15 @@ chiếu thêm Lessons in SignWriting chương 6 trước khi chốt. Đây là l
 `HandSide` cần thêm `BOTH` (giá trị ISWA fill code 2 ám chỉ) thay vì chỉ
 RIGHT/LEFT nhị phân.
 
-#### Chuỗi sửa 3 lỗi nguồn dữ liệu Category 2 (3/3 — HOÀN TẤT): `symbol_id` →
-`path_type` → `amplitude`
+#### Chuỗi sửa nguồn dữ liệu Category 2 (4/4 — HOÀN TẤT): `symbol_id` →
+`path_type` → `amplitude` → `plane`/`is_hit`
 
-3 việc này BẮT BUỘC làm THEO ĐÚNG THỨ TỰ trên (không đổi chỗ, không làm song
-song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới.
+4 việc này BẮT BUỘC làm THEO ĐÚNG THỨ TỰ trên (không đổi chỗ, không làm song
+song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới; `plane`/
+`is_hit` được thêm vào cuối chuỗi sau khi phát hiện task 2 chưa sửa hết
+(chính `_meta` của `movement_paths.json` tự khai còn sót).
 
-- **1/3 — `symbol_id` dùng `symidArr` chuẩn: ĐÃ XONG** (`PROGRESS.md` mục
+- **1/4 — `symbol_id` dùng `symidArr` chuẩn: ĐÃ XONG** (`PROGRESS.md` mục
   "Pha 19"). `symbol_id_of()` giờ lấy từ thư viện tham chiếu ISWA thật
   (`@sutton-signwriting/core`'s `symidArr`, qua `data/iswa_symbol_ids.json`),
   không còn tự suy từ `GROUP_START` nội bộ nữa — sửa 328/652 base symbol có
@@ -233,18 +235,15 @@ song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới
   `group_of()`/`GROUP_START` giữ nguyên KHÔNG đổi (việc này chỉ đổi trường
   hiển thị `symbol_id`, không đụng khoá tra cứu `base_hex` hay bảng
   `movement_paths`/`finger_articulations`).
-- **2/3 — `path_type` suy SAI nguồn: ĐÃ XONG** (`PROGRESS.md` mục "Pha 20").
+- **2/4 — `path_type` suy SAI nguồn: ĐÃ XONG** (`PROGRESS.md` mục "Pha 20").
   `path_type` giờ suy từ **TÊN BASE SYMBOL thật** (signbank.org, qua
   `data/iswa_base_symbol_names.json`), không còn từ TÊN GROUP nữa — sửa
   134/242 (55,4%) base symbol có `path_type` sai (vd group "Straight Wall
   Plane" từng gán `path_type="straight"` cho cả 43 base, kể cả những base
   tên là Zigzag/Box/Check/Corner/Peaks). `PathType` mở rộng từ 5 lên 22 giá
-  trị. `plane`/`is_hit` vẫn suy từ tên GROUP như cũ (Part 0 của task đó chỉ
-  phát hiện `path_type` sai, không phát hiện 2 trường này sai — dù việc fetch
-  tên thật cho thấy `is_hit` CŨNG biến thiên trong 1 số group, ví dụ "Arm
-  Circle Wall" vs "Arm Circle Hits Wall" cùng group 02-10 — ghi nhận, chưa
-  sửa, ngoài phạm vi task đó).
-- **3/3 — `amplitude` cứng 10.0 cho toàn bộ 242 base: ĐÃ XONG**
+  trị. `plane`/`is_hit` CÒN SÓT (vẫn suy từ tên GROUP) — task đó tự khai
+  trong `_meta`, sửa nốt ở 4/4.
+- **3/4 — `amplitude` cứng 10.0 cho toàn bộ 242 base: ĐÃ XONG**
   (`PROGRESS.md` mục "Pha 21"). Kiểm chứng trước (A1, không giả định):
   variation KHÔNG phải 1 thang kích thước thuần nhất/đơn điệu (chỉ 39/58
   base có >1 variation là có tín hiệu kích thước trong TÊN, và ngay cả khi
@@ -256,20 +255,43 @@ song) — lý do ràng buộc thứ tự nêu ở mục `amplitude` bên dưới
   nhóm anh em tự chuẩn hoá về trung bình 10.0 (giữ đúng thang cũ, không phá
   `SIGNBOX_TO_BODY_SCALE`) — trung bình toàn cục đo lại đúng 10,0000, lệch
   0% so ±20% cho phép.
+- **4/4 — `plane`/`is_hit` suy SAI nguồn: ĐÃ XONG** (`PROGRESS.md` mục
+  "Pha 22"). `plane` giờ ưu tiên tên BASE SYMBOL (`"floor plane"`/
+  `"wall plane"`/`"diagonal"`), fallback tên GROUP chỉ khi tên base không
+  nói gì (102/242) — sửa **11/242** base có `plane` sai (đo được, không
+  phải 9 như brief nêu — 2 base thêm ở group 12 "Finger Movement", group
+  brief coi là "không quy định plane" nhưng 2 base cụ thể đó lại có tên
+  nói rõ plane). `is_hit` chuyển HẲN sang tên base, KHÔNG fallback nữa
+  (từ khoá "Hit"/"Hits" luôn tường minh trong tên khi áp dụng) — sửa
+  **13/242** base, đáng chú ý nhất là nguyên nhóm "Arm/Wrist/Finger
+  Circle(s) Hits Wall" (group 20, Circles — group không có chữ "Hit" trong
+  tên nên bị bỏ cờ hoàn toàn trước đây).
 
-**Bài học chung rút ra sau cả 3 task (đúng yêu cầu ghi lại của task 3's
-brief, Part D3):** kiểm tra xem MỘT nguồn có đang bị dùng để suy ra NHIỀU
-thứ khác nhau không, trước khi tin nó. Ở đây: tên GROUP chỉ cho biết
-**mặt phẳng** (Wall/Floor/Diagonal), tên BASE SYMBOL cho biết **dạng quỹ
-đạo** (Zigzag/Box/Corner/...), trường VARIATION cho biết **kích thước** (và
-đôi khi hướng/số lần lặp) — ba thông tin, ba nguồn khác nhau, dù cả ba đều
-"nằm trong ISWA". Framework ban đầu gộp cả ba vào MỘT nguồn (tên group) rồi
-suy diễn — sai không phải vì tên group SAI, mà vì nó bị hỏi những câu nó
-không trả lời được. Thứ tự sửa 3 task theo đúng thứ tự "unlock" dữ liệu:
-task 1 mở khoá variation, task 2 dùng variation (gián tiếp, qua
-`base_symbol_id`) + tên base để tách path_type khỏi group, task 3 dùng cả
-path_type (đã đúng) lẫn variation (đã có) để tách amplitude khỏi cả hai
-nguồn còn lại.
+**Bài học chung rút ra sau cả 4 task (đúng yêu cầu ghi lại của task cuối,
+Part D3):** kiểm tra xem MỘT nguồn có đang bị dùng để suy ra NHIỀU thứ khác
+nhau không, trước khi tin nó. Ở đây: tên GROUP chỉ cho biết **mặt phẳng**
+(Wall/Floor/Diagonal) và **có "hit" hay không** — nhưng chỉ đúng cho ĐA SỐ,
+không phải MỌI base trong group (chính base bị ISWA đặt lệch group thường
+lệ là nơi giả định "group nói đúng cho cả nhóm" sụp đổ); tên BASE SYMBOL
+cho biết **dạng quỹ đạo** (Zigzag/Box/Corner/...) và, khi có, **plane
+chính xác của riêng nó**; trường VARIATION cho biết **kích thước** (và đôi
+khi hướng/số lần lặp). Framework ban đầu gộp tất cả vào MỘT nguồn (tên
+group) rồi suy diễn — sai không phải vì tên group SAI, mà vì nó bị hỏi
+những câu nó không trả lời được, VÀ vì "đa số đúng" bị lặng lẽ đối xử như
+"luôn đúng". Thứ tự sửa 4 task theo đúng thứ tự "unlock" dữ liệu: task 1
+mở khoá variation, task 2 dùng variation (gián tiếp, qua `base_symbol_id`)
++ tên base để tách `path_type` khỏi group, task 3 dùng cả `path_type` (đã
+đúng) lẫn variation (đã có) để tách `amplitude` khỏi cả hai nguồn còn lại,
+task 4 áp cùng nguyên tắc "ưu tiên tên base, group chỉ là fallback" cho 2
+trường cuối cùng còn sót — đóng hoàn toàn chuỗi source-fidelity Category 2.
+
+**Việc tiếp theo cho Category 2** (không còn trong chuỗi 4 task này, nêu ở
+task cuối's brief Part D4): đo độ phủ THẬT bằng cách chạy toàn bộ corpus
+qua pipeline (thay vì chỉ trích số brief), và làm nốt Category 6 (Location,
+8 base)/7 (Punctuation, 5 base) để chốt 652/652 base symbol toàn ISWA (xem
+mục "Các category ISWA" phía trên). `curvature`/`repeat` (tên base thật
+nêu rõ Single/Double/Triple/Alternating nhưng chưa task nào dùng tới) vẫn
+là cơ hội còn để ngỏ nếu có task sau muốn nhận.
 
 ### SignTimeline (MVP-1) — ĐÃ XONG
 
