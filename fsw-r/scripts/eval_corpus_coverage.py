@@ -51,7 +51,7 @@ from pathlib import Path
 from fsw_r.core.fsw_ast import parse_fsw_to_ast
 from fsw_r.core.fsw_symbol_key import parse_fsw_symbol_key
 from fsw_r.core.fswr_converter import PositionedSymbol
-from fsw_r.core.iswa_data import category_of
+from fsw_r.core.iswa_data import GROUP_START, category_of
 from fsw_r.core.registry import build_symbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 from fsw_r.timeline.build import build_timeline
@@ -96,6 +96,49 @@ def _classify_timeline_failure(message: str) -> str:
         if needle in message:
             return label
     return "other"
+
+
+# Every corpus-derived percentage asserted anywhere in fsw_r's own source,
+# with the file that asserts it. Each was measured ad hoc during development
+# and none could be re-derived, which under the paper's own "no invented
+# data" rule makes them unquotable. verify_cited_claims() recomputes each
+# one from the corpus so they either become citable or get corrected.
+# (key, where it is asserted, cited %, the DEFINITION measured here). The
+# definition is part of the output, not just a comment: a percentage whose
+# population and filter are unstated is no more reproducible than one that
+# was never measured, and an unrecoverable original definition is itself
+# the finding wherever a claim fails to reproduce.
+_CITED_CLAIMS: tuple[tuple[str, str, float, str], ...] = (
+    ("mvp1_one_hand", "timeline/build.py", 6.2,
+     "signs whose built timeline has exactly 1 track, over all corpus signs"),
+    ("mvp2_coverage", "timeline/build.py", 20.9,
+     "signs whose timeline builds at all, over all corpus signs"),
+    ("cat5_fill0", "core/body_types.py, core/body_symbol.py", 92.5,
+     "Category 5 symbol TOKENS with fill == 0, over all Category 5 tokens"),
+    ("cat5_rotation_0_7", "core/body_types.py, core/body_symbol.py", 88.7,
+     "Category 5 symbol TOKENS with rotation 0-7, over all Category 5 tokens"),
+    ("group12_sign_share", "core/movement_paths.py", 16.8,
+     "signs containing >=1 Group 12 symbol, over all parsed signs"),
+    ("group12_top5_tokens", "core/movement_paths.py, scripts/gen_finger_articulations.py", 76.1,
+     "Group 12 TOKENS whose base is one of the 5 named in finger_articulations.json, "
+     "over all Group 12 tokens"),
+    ("cat2_right_rot_0_7", "core/movement_symbol.py", 62.2,
+     "in signs with EXACTLY ONE Category 1 symbol whose rotation < 8 (a right hand): "
+     "Category 2 TOKENS with rotation 0-7, over that sign set's Category 2 tokens"),
+    ("cat2_left_rot_0_7", "core/movement_symbol.py", 58.5,
+     "same, for signs whose single Category 1 symbol has rotation >= 8 (a left hand)"),
+)
+
+# A claim counts as reproduced if it lands within this many percentage
+# points. Wide enough to absorb an upstream corpus revision, narrow enough
+# that a differently-defined filter (the real cause of the MVP-2 gap) still
+# shows up as a disagreement.
+_CLAIM_TOLERANCE_PP = 0.5
+
+# Category 2 spans base 0x205-0x2f6; Group 12 (Finger Movement) is
+# 0x216-0x229. Taken from iswa_data's GROUP_START rather than hardcoded.
+_GROUP12 = 12
+_CATEGORY_5 = 5
 
 
 @dataclass
@@ -146,6 +189,9 @@ class Results:
     tokens_by_category: Counter[int] = field(default_factory=Counter)
     bases_seen: set[int] = field(default_factory=set)
     symbols_per_sign: Counter[int] = field(default_factory=Counter)
+    # Counted at stage 3, not derived from stage 4's track tally, so it
+    # stays correct when --generation-limit samples the timelines.
+    timelines_by_track_count: Counter[int] = field(default_factory=Counter)
     frames_total: int = 0
     tracks_total: int = 0
     generation_sampled: bool = False
@@ -226,6 +272,7 @@ def evaluate(corpus: list[str], fps: int, generation_limit: int | None, seed: in
             continue
         results.timeline.seconds += time.perf_counter() - started
         results.timeline.succeeded += 1
+        results.timelines_by_track_count[len(timeline.tracks)] += 1
         timelines.append(timeline)
 
     # --- Stage 4: animation generation. ---
@@ -250,7 +297,114 @@ def evaluate(corpus: list[str], fps: int, generation_limit: int | None, seed: in
     return results
 
 
-def build_report(results: Results, fps: int, seed: int) -> dict[str, object]:
+def verify_cited_claims(corpus: list[str], results: Results) -> list[dict[str, object]]:
+    """Recompute every corpus percentage fsw_r's source asserts, so each one
+    is either reproduced or corrected instead of being quoted on trust.
+
+    Each claim is recomputed under the definition its own citation states;
+    where a citation is ambiguous about the filter it used, that ambiguity is
+    the finding (it is what makes MVP-2's ~20.9% irreproducible), not
+    something to tune the filter until it matches."""
+    group12_start = GROUP_START[_GROUP12 - 1]
+    group12_end = GROUP_START[_GROUP12]  # exclusive
+
+    # Claim 6's "5 leading base symbols" are the ones gen_finger_articulations
+    # researched by name; read from the shipped table rather than restated
+    # here, so the two cannot drift apart.
+    articulations = json.loads(
+        (Path(__file__).resolve().parent.parent / "src" / "fsw_r" / "data" / "finger_articulations.json")
+        .read_text(encoding="utf-8")
+    )
+    top5 = {
+        int(key, 16)
+        for key, entry in articulations.items()
+        if key != "_meta" and isinstance(entry, dict) and entry.get("name")
+    }
+
+    cat5_tokens = cat5_fill0 = cat5_rot07 = 0
+    g12_tokens = g12_top5 = 0
+    signs_with_g12 = 0
+    right_07 = right_815 = left_07 = left_815 = 0
+
+    for fsw in corpus:
+        try:
+            ast = parse_fsw_to_ast(fsw)
+        except Exception:  # noqa: BLE001 -- unparseable signs are counted in stage 1
+            continue
+        parsed_symbols = []
+        for node in ast.symbols:
+            try:
+                parsed_symbols.append(parse_fsw_symbol_key(node.key))
+            except Exception:  # noqa: BLE001
+                continue
+
+        has_g12 = False
+        hands = [p for p in parsed_symbols if category_of(p.base_hex) == 1]
+        for parsed in parsed_symbols:
+            category = category_of(parsed.base_hex)
+            if category == _CATEGORY_5:
+                cat5_tokens += 1
+                cat5_fill0 += parsed.fill == 0
+                cat5_rot07 += parsed.rotation < 8
+            if group12_start <= parsed.base_hex < group12_end:
+                has_g12 = True
+                g12_tokens += 1
+                g12_top5 += parsed.base_hex in top5
+        signs_with_g12 += has_g12
+
+        # Category 2 rotation vs. the hand the sign is performed with, only
+        # for signs with EXACTLY one Category 1 symbol -- the filter
+        # core/movement_symbol.py's own table states, so the hand is known.
+        if len(hands) == 1:
+            hand_is_right = hands[0].rotation < 8
+            for parsed in parsed_symbols:
+                if category_of(parsed.base_hex) != 2:
+                    continue
+                if hand_is_right:
+                    right_07 += parsed.rotation < 8
+                    right_815 += parsed.rotation >= 8
+                else:
+                    left_07 += parsed.rotation < 8
+                    left_815 += parsed.rotation >= 8
+
+    def pct(numerator: int, denominator: int) -> float:
+        return numerator / denominator * 100.0 if denominator else 0.0
+
+    total = results.corpus_rows
+    one_track = results.timelines_by_track_count[1]
+    measured = {
+        # MVP-1 was "one hand": buildable signs whose timeline has exactly
+        # one track, counted at stage 3.
+        "mvp1_one_hand": pct(one_track, total),
+        "mvp2_coverage": pct(results.timeline.succeeded, total),
+        "cat5_fill0": pct(cat5_fill0, cat5_tokens),
+        "cat5_rotation_0_7": pct(cat5_rot07, cat5_tokens),
+        "group12_sign_share": pct(signs_with_g12, results.parse.succeeded),
+        "group12_top5_tokens": pct(g12_top5, g12_tokens),
+        "cat2_right_rot_0_7": pct(right_07, right_07 + right_815),
+        "cat2_left_rot_0_7": pct(left_07, left_07 + left_815),
+    }
+
+    rows: list[dict[str, object]] = []
+    for key, where, cited, definition in _CITED_CLAIMS:
+        value = measured[key]
+        rows.append(
+            {
+                "claim": key,
+                "cited_in": where,
+                "definition_measured_here": definition,
+                "cited_pct": cited,
+                "measured_pct": round(value, 2),
+                "delta_pp": round(value - cited, 2),
+                "reproduced": abs(value - cited) <= _CLAIM_TOLERANCE_PP,
+            }
+        )
+    return rows
+
+
+def build_report(
+    results: Results, fps: int, seed: int, claims: list[dict[str, object]] | None = None
+) -> dict[str, object]:
     total = results.corpus_rows
     stages = [results.parse, results.mapping, results.timeline, results.generation]
     mean_symbols = results.symbol_tokens / results.parse.succeeded if results.parse.succeeded else 0.0
@@ -296,13 +450,16 @@ def build_report(results: Results, fps: int, seed: int) -> dict[str, object]:
             if results.generation.succeeded
             else 0.0,
         },
+        "cited_claims": claims or [],
         "symbols_per_sign_distribution": {
             str(k): v for k, v in sorted(results.symbols_per_sign.items())
         },
     }
 
 
-def render_markdown(results: Results, fps: int, seed: int) -> str:
+def render_markdown(
+    results: Results, fps: int, seed: int, claims: list[dict[str, object]] | None = None
+) -> str:
     total = results.corpus_rows
     stages = [results.parse, results.mapping, results.timeline, results.generation]
 
@@ -396,6 +553,30 @@ def render_markdown(results: Results, fps: int, seed: int) -> str:
         for reason, count in results.symbol_reasons.most_common():
             lines.append(f"- {count:,} — {reason}")
         lines.append("")
+    if claims:
+        lines.append("## Previously-cited corpus claims")
+        lines.append("")
+        lines.append(
+            "Every corpus percentage asserted in fsw_r's own source, recomputed here. "
+            "Each was originally measured ad hoc and could not be re-derived, which "
+            "under the paper's no-invented-data rule makes it unquotable until it "
+            "either reproduces or is corrected."
+        )
+        lines.append("")
+        lines.append("| Claim | Cited | Measured | Delta (pp) | Reproduced | Asserted in |")
+        lines.append("|---|---:|---:|---:|---|---|")
+        for claim in claims:
+            ok = "yes" if claim["reproduced"] else "**NO**"
+            lines.append(
+                f"| `{claim['claim']}` | {claim['cited_pct']}% | {claim['measured_pct']}% "
+                f"| {claim['delta_pp']:+} | {ok} | `{claim['cited_in']}` |"
+            )
+        lines.append("")
+        lines.append("Definition measured for each claim:")
+        lines.append("")
+        for claim in claims:
+            lines.append(f"- `{claim['claim']}` — {claim['definition_measured_here']}")
+        lines.append("")
     lines.append("## Library exercise")
     lines.append("")
     used = len(results.bases_seen)
@@ -445,14 +626,15 @@ def main() -> None:
     elapsed = time.perf_counter() - started
     print(f"Processed in {elapsed:.1f}s ({len(corpus) / elapsed:,.0f} signs/s)")
 
-    report = build_report(results, fps=args.fps, seed=args.seed)
+    claims = verify_cited_claims(corpus, results)
+    report = build_report(results, fps=args.fps, seed=args.seed, claims=claims)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     json_path = REPORT_DIR / "corpus_coverage.json"
     md_path = REPORT_DIR / "corpus_coverage.md"
     with open(json_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
         f.write("\n")
-    markdown = render_markdown(results, fps=args.fps, seed=args.seed)
+    markdown = render_markdown(results, fps=args.fps, seed=args.seed, claims=claims)
     with open(md_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(markdown)
     print(f"Wrote {json_path}\nWrote {md_path}\n")

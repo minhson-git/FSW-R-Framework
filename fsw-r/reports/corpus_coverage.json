@@ -16,7 +16,7 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 1.0,
-      "seconds": 11.416,
+      "seconds": 14.314,
       "failure_reasons": {}
     },
     {
@@ -26,7 +26,7 @@
       "failed": 24843,
       "success_rate_of_attempted": 0.903635,
       "success_rate_of_corpus": 0.903635,
-      "seconds": 35.184,
+      "seconds": 44.572,
       "failure_reasons": {
         "at least one symbol unmapped": 24843
       }
@@ -38,7 +38,7 @@
       "failed": 196879,
       "success_rate_of_attempted": 0.154873,
       "success_rate_of_corpus": 0.139949,
-      "seconds": 33.854,
+      "seconds": 40.403,
       "failure_reasons": {
         "symbol outside Categories 1-2": 135362,
         "not 1-2 hand symbols": 23986,
@@ -53,7 +53,7 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 0.139949,
-      "seconds": 437.491,
+      "seconds": 567.834,
       "failure_reasons": {}
     }
   ],
@@ -87,6 +87,80 @@
     "mean_frames_per_sign": 24.0,
     "mean_tracks_per_sign": 1.525
   },
+  "cited_claims": [
+    {
+      "claim": "mvp1_one_hand",
+      "cited_in": "timeline/build.py",
+      "definition_measured_here": "signs whose built timeline has exactly 1 track, over all corpus signs",
+      "cited_pct": 6.2,
+      "measured_pct": 6.65,
+      "delta_pp": 0.45,
+      "reproduced": true
+    },
+    {
+      "claim": "mvp2_coverage",
+      "cited_in": "timeline/build.py",
+      "definition_measured_here": "signs whose timeline builds at all, over all corpus signs",
+      "cited_pct": 20.9,
+      "measured_pct": 13.99,
+      "delta_pp": -6.91,
+      "reproduced": false
+    },
+    {
+      "claim": "cat5_fill0",
+      "cited_in": "core/body_types.py, core/body_symbol.py",
+      "definition_measured_here": "Category 5 symbol TOKENS with fill == 0, over all Category 5 tokens",
+      "cited_pct": 92.5,
+      "measured_pct": 92.47,
+      "delta_pp": -0.03,
+      "reproduced": true
+    },
+    {
+      "claim": "cat5_rotation_0_7",
+      "cited_in": "core/body_types.py, core/body_symbol.py",
+      "definition_measured_here": "Category 5 symbol TOKENS with rotation 0-7, over all Category 5 tokens",
+      "cited_pct": 88.7,
+      "measured_pct": 88.67,
+      "delta_pp": -0.03,
+      "reproduced": true
+    },
+    {
+      "claim": "group12_sign_share",
+      "cited_in": "core/movement_paths.py",
+      "definition_measured_here": "signs containing >=1 Group 12 symbol, over all parsed signs",
+      "cited_pct": 16.8,
+      "measured_pct": 16.83,
+      "delta_pp": 0.03,
+      "reproduced": true
+    },
+    {
+      "claim": "group12_top5_tokens",
+      "cited_in": "core/movement_paths.py, scripts/gen_finger_articulations.py",
+      "definition_measured_here": "Group 12 TOKENS whose base is one of the 5 named in finger_articulations.json, over all Group 12 tokens",
+      "cited_pct": 76.1,
+      "measured_pct": 76.12,
+      "delta_pp": 0.02,
+      "reproduced": true
+    },
+    {
+      "claim": "cat2_right_rot_0_7",
+      "cited_in": "core/movement_symbol.py",
+      "definition_measured_here": "in signs with EXACTLY ONE Category 1 symbol whose rotation < 8 (a right hand): Category 2 TOKENS with rotation 0-7, over that sign set's Category 2 tokens",
+      "cited_pct": 62.2,
+      "measured_pct": 94.0,
+      "delta_pp": 31.8,
+      "reproduced": false
+    },
+    {
+      "claim": "cat2_left_rot_0_7",
+      "cited_in": "core/movement_symbol.py",
+      "definition_measured_here": "same, for signs whose single Category 1 symbol has rotation >= 8 (a left hand)",
+      "cited_pct": 58.5,
+      "measured_pct": 94.28,
+      "delta_pp": 35.78,
+      "reproduced": false
+    }
+  ],
   "symbols_per_sign_distribution": {
     "0": 1,
     "1": 7152,

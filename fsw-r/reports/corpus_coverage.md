@@ -62,6 +62,32 @@ Unmapped symbol reasons:
 - 118,251 — Category 7 is not supported yet
 - 367 — Category 6 is not supported yet
 
+## Previously-cited corpus claims
+
+Every corpus percentage asserted in fsw_r's own source, recomputed here. Each was originally measured ad hoc and could not be re-derived, which under the paper's no-invented-data rule makes it unquotable until it either reproduces or is corrected.
+
+| Claim | Cited | Measured | Delta (pp) | Reproduced | Asserted in |
+|---|---:|---:|---:|---|---|
+| `mvp1_one_hand` | 6.2% | 6.65% | +0.45 | yes | `timeline/build.py` |
+| `mvp2_coverage` | 20.9% | 13.99% | -6.91 | **NO** | `timeline/build.py` |
+| `cat5_fill0` | 92.5% | 92.47% | -0.03 | yes | `core/body_types.py, core/body_symbol.py` |
+| `cat5_rotation_0_7` | 88.7% | 88.67% | -0.03 | yes | `core/body_types.py, core/body_symbol.py` |
+| `group12_sign_share` | 16.8% | 16.83% | +0.03 | yes | `core/movement_paths.py` |
+| `group12_top5_tokens` | 76.1% | 76.12% | +0.02 | yes | `core/movement_paths.py, scripts/gen_finger_articulations.py` |
+| `cat2_right_rot_0_7` | 62.2% | 94.0% | +31.8 | **NO** | `core/movement_symbol.py` |
+| `cat2_left_rot_0_7` | 58.5% | 94.28% | +35.78 | **NO** | `core/movement_symbol.py` |
+
+Definition measured for each claim:
+
+- `mvp1_one_hand` — signs whose built timeline has exactly 1 track, over all corpus signs
+- `mvp2_coverage` — signs whose timeline builds at all, over all corpus signs
+- `cat5_fill0` — Category 5 symbol TOKENS with fill == 0, over all Category 5 tokens
+- `cat5_rotation_0_7` — Category 5 symbol TOKENS with rotation 0-7, over all Category 5 tokens
+- `group12_sign_share` — signs containing >=1 Group 12 symbol, over all parsed signs
+- `group12_top5_tokens` — Group 12 TOKENS whose base is one of the 5 named in finger_articulations.json, over all Group 12 tokens
+- `cat2_right_rot_0_7` — in signs with EXACTLY ONE Category 1 symbol whose rotation < 8 (a right hand): Category 2 TOKENS with rotation 0-7, over that sign set's Category 2 tokens
+- `cat2_left_rot_0_7` — same, for signs whose single Category 1 symbol has rotation >= 8 (a left hand)
+
 ## Library exercise
 
 - distinct base symbols appearing in the corpus: **652** of 652 (100.0%)
