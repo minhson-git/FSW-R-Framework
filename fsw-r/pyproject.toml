@@ -65,6 +65,7 @@ files = [
     "scripts/eval_fk_accuracy.py",
     "scripts/eval_anatomical.py",
     "scripts/calibrate_hand_geometry.py",
+    "scripts/check_symbol_id_provenance.py",
     # Added when written (weren't wired in at the time, an oversight caught
     # while starting the path_type task -- see PROGRESS.md):
     "scripts/gen_symbol_ids.py",
