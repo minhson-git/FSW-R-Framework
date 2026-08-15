@@ -64,6 +64,10 @@ files = [
     "scripts/fetch_ground_truth.py",
     "scripts/eval_fk_accuracy.py",
     "scripts/eval_anatomical.py",
+    "scripts/eval_corpus_coverage.py",
+    "scripts/fetch_corpus.py",
+    "scripts/gen_provenance_table.py",
+    "scripts/check_face_fill_semantics.py",
     "scripts/calibrate_hand_geometry.py",
     "scripts/check_symbol_id_provenance.py",
     # Added when written (weren't wired in at the time, an oversight caught
