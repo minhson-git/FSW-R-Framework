@@ -59,15 +59,36 @@ from fsw_r.core.types import MotionPath, MovementPlane, PathType
 _Samples = NDArray[np.float64]
 
 
+def _triangle_wave(t: _Samples, freq: float) -> _Samples:
+    """A [-1, 1] triangle wave, ``freq`` full cycles over t in [0, 1] --
+    sharp, angular vertices (unlike a sine), used for ZIGZAG/ARROWHEAD."""
+    phase = t * freq
+    result: _Samples = 2.0 * np.abs(2.0 * (phase - np.floor(phase + 0.5))) - 1.0
+    return result
+
+
 def _canonical_shape(path: MotionPath, samples: int) -> _Samples:
     """The un-rotated, un-planed shape for one repeat of this path_type, in
     a local frame -- Y is the primary direction of travel (matching
-    Category 1's wrist-to-fingertip convention), starting at the origin."""
+    Category 1's wrist-to-fingertip convention), starting at the origin.
+
+    The 17 shapes below CONTACT..CIRCLE (see ``PathType``'s own docstring
+    for which real ISWA base-symbol NAME family each comes from) are this
+    project's own approximation of each name's implied trajectory, same
+    caveat as CURVED/CIRCLE already had -- not derived from any ISWA
+    glyph measurement, only required to be geometrically DISTINCT from
+    STRAIGHT and from each other (see this task's C6: distance between
+    point clouds must clear a measurable threshold), not pixel-accurate to
+    the real glyph. Flagged in ``data/movement_paths.json``'s own ``_meta``
+    too, not silently treated as exact."""
     t = np.linspace(0.0, 1.0, samples)
+    a = path.amplitude
+    c = path.curvature
+    zeros = np.zeros_like(t)
     if path.path_type == PathType.CONTACT:
         # Degenerate: a single location, repeated -- nothing to animate
         # along, just where the contact happens.
-        return np.tile(np.array([0.0, path.amplitude, 0.0]), (samples, 1))
+        return np.tile(np.array([0.0, a, 0.0]), (samples, 1))
     if path.path_type == PathType.FINGER:
         # Group 12 (Finger Movement): the WRIST does not translate at all
         # -- the movement is joint-angle oscillation on the fingers
@@ -77,20 +98,130 @@ def _canonical_shape(path: MotionPath, samples: int) -> _Samples:
         # point, repeated -- see module docstring's "UNVERIFIED
         # ASSUMPTIONS" for why this replaced the previous (semantically
         # wrong) side-to-side wrist wiggle.
-        return np.tile(np.array([0.0, path.amplitude, 0.0]), (samples, 1))
+        return np.tile(np.array([0.0, a, 0.0]), (samples, 1))
     if path.path_type == PathType.STRAIGHT:
-        y = t * path.amplitude
-        return np.column_stack([np.zeros_like(t), y, np.zeros_like(t)])
+        return np.column_stack([zeros, t * a, zeros])
     if path.path_type == PathType.CURVED:
-        y = t * path.amplitude
-        x = path.curvature * path.amplitude * np.sin(np.pi * t)
-        return np.column_stack([x, y, np.zeros_like(t)])
+        # A single smooth arc, bulging out and back to the axis -- covers
+        # "Curve ... Quarter/Half/3 Quarter Circle" (arc sweep is a
+        # curvature/amplitude nuance, not a different path_type).
+        x = c * a * np.sin(np.pi * t)
+        return np.column_stack([x, t * a, zeros])
     if path.path_type == PathType.CIRCLE:
         angle = 2 * np.pi * t
-        radius = path.amplitude / 2
+        radius = a / 2
         x = radius * np.cos(angle)
-        y = path.amplitude / 2 + radius * np.sin(angle)
-        return np.column_stack([x, y, np.zeros_like(t)])
+        y = a / 2 + radius * np.sin(angle)
+        return np.column_stack([x, y, zeros])
+    if path.path_type == PathType.FLEX:
+        # Mostly straight; hooks off-axis only in the last ~35% ("Wrist
+        # Flex" = a flex at the END of an otherwise straight movement).
+        bend = np.where(t > 0.65, ((t - 0.65) / 0.35) ** 2, 0.0)
+        x = c * a * bend
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.CROSS:
+        # One full sideways sine cycle while advancing -- the path crosses
+        # the central travel axis, unlike CURVED which only bulges once.
+        x = c * a * np.sin(2 * np.pi * t)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.BEND:
+        # One gentle, LINEAR direction change partway (distinguished from
+        # CORNER's sharp right angle and FLEX's late hook by being a
+        # shallow ramp starting at the midpoint).
+        x = c * a * np.where(t < 0.5, 0.0, (t - 0.5) * 2.0)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.CORNER:
+        # A genuine right-angle turn: travel along Y for the first half,
+        # then along X for the second half.
+        half = a / 2
+        y = np.minimum(t * 2.0, 1.0) * half
+        x = np.maximum((t - 0.5) * 2.0, 0.0) * c * a
+        return np.column_stack([x, y, zeros])
+    if path.path_type == PathType.CHECK:
+        # An asymmetric tick mark: a short dip, then a longer stroke back
+        # up past the start ("✓" shape).
+        dip_end = 0.35
+        y = np.where(
+            t < dip_end, -0.5 * a * (t / dip_end), -0.5 * a + (t - dip_end) / (1 - dip_end) * 1.5 * a
+        )
+        x = c * a * 0.3 * np.sin(np.pi * np.clip((t - dip_end) / (1 - dip_end), 0.0, 1.0))
+        return np.column_stack([x, y, zeros])
+    if path.path_type == PathType.BOX:
+        # A closed 4-sided path, traced in 4 equal quarters of t.
+        side = a
+        x = np.select(
+            [t < 0.25, t < 0.5, t < 0.75],
+            [t / 0.25 * side, side, side - (t - 0.5) / 0.25 * side],
+            default=0.0,
+        )
+        y = np.select(
+            [t < 0.25, t < 0.5, t < 0.75],
+            [0.0, (t - 0.25) / 0.25 * side, side],
+            default=side - (t - 0.75) / 0.25 * side,
+        )
+        return np.column_stack([x, y, zeros])
+    if path.path_type == PathType.ZIGZAG:
+        # Sharp alternating diagonal segments (a triangle wave) while
+        # advancing -- unlike WAVE's smooth sine or PEAKS' one-sided bumps.
+        x = c * a * 0.4 * _triangle_wave(t, freq=3.0)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.PEAKS:
+        # A one-sided triangle wave (always bulging the same way, like a
+        # mountain range) -- distinguishes it from ZIGZAG's signed,
+        # alternating triangle wave.
+        x = c * a * 0.4 * np.abs(_triangle_wave(t, freq=2.5))
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.TRAVEL_ROTATION:
+        # A constant-radius loop while advancing (a helix) -- a few slow,
+        # wide oscillations (distinguished from SHAKE's many tight ones).
+        radius = c * a * 0.15
+        x = radius * np.sin(2 * np.pi * 3.0 * t)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.SHAKE:
+        # A tight, high-frequency, small-amplitude wiggle while advancing.
+        radius = c * a * 0.05
+        x = radius * np.sin(2 * np.pi * 10.0 * t)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.SPIRAL:
+        # An expanding-radius loop while advancing -- radius grows from 0
+        # to its max as t goes 0->1, unlike TRAVEL_ROTATION's constant one.
+        growing_radius = c * a * 0.2 * t
+        x = growing_radius * np.cos(2 * np.pi * 3.0 * t)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.HUMP:
+        # A single bump concentrated near the midpoint, returning to
+        # baseline at both ends -- sharper/more localized than CURVED's
+        # smooth full-range arc.
+        x = c * a * np.exp(-(((t - 0.5) * 5.0) ** 2))
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.LOOP:
+        # One small self-contained loop (a full circle in local xy) with a
+        # little net forward travel -- unlike CIRCLE (no net travel) or
+        # TRAVEL_ROTATION (many loops, mostly net travel).
+        radius = c * a * 0.2
+        x = radius * (1.0 - np.cos(2 * np.pi * t))
+        y = t * 0.3 * a + radius * np.sin(2 * np.pi * t)
+        return np.column_stack([x, y, zeros])
+    if path.path_type == PathType.WAVE:
+        # A smooth, signed sine wave (2-3 curves) while advancing --
+        # distinguished from ZIGZAG (sharp) and PEAKS (one-sided).
+        x = c * a * 0.3 * np.sin(2 * np.pi * 2.5 * t)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.CURVE_THEN_STRAIGHT:
+        # Curved for the first half (bulges out and back to the axis by
+        # the midpoint), dead straight for the second -- one compound path.
+        x = np.where(t < 0.5, c * a * np.sin(np.pi * (t / 0.5)), 0.0)
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.CURVED_CROSS:
+        # CROSS's sideways crossing, but with an added second harmonic so
+        # the strokes read as curved rather than a clean single sine.
+        x = c * a * (np.sin(2 * np.pi * t) + 0.3 * np.sin(4 * np.pi * t))
+        return np.column_stack([x, t * a, zeros])
+    if path.path_type == PathType.ARROWHEAD:
+        # A single sharp symmetric tent (chevron apex at the midpoint) --
+        # one linear peak, unlike PEAKS' several smoother ones.
+        x = c * a * 0.5 * _triangle_wave(t, freq=1.0)
+        return np.column_stack([x, t * a, zeros])
     raise ValueError(f"unhandled path_type: {path.path_type}")
 
 

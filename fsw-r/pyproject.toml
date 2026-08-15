@@ -68,6 +68,15 @@ files = [
     "scripts/fetch_corpus.py",
     "scripts/gen_provenance_table.py",
     "scripts/calibrate_hand_geometry.py",
+    # Added when written (weren't wired in at the time, an oversight caught
+    # while starting the path_type task -- see PROGRESS.md):
+    "scripts/gen_symbol_ids.py",
+    "scripts/fix_hand_joint_poses_symbol_id.py",
+    # path_type task (2/3):
+    "scripts/fetch_base_symbol_names.py",
+    "scripts/gen_movement_paths.py",
+    # amplitude task (3/3):
+    "scripts/gen_movement_glyph_sizes.py",
 ]
 
 [[tool.mypy.overrides]]
