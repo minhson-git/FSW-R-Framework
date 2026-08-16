@@ -8,10 +8,13 @@ from fsw_r.core.registry import _CATEGORY_SYMBOL, build_symbol, symbol_from_fsw
 from fsw_r.core.types import HandSide
 
 
-def test_category_symbol_has_all_five_implemented_categories() -> None:
-    # C1 -- Category 3/5's task brief requires exactly {1, 2, 3, 4, 5}
-    # dispatched (6 Location and 7 Punctuation remain unimplemented).
-    assert set(_CATEGORY_SYMBOL) == {1, 2, 3, 4, 5}
+def test_category_symbol_covers_all_seven_iswa_categories() -> None:
+    # Was {1, 2, 3, 4, 5} while Location and Punctuation were unimplemented.
+    # Both now dispatch to AnnotationSymbol -- identity carried, no modelled
+    # pose, which is the accurate answer for them rather than a placeholder
+    # (see _CATEGORY_SYMBOL's own comment and
+    # tests/test_category6_7_coverage.py).
+    assert set(_CATEGORY_SYMBOL) == {1, 2, 3, 4, 5, 6, 7}
 
 
 def test_symbol_from_fsw_builds_index() -> None:
@@ -44,15 +47,39 @@ def test_symbol_from_fsw_matches_direct_construction() -> None:
     )
 
 
-def test_build_symbol_raises_for_unsupported_category() -> None:
-    # 0x37f is a real ISWA base (Category 6, Location) -- parses fine, but
-    # _CATEGORY_SYMBOL has no entry for category 6 yet (1, 2, 3, 4, 5 do --
-    # this test's target base has moved as coverage grew: it used to point
-    # at Category 2, then Category 3, both since gained real support; see
-    # PROGRESS.md's Category 3/5 entry).
-    parsed = ParsedFSWSymbol(base_hex=0x37F, fill=0, rotation=0)
-    with pytest.raises(ValueError):
+def test_build_symbol_raises_for_unsupported_category(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # This test's target base kept moving as coverage grew -- Category 2,
+    # then 3, then 6 -- and has now run out of places to move: all seven
+    # categories dispatch, so no real ISWA base can reach the guard. Rather
+    # than delete the test (the guard is the thing stopping a future partial
+    # category from silently building the wrong symbol type), exercise the
+    # mechanism directly by removing an entry, the same approach
+    # test_fswr_converter.py already uses to reach an unreachable error path.
+    monkeypatch.delitem(_CATEGORY_SYMBOL, 6)
+    parsed = ParsedFSWSymbol(base_hex=0x37F, fill=0, rotation=0)  # Location
+    with pytest.raises(ValueError, match="Category 6 is not supported yet"):
         build_symbol(parsed)
+
+
+def test_build_symbol_covers_every_real_iswa_base() -> None:
+    # The complement of the test above: with the dispatch intact, there is
+    # no real base symbol left that raises.
+    from fsw_r.core.iswa_data import CATEGORY_START, ISWA_LAST_BASE, valid_combinations_for
+
+    for base_hex in range(CATEGORY_START[0], ISWA_LAST_BASE + 1):
+        try:
+            combos = valid_combinations_for(base_hex)
+        except ValueError:
+            continue  # not a real ISWA base symbol
+        build_symbol(
+            ParsedFSWSymbol(
+                base_hex=base_hex,
+                fill=min(combos.fills),
+                rotation=min(combos.rotations),
+            )
+        )
 
 
 def test_symbol_from_fsw_raises_for_malformed_key() -> None:

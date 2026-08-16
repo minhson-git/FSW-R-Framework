@@ -16,31 +16,29 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 1.0,
-      "seconds": 11.556,
+      "seconds": 11.29,
       "failure_reasons": {}
     },
     {
       "stage": "Symbol Mapping (per sign)",
       "attempted": 257801,
-      "succeeded": 232958,
-      "failed": 24843,
-      "success_rate_of_attempted": 0.903635,
-      "success_rate_of_corpus": 0.903635,
-      "seconds": 35.608,
-      "failure_reasons": {
-        "at least one symbol unmapped": 24843
-      }
+      "succeeded": 257801,
+      "failed": 0,
+      "success_rate_of_attempted": 1.0,
+      "success_rate_of_corpus": 1.0,
+      "seconds": 39.587,
+      "failure_reasons": {}
     },
     {
       "stage": "Timeline Construction",
-      "attempted": 232958,
+      "attempted": 257801,
       "succeeded": 36079,
-      "failed": 196879,
-      "success_rate_of_attempted": 0.154873,
+      "failed": 221722,
+      "success_rate_of_attempted": 0.139949,
       "success_rate_of_corpus": 0.139949,
-      "seconds": 33.357,
+      "seconds": 36.741,
       "failure_reasons": {
-        "symbol outside Categories 1-2": 135362,
+        "symbol outside Categories 1-2": 160205,
         "not 1-2 hand symbols": 23986,
         "two movements on one hand": 23190,
         "two postures on one hand": 14341
@@ -53,20 +51,19 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 0.139949,
-      "seconds": 538.178,
+      "seconds": 599.917,
       "failure_reasons": {}
     }
   ],
   "symbol_level": {
     "symbol_tokens": 3407742,
-    "symbols_mapped": 3289124,
-    "symbols_unmapped": 118618,
-    "mapping_rate": 0.965192,
+    "symbols_mapped": 3407742,
+    "symbols_unmapped": 0,
+    "symbols_annotation_only": 221691,
+    "symbols_modelled": 3186051,
+    "mapping_rate": 1.0,
     "mean_symbols_per_parsed_sign": 13.218,
-    "failure_reasons": {
-      "Category 7 is not supported yet": 118251,
-      "Category 6 is not supported yet": 367
-    },
+    "failure_reasons": {},
     "tokens_by_category": {
       "1 Hands": 1415887,
       "2 Movement": 1129847,

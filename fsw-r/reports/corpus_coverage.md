@@ -10,21 +10,17 @@ Functional/process evaluation: each stage is scored on whether it produced an ou
 | Processing Stage | Input | Successful | Failed | Success Rate | % of corpus |
 |---|---:|---:|---:|---:|---:|
 | FSW Parsing | 257,801 | 257,801 | 0 | 100.0% | 100.0% |
-| Symbol Mapping (per sign) | 257,801 | 232,958 | 24,843 | 90.4% | 90.4% |
-| Timeline Construction | 232,958 | 36,079 | 196,879 | 15.5% | 14.0% |
+| Symbol Mapping (per sign) | 257,801 | 257,801 | 0 | 100.0% | 100.0% |
+| Timeline Construction | 257,801 | 36,079 | 221,722 | 14.0% | 14.0% |
 | Animation Generation | 36,079 | 36,079 | 0 | 100.0% | 14.0% |
 
 *Input* is the number of signs that REACHED that stage, so *Success Rate* is conditional; *% of corpus* is the unconditional figure.
 
 ### Failure reasons by stage
 
-**Symbol Mapping (per sign)**
-
-- 24,843 — at least one symbol unmapped
-
 **Timeline Construction**
 
-- 135,362 — symbol outside Categories 1-2
+- 160,205 — symbol outside Categories 1-2
 - 23,986 — not 1-2 hand symbols
 - 23,190 — two movements on one hand
 - 14,341 — two postures on one hand
@@ -35,7 +31,7 @@ Functional/process evaluation: each stage is scored on whether it produced an ou
 
 | After applying | Signs remaining | % of corpus |
 |---|---:|---:|
-| (reached Timeline Construction) | 232,958 | 90.4% |
+| (reached Timeline Construction) | 257,801 | 100.0% |
 | — symbol outside Categories 1-2 | 97,596 | 37.9% |
 | — not 1-2 hand symbols | 73,610 | 28.6% |
 | — two postures on one hand | 59,269 | 23.0% |
@@ -44,8 +40,12 @@ Functional/process evaluation: each stage is scored on whether it produced an ou
 ## Symbol level
 
 - symbol tokens: **3,407,742**
-- mapped to a library symbol: **3,289,124** (96.52%)
+- mapped to a library symbol: **3,407,742** (100.00%)
+  - of those, MODELLED (a pose/path/expression): **3,186,051** (93.49%)
+  - of those, ANNOTATION-ONLY (identified, no modelled pose): **221,691**
 - mean symbols per parsed sign: 13.218
+
+> Mapping an ISWA symbol to an `AnnotationSymbol` is a successful IDENTIFICATION, not a modelled pose -- Punctuation is never performed by the body at all, and Location is a spatial anchor rather than an articulation. The mapping rate must not be quoted as an animation rate.
 
 | Category | Symbol tokens | Share |
 |---|---:|---:|
@@ -56,11 +56,6 @@ Functional/process evaluation: each stage is scored on whether it produced an ou
 | 5 Trunk & Limb | 155,420 | 4.6% |
 | 6 Location | 367 | 0.0% |
 | 7 Punctuation | 118,251 | 3.5% |
-
-Unmapped symbol reasons:
-
-- 118,251 — Category 7 is not supported yet
-- 367 — Category 6 is not supported yet
 
 ## Previously-cited corpus claims
 

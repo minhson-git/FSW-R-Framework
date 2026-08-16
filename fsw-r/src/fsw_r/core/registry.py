@@ -4,8 +4,10 @@ becomes a real ``HandSymbol`` instance, not a bag of raw ints.
 
 Dispatch is by **category**, not by per-symbol registration: ``_CATEGORY_SYMBOL``
 maps a category number to the one class (or factory) that handles every base
-symbol in it (``{1: HandSymbol, 2: MovementSymbol, 4: <face factory>, 5: BodySymbol,
-3: DynamicsSymbol}``). ``build_symbol()`` returns the ``FSWBaseSymbol`` marker, not
+symbol in it. All seven ISWA categories are covered, so every one of the 652
+real base symbols builds; Categories 6 (Location) and 7 (Punctuation) build
+as ``AnnotationSymbol`` -- see that entry's comment for why that is the
+accurate answer for them rather than a placeholder. ``build_symbol()`` returns the ``FSWBaseSymbol`` marker, not
 ``FSWRenderableSymbol`` -- Category 3 (Dynamics) symbols are deliberately NOT
 ``FSWRenderableSymbol`` (a Dynamics symbol renders nothing of its own, see
 ``core/modifier_symbol.py``), so a single return type covering every dispatched
@@ -93,6 +95,35 @@ _CATEGORY_SYMBOL: dict[int, _Constructor] = {
     3: DynamicsSymbol,
     4: _make_category4_symbol,
     5: BodySymbol,
+    # Categories 6 (Location) and 7 (Punctuation) build as AnnotationSymbol
+    # -- a labelled marker carrying the symbol's identity and no modelled
+    # pose. That is the accurate answer for both, not a placeholder:
+    #
+    #   Location says WHERE a sign is produced relative to the signer. It is
+    #   a spatial anchor, not an articulation, and this framework has no
+    #   verified convention mapping an ISWA location glyph onto its own
+    #   body-anchor space (timeline/anchor.py positions from the SIGNBOX
+    #   coordinates the FSW string already carries). Inventing one would be
+    #   exactly the "wrong source when none is available" mistake the
+    #   Category 2 source-fidelity work spent four commits undoing.
+    #
+    #   Punctuation is writing-system notation -- sentence marks between
+    #   signs. It is never performed by the body at all, so "no modelled
+    #   pose" is not a gap here, it is the correct and final answer.
+    #
+    # Measured reason this matters: before this entry, these 13 base symbols
+    # were the ONLY cause of symbol-mapping failure over the whole SignBank+
+    # corpus -- 118,251 Punctuation tokens (3.5%, more than Dynamics) and 367
+    # Location tokens (see reports/corpus_coverage.md). A sign containing a
+    # full stop could not be processed at all because of the full stop.
+    #
+    # NOTE for anyone quoting the mapping rate: mapping to an
+    # AnnotationSymbol is a successful IDENTIFICATION, not a modelled pose.
+    # scripts/eval_corpus_coverage.py reports modelled and annotation-only
+    # tokens separately for exactly this reason -- do not read 100% mapping
+    # as 100% animated.
+    6: AnnotationSymbol,
+    7: AnnotationSymbol,
 }
 
 # Escape hatch for a future INDIVIDUAL base symbol needing distinct
@@ -116,9 +147,11 @@ def build_symbol(parsed: ParsedFSWSymbol) -> FSWBaseSymbol:
     Category 3/5 entry.
 
     Raises ``ValueError`` if ``parsed``'s category has no entry in
-    ``_CATEGORY_SYMBOL`` yet (Category 6/7, not implemented as of this
-    task) -- honestly, as "category not supported" rather than a parse
-    error.
+    ``_CATEGORY_SYMBOL`` -- honestly, as "category not supported" rather
+    than a parse error. All seven ISWA categories are now covered, so this
+    is unreachable for any real base symbol; it stays because
+    ``_CATEGORY_SYMBOL`` is the extension point and a future partial entry
+    must fail loudly rather than silently build the wrong kind of symbol.
     """
     cls = _OVERRIDES.get(parsed.base_hex)
     if cls is None:

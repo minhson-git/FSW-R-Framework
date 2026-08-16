@@ -52,6 +52,7 @@ from fsw_r.core.fsw_ast import parse_fsw_to_ast
 from fsw_r.core.fsw_symbol_key import parse_fsw_symbol_key
 from fsw_r.core.fswr_converter import PositionedSymbol
 from fsw_r.core.iswa_data import GROUP_START, category_of
+from fsw_r.core.annotation_symbol import AnnotationSymbol
 from fsw_r.core.registry import build_symbol
 from fsw_r.core.renderable_symbol import FSWRenderableSymbol
 from fsw_r.timeline.build import build_timeline
@@ -188,6 +189,10 @@ class Results:
     symbol_reasons: Counter[str] = field(default_factory=Counter)
     tokens_by_category: Counter[int] = field(default_factory=Counter)
     bases_seen: set[int] = field(default_factory=set)
+    # A symbol that maps to AnnotationSymbol is IDENTIFIED, not modelled:
+    # it carries its ISWA identity and has no pose. Counted apart so the
+    # mapping rate can never be read as an animation rate.
+    symbol_annotation_only: int = 0
     symbols_per_sign: Counter[int] = field(default_factory=Counter)
     # Counted at stage 3, not derived from stage 4's track tally, so it
     # stays correct when --generation-limit samples the timelines.
@@ -253,6 +258,8 @@ def evaluate(corpus: list[str], fps: int, generation_limit: int | None, seed: in
                 sign_ok = False
                 continue
             results.symbol_mapped += 1
+            if isinstance(symbol, AnnotationSymbol):
+                results.symbol_annotation_only += 1
             if isinstance(symbol, FSWRenderableSymbol):
                 positioned.append(PositionedSymbol(symbol=symbol, x=node.x, y=node.y))
         results.mapping.seconds += time.perf_counter() - started
@@ -427,6 +434,8 @@ def build_report(
             "symbol_tokens": results.symbol_tokens,
             "symbols_mapped": results.symbol_mapped,
             "symbols_unmapped": results.symbol_tokens - results.symbol_mapped,
+            "symbols_annotation_only": results.symbol_annotation_only,
+            "symbols_modelled": results.symbol_mapped - results.symbol_annotation_only,
             "mapping_rate": round(results.symbol_mapped / results.symbol_tokens, 6)
             if results.symbol_tokens
             else 0.0,
@@ -538,7 +547,24 @@ def render_markdown(
     mean_symbols = results.symbol_tokens / results.parse.succeeded if results.parse.succeeded else 0.0
     lines.append(f"- symbol tokens: **{results.symbol_tokens:,}**")
     lines.append(f"- mapped to a library symbol: **{results.symbol_mapped:,}** ({mapping_rate:.2%})")
+    modelled = results.symbol_mapped - results.symbol_annotation_only
+    modelled_rate = modelled / results.symbol_tokens if results.symbol_tokens else 0.0
+    lines.append(
+        f"  - of those, MODELLED (a pose/path/expression): **{modelled:,}** "
+        f"({modelled_rate:.2%})"
+    )
+    lines.append(
+        f"  - of those, ANNOTATION-ONLY (identified, no modelled pose): "
+        f"**{results.symbol_annotation_only:,}**"
+    )
     lines.append(f"- mean symbols per parsed sign: {mean_symbols:.3f}")
+    lines.append("")
+    lines.append(
+        "> Mapping an ISWA symbol to an `AnnotationSymbol` is a successful "
+        "IDENTIFICATION, not a modelled pose -- Punctuation is never performed "
+        "by the body at all, and Location is a spatial anchor rather than an "
+        "articulation. The mapping rate must not be quoted as an animation rate."
+    )
     lines.append("")
     lines.append("| Category | Symbol tokens | Share |")
     lines.append("|---|---:|---:|")
