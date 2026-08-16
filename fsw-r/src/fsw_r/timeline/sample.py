@@ -33,6 +33,7 @@ from __future__ import annotations
 from scipy.spatial.transform import Rotation, Slerp
 
 from fsw_r.core.types import FingerPose, HandJointPose, JointAngle, ThumbPose
+from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.timeline.types import Keyframe, PoseFrame, SignTimeline, Track, TrackPose
 
 DEFAULT_FPS = 25
@@ -83,6 +84,25 @@ def _slerp_wrist(a: Rotation, b: Rotation, t: float) -> Rotation:
     return result
 
 
+def _lerp_expression(a: FaceExpressionPose, b: FaceExpressionPose, t: float) -> FaceExpressionPose:
+    """Blend two ARKit-52 expressions channel by channel.
+
+    A name absent from a pose is implicitly 0 (neutral, see
+    ``FaceExpressionPose``), so the union of both key sets is interpolated
+    with the missing side treated as 0 -- interpolating only the shared keys
+    would make a channel that one side does not mention jump instead of
+    easing in. Values stay in [0, 1] because both endpoints are, so the
+    result never trips ``FaceExpressionPose``'s own validation."""
+    names = set(a.blendshapes) | set(b.blendshapes)
+    return FaceExpressionPose(
+        blendshapes={
+            name: a.blendshapes.get(name, 0.0)
+            + (b.blendshapes.get(name, 0.0) - a.blendshapes.get(name, 0.0)) * t
+            for name in sorted(names)
+        }
+    )
+
+
 def _find_bracket(keyframes: tuple[Keyframe, ...], t: float) -> tuple[Keyframe, Keyframe, float]:
     if t <= keyframes[0].time:
         return keyframes[0], keyframes[0], 0.0
@@ -111,7 +131,11 @@ def _interpolate_track_at(track: Track, t: float) -> TrackPose:
     if left.position is not None and right.position is not None:
         position = left.position + (right.position - left.position) * local_t
 
-    return TrackPose(joint_pose=joint_pose, wrist=wrist, position=position)
+    expression = None
+    if left.expression is not None and right.expression is not None:
+        expression = _lerp_expression(left.expression, right.expression, local_t)
+
+    return TrackPose(joint_pose=joint_pose, wrist=wrist, position=position, expression=expression)
 
 
 def sample(timeline: SignTimeline, fps: int = DEFAULT_FPS) -> tuple[PoseFrame, ...]:

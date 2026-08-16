@@ -85,10 +85,11 @@ _CATEGORY_NAME = {
 # bucketing raw message text) means an upstream message change shows up as
 # a growing "other" bucket instead of silently re-partitioning the report.
 _TIMELINE_REASONS: tuple[tuple[str, str], ...] = (
-    ("only supports Category 1", "symbol outside Categories 1-2"),
+    ("MVP-3 supports Category 1", "symbol outside supported categories"),
     ("1 or 2 hand (Category 1) symbols", "not 1-2 hand symbols"),
     ("at most one posture per hand", "two postures on one hand"),
     ("at most 1 movement per hand", "two movements on one hand"),
+    ("disagree on ARKit channel", "conflicting facial expressions"),
 )
 
 
@@ -524,8 +525,10 @@ def render_markdown(
     lines.append(
         "``build_timeline`` raises on the FIRST constraint a sign violates, so the "
         "counts above are mutually exclusive and can be read as a funnel. This shows "
-        "where MVP-2 coverage is actually lost -- an intermediate row is the coverage "
-        "the framework would reach if only the constraints above it applied."
+        "where timeline coverage is actually lost -- an intermediate row is the "
+        "coverage the framework would reach if only the constraints above it "
+        "applied. Deliberately not named after a scope version, so it stays "
+        "correct as the scope grows."
     )
     lines.append("")
     lines.append("| After applying | Signs remaining | % of corpus |")

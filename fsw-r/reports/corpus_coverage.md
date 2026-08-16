@@ -11,8 +11,8 @@ Functional/process evaluation: each stage is scored on whether it produced an ou
 |---|---:|---:|---:|---:|---:|
 | FSW Parsing | 257,801 | 257,801 | 0 | 100.0% | 100.0% |
 | Symbol Mapping (per sign) | 257,801 | 257,801 | 0 | 100.0% | 100.0% |
-| Timeline Construction | 257,801 | 36,079 | 221,722 | 14.0% | 14.0% |
-| Animation Generation | 36,079 | 36,079 | 0 | 100.0% | 14.0% |
+| Timeline Construction | 257,801 | 54,707 | 203,094 | 21.2% | 21.2% |
+| Animation Generation | 54,707 | 54,707 | 0 | 100.0% | 21.2% |
 
 *Input* is the number of signs that REACHED that stage, so *Success Rate* is conditional; *% of corpus* is the unconditional figure.
 
@@ -20,22 +20,24 @@ Functional/process evaluation: each stage is scored on whether it produced an ou
 
 **Timeline Construction**
 
-- 160,205 — symbol outside Categories 1-2
-- 23,986 — not 1-2 hand symbols
-- 23,190 — two movements on one hand
-- 14,341 — two postures on one hand
+- 108,692 — symbol outside supported categories
+- 36,449 — two movements on one hand
+- 35,199 — not 1-2 hand symbols
+- 20,287 — two postures on one hand
+- 2,467 — conflicting facial expressions
 
 ### Timeline scope funnel
 
-``build_timeline`` raises on the FIRST constraint a sign violates, so the counts above are mutually exclusive and can be read as a funnel. This shows where MVP-2 coverage is actually lost -- an intermediate row is the coverage the framework would reach if only the constraints above it applied.
+``build_timeline`` raises on the FIRST constraint a sign violates, so the counts above are mutually exclusive and can be read as a funnel. This shows where timeline coverage is actually lost -- an intermediate row is the coverage the framework would reach if only the constraints above it applied. Deliberately not named after a scope version, so it stays correct as the scope grows.
 
 | After applying | Signs remaining | % of corpus |
 |---|---:|---:|
 | (reached Timeline Construction) | 257,801 | 100.0% |
-| — symbol outside Categories 1-2 | 97,596 | 37.9% |
-| — not 1-2 hand symbols | 73,610 | 28.6% |
-| — two postures on one hand | 59,269 | 23.0% |
-| — two movements on one hand | 36,079 | 14.0% |
+| — symbol outside supported categories | 149,109 | 57.8% |
+| — not 1-2 hand symbols | 113,910 | 44.2% |
+| — two postures on one hand | 93,623 | 36.3% |
+| — two movements on one hand | 57,174 | 22.2% |
+| — conflicting facial expressions | 54,707 | 21.2% |
 
 ## Symbol level
 
@@ -63,8 +65,8 @@ Every corpus percentage asserted in fsw_r's own source, recomputed here. Each wa
 
 | Claim | Cited | Measured | Delta (pp) | Reproduced | Asserted in |
 |---|---:|---:|---:|---|---|
-| `mvp1_one_hand` | 6.2% | 6.65% | +0.45 | yes | `timeline/build.py` |
-| `mvp2_coverage` | 20.9% | 13.99% | -6.91 | **NO** | `timeline/build.py` |
+| `mvp1_one_hand` | 6.2% | 7.53% | +1.33 | **NO** | `timeline/build.py` |
+| `mvp2_coverage` | 20.9% | 21.22% | +0.32 | yes | `timeline/build.py` |
 | `cat5_fill0` | 92.5% | 92.47% | -0.03 | yes | `core/body_types.py, core/body_symbol.py` |
 | `cat5_rotation_0_7` | 88.7% | 88.67% | -0.03 | yes | `core/body_types.py, core/body_symbol.py` |
 | `group12_sign_share` | 16.8% | 16.83% | +0.03 | yes | `core/movement_paths.py` |
@@ -89,6 +91,6 @@ Definition measured for each claim:
 
 ## Generated output
 
-- pose frames generated: 865,896
+- pose frames generated: 1,312,968
 - mean frames per sign: 24.000
-- mean animation tracks (hands) per sign: 1.525
+- mean animation tracks (hands) per sign: 1.755

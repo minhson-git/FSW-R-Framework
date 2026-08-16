@@ -1,12 +1,36 @@
 """Builds a ``SignTimeline`` from ``core/fswr_converter.py``'s
-``tuple[PositionedSymbol, ...]`` -- MVP-2 scope.
+``tuple[PositionedSymbol, ...]`` -- MVP-3 scope.
 
-**MVP-2 scope:** a sign with 1 OR 2 hand (Category 1) symbols, at most 1
-movement (Category 2) symbol PER hand, and no symbol from any other
-category. Measured on SignBank+ (257,800 signs): two-hand signs raise the
-coverage from MVP-1's 6.2% (one hand) toward ~20.9% of real signs.
+**MVP-3 scope:** a sign with 1 OR 2 hand (Category 1) symbols, at most 1
+movement (Category 2) symbol PER hand, and any number of Category 4 STATIC
+facial expressions, which merge into one FACE track.
 
-**What MVP-2 adds over MVP-1, and why it stays deterministic:** MVP-1
+**Coverage, measured -- run scripts/eval_corpus_coverage.py to reproduce.**
+Over all 257,801 SignBank+ signs, MVP-2 (hands and movement only) built a
+timeline for 14.0%. Earlier revisions of this docstring cited "~20.9%" for
+MVP-2; that figure was measured ad hoc during development and does NOT
+reproduce -- see reports/corpus_coverage.md, whose scope funnel shows 23.0%
+surviving every MVP-2 constraint EXCEPT "at most 1 movement per hand", which
+is the likeliest thing the old number actually measured. Quote the report,
+never this docstring.
+
+Why Category 4 was the right thing to add next, rather than Category 3 or 5:
+measured per-category, accepting Category 4 alone raises coverage by about
++13pp, against +2.5pp for Category 3 and +3.2pp for Category 5 -- facial
+expression appears in 52.9% of all real signs, so it is not a garnish.
+
+**What is deliberately still rejected**, because each has a real model that
+this scope does not consume yet, and accepting the sign while ignoring the
+symbol would misrepresent what was written:
+  - ``HeadSymbol`` / ``HeadMovementSymbol`` (rigid head orientation, and
+    orientation over time) -- the next unlock, ~11.3k corpus occurrences.
+  - ``FaceMovementSymbol`` (expression over time).
+  - Categories 3 (Dynamics) and 5 (Trunk & Limb).
+``AnnotationSymbol`` is the one Category 4 kind carried WITHOUT contributing,
+and that is not an exception to the rule: an AnnotationSymbol is defined as
+"identified, no modelled pose", so there is no pose being dropped.
+
+**What MVP-2 added over MVP-1, and why it stays deterministic:** MVP-1
 allowed exactly one hand precisely so there was no "which hand does this
 movement belong to" question. MVP-2 answers that question from a *cited*
 rule rather than a guess -- SignWriting encodes the performing hand in the
@@ -23,15 +47,19 @@ see ``classify.tracks_for_movement`` for the citation). So:
     two moments" vs. a sequence) is still the ambiguity MVP-1 avoided.
 
 Every stage is still a deterministic lookup, never inference: given the
-symbols, the tracks and their keyframes are fully determined. A sign
-outside this scope raises ``UnsupportedSignError`` naming exactly why --
-never a best-effort wrong timeline.
+symbols, the tracks and their keyframes are fully determined. A sign outside
+this scope raises ``UnsupportedSignError`` naming exactly why -- never a
+best-effort wrong timeline. That rule is why two Category 4 symbols
+disagreeing on the same ARKit channel raise instead of one silently winning.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
+from fsw_r.core.annotation_symbol import AnnotationSymbol
+from fsw_r.core.face_symbol import FaceSymbol
+from fsw_r.core.face_types import FaceExpressionPose
 from fsw_r.core.finger_articulation import articulate_joint_pose
 from fsw_r.core.fswr_converter import PositionedSymbol
 from fsw_r.core.hand_symbol import HandSymbol
@@ -97,11 +125,44 @@ def _build_keyframes(posture: PositionedSymbol, movement: MovementSymbol | None)
     )
 
 
+def _merge_face_expressions(faces: list[PositionedSymbol]) -> FaceExpressionPose:
+    """Several Category 4 expression symbols in one sign describe ONE face at
+    ONE instant -- brows, mouth and eyes are different ARKit channels of the
+    same head -- so they merge into a single expression rather than becoming
+    competing tracks. Measured on SignBank+: of the signs this scope accepts,
+    21.9% carry more than one FaceSymbol, so merging is the common case, not
+    an edge case.
+
+    Two symbols writing the SAME ARKit channel with DIFFERENT weights is a
+    genuine ambiguity (which one is the face actually doing?), so it raises
+    rather than picking one -- the same "never a best-effort wrong timeline"
+    rule the hand scope follows. Measured cost: 115 of 10,931 such signs
+    (1.05%). Identical weights are not a conflict; that is just two symbols
+    agreeing."""
+    merged: dict[str, float] = {}
+    source_of: dict[str, str] = {}
+    for positioned in faces:
+        face = positioned.symbol
+        assert isinstance(face, FaceSymbol)  # caller filtered on this
+        for name, weight in face.get_expression().blendshapes.items():
+            previous = merged.get(name)
+            if previous is not None and previous != weight:
+                raise UnsupportedSignError(
+                    f"two Category 4 symbols disagree on ARKit channel {name!r}: "
+                    f"{source_of[name]} sets {previous}, {face.symbol_id} sets {weight}"
+                )
+            merged[name] = weight
+            source_of[name] = face.symbol_id
+    return FaceExpressionPose(blendshapes=merged)
+
+
 def build_timeline(positioned_symbols: tuple[PositionedSymbol, ...]) -> SignTimeline:
     """Raises ``UnsupportedSignError`` for anything outside MVP-2's scope
     (see module docstring)."""
     postures = []
     transitions = []
+    faces: list[PositionedSymbol] = []
+    annotations: list[PositionedSymbol] = []
     for positioned in positioned_symbols:
         # Gate on the literal ISWA category, not SymbolRole -- Category 4
         # (Head & Face) also classifies as POSTURE (see classify.py's
@@ -115,11 +176,24 @@ def build_timeline(positioned_symbols: tuple[PositionedSymbol, ...]) -> SignTime
             postures.append(positioned)
         elif category == 2 and role == SymbolRole.TRANSITION:
             transitions.append(positioned)
+        elif category == 4 and isinstance(positioned.symbol, FaceSymbol):
+            faces.append(positioned)
+        elif category == 4 and isinstance(positioned.symbol, AnnotationSymbol):
+            # Carried, contributes nothing -- which is precisely what an
+            # AnnotationSymbol MEANS ("identified, no modelled pose", see
+            # core/annotation_symbol.py). This is not a silent drop: the
+            # symbol has no pose to drop. The Category 4 kinds that DO have a
+            # model (HeadSymbol's rigid orientation, FaceMovementSymbol's and
+            # HeadMovementSymbol's expression-over-time) fall through to the
+            # error below on purpose -- ignoring those would produce exactly
+            # the best-effort wrong timeline this module refuses to build.
+            annotations.append(positioned)
         else:
             raise UnsupportedSignError(
-                f"MVP-2 only supports Category 1 (hand posture) and Category 2 "
-                f"(movement) symbols; found a category {category} ({role.value}) "
-                f"symbol ({positioned.symbol.symbol_id})"
+                f"MVP-3 supports Category 1 (hand posture), Category 2 (movement) "
+                f"and Category 4 static facial expressions; found a category "
+                f"{category} ({role.value}) symbol ({positioned.symbol.symbol_id}, "
+                f"{type(positioned.symbol).__name__})"
             )
 
     if not 1 <= len(postures) <= 2:
@@ -162,8 +236,28 @@ def build_timeline(positioned_symbols: tuple[PositionedSymbol, ...]) -> SignTime
                 )
             movement_by_track[track_name] = movement
 
-    tracks = tuple(
+    tracks = [
         Track(name=track_name, keyframes=_build_keyframes(posture, movement_by_track.get(track_name)))
         for track_name, posture in sorted(posture_by_track.items(), key=lambda item: item[0].value)
-    )
-    return SignTimeline(tracks=tracks, duration_seconds=DEFAULT_SIGN_DURATION)
+    ]
+
+    # The face track is a single static keyframe: ISWA writes a facial
+    # expression as a STATE the sign is performed with, not a trajectory.
+    # Expressions that genuinely change over time are FaceMovementSymbol,
+    # which this scope still rejects rather than approximating.
+    if faces:
+        tracks.append(
+            Track(
+                name=TrackName.FACE,
+                keyframes=(
+                    Keyframe(
+                        time=0.0,
+                        joint_pose=None,
+                        wrist=None,
+                        position=None,
+                        expression=_merge_face_expressions(faces),
+                    ),
+                ),
+            )
+        )
+    return SignTimeline(tracks=tuple(tracks), duration_seconds=DEFAULT_SIGN_DURATION)

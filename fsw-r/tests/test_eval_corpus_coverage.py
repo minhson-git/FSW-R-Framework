@@ -22,7 +22,11 @@ from fsw_r.timeline.build import build_timeline
 # message string -- so if a message is reworded, this test fails instead of
 # the report silently growing an "other" bucket.
 SCOPE_FAILURES = (
-    ("M500x500S10000480x480S30a00500x500", "symbol outside Categories 1-2"),
+    # A Category 5 (Trunk & Limb) symbol -- this example used to be a
+    # Category 4 face symbol, which MVP-3 now accepts. Category 5 has a real
+    # BodySymbol model that is not wired into the timeline yet, so it is
+    # still rejected rather than silently dropped.
+    ("M500x500S10000480x480S36d00500x500", "symbol outside supported categories"),
     ("M500x500S22b00480x480", "not 1-2 hand symbols"),
     ("M500x500S10000480x480S10100500x500", "two postures on one hand"),
     ("M500x500S10000480x480S22b00500x500S22b00510x510", "two movements on one hand"),

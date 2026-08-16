@@ -16,7 +16,7 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 1.0,
-      "seconds": 11.29,
+      "seconds": 10.554,
       "failure_reasons": {}
     },
     {
@@ -26,32 +26,33 @@
       "failed": 0,
       "success_rate_of_attempted": 1.0,
       "success_rate_of_corpus": 1.0,
-      "seconds": 39.587,
+      "seconds": 35.875,
       "failure_reasons": {}
     },
     {
       "stage": "Timeline Construction",
       "attempted": 257801,
-      "succeeded": 36079,
-      "failed": 221722,
-      "success_rate_of_attempted": 0.139949,
-      "success_rate_of_corpus": 0.139949,
-      "seconds": 36.741,
+      "succeeded": 54707,
+      "failed": 203094,
+      "success_rate_of_attempted": 0.212206,
+      "success_rate_of_corpus": 0.212206,
+      "seconds": 49.928,
       "failure_reasons": {
-        "symbol outside Categories 1-2": 160205,
-        "not 1-2 hand symbols": 23986,
-        "two movements on one hand": 23190,
-        "two postures on one hand": 14341
+        "symbol outside supported categories": 108692,
+        "two movements on one hand": 36449,
+        "not 1-2 hand symbols": 35199,
+        "two postures on one hand": 20287,
+        "conflicting facial expressions": 2467
       }
     },
     {
       "stage": "Animation Generation",
-      "attempted": 36079,
-      "succeeded": 36079,
+      "attempted": 54707,
+      "succeeded": 54707,
       "failed": 0,
       "success_rate_of_attempted": 1.0,
-      "success_rate_of_corpus": 0.139949,
-      "seconds": 599.917,
+      "success_rate_of_corpus": 0.212206,
+      "seconds": 678.415,
       "failure_reasons": {}
     }
   ],
@@ -80,9 +81,9 @@
     "fraction_of_library_used": 1.0
   },
   "generation_output": {
-    "frames_total": 865896,
+    "frames_total": 1312968,
     "mean_frames_per_sign": 24.0,
-    "mean_tracks_per_sign": 1.525
+    "mean_tracks_per_sign": 1.755
   },
   "cited_claims": [
     {
@@ -90,18 +91,18 @@
       "cited_in": "timeline/build.py",
       "definition_measured_here": "signs whose built timeline has exactly 1 track, over all corpus signs",
       "cited_pct": 6.2,
-      "measured_pct": 6.65,
-      "delta_pp": 0.45,
-      "reproduced": true
+      "measured_pct": 7.53,
+      "delta_pp": 1.33,
+      "reproduced": false
     },
     {
       "claim": "mvp2_coverage",
       "cited_in": "timeline/build.py",
       "definition_measured_here": "signs whose timeline builds at all, over all corpus signs",
       "cited_pct": 20.9,
-      "measured_pct": 13.99,
-      "delta_pp": -6.91,
-      "reproduced": false
+      "measured_pct": 21.22,
+      "delta_pp": 0.32,
+      "reproduced": true
     },
     {
       "claim": "cat5_fill0",
